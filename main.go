@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"example.com/m/commands"
+	"example.com/m/slashcommands"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -12,6 +13,32 @@ const token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWc
 
 var BotID string
 var Prefix = "!"
+
+var Scommands = []*discordgo.ApplicationCommand{
+	{
+		ID:          BotID,
+		Name:        "help",
+		Description: "A Helpful Command",
+	},
+	{
+		Name:        "auction",
+		Description: "Put an item up for auction!",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "item",
+				Description: "Choose an Item to put up for auction",
+				Required:    true,
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{
+						Name:  "apples",
+						Value: "1",
+					},
+				},
+			},
+		},
+	},
+}
 
 func main() {
 	dg, err := discordgo.New("Bot " + token)
@@ -39,6 +66,14 @@ func main() {
 		return
 	}
 
+	for _, v := range Scommands {
+		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, "840768614142967809", v)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println("Command Applied")
+	}
+
 	fmt.Println("Bot is running!")
 
 	<-make(chan struct{})
@@ -56,10 +91,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	Builder(s, m, CommandSlice)
 }
 
-func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	commands.AuctionButton(s, i)
-}
-
 func Builder(s *discordgo.Session, m *discordgo.MessageCreate, CommandSlice []string) {
 
 	if strings.HasPrefix(CommandSlice[0], Prefix) {
@@ -69,7 +100,18 @@ func Builder(s *discordgo.Session, m *discordgo.MessageCreate, CommandSlice []st
 		case "auction":
 			commands.Auction(s, m, CommandSlice[1:])
 		case "help":
-			commands.Help(s, m, CommandSlice[1:]) 
+			commands.Help(s, m, CommandSlice[1:])
 		}
+	}
+}
+
+func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	commands.AuctionButton(s, i)
+
+	switch i.ApplicationCommandData().Name {
+	case "help":
+		slashcommands.Help(s, i)
+	case "Auction":
+		slashcommands.Auction(s, i)
 	}
 }
