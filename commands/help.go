@@ -2,21 +2,61 @@ package commands
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 
+	"github.com/bwmarrin/discordgo"
 )
 
-func Help (s *discordgo.Session, m *discordgo.MessageCreate, details []string) {
-
-
-	helpmessage := &discordgo.MessageSend{
-		Content:         "Test",
-		Embed:           &discordgo.MessageEmbed{
-			Title:       "Discord Bot Help",
-			Description: "This is the help function",
+func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label:    "Close Help Menu",
+							Style:    3,
+							Disabled: false,
+							Emoji: discordgo.ButtonEmoji{
+								Name:     "",
+								ID:       "",
+								Animated: false,
+							},
+							CustomID: "Help",
+						},
+					},
+				},
+			},
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					URL:         "",
+					Type:        "",
+					Title:       "Discord Bot Help",
+					Description: "This bot currently only supports Auctions.",
+					Timestamp:   "",
+					Color:       0,
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:  "**/Help**:",
+							Value: "A command that displays bot functionality.",
+						},
+						{
+							Name:  "**/Auction**:",
+							Value: "Allows you to put an item up for auction.",
+						},
+					},
+				},
+			},
+			AllowedMentions: &discordgo.MessageAllowedMentions{},
 		},
-	}
+	})
+
+}
+
+func HelpButton (s *discordgo.Session, i *discordgo.InteractionCreate) {
+	err := s.ChannelMessageDelete(i.ChannelID, i.Message.ID)
 	
-	_, err := s.ChannelMessageSendComplex(m.ChannelID, helpmessage)
+	if err != nil {
 	fmt.Println(err)
+	}
 }
