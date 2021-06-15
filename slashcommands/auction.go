@@ -29,6 +29,7 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content += "Bid Successful"
 	case "2":
 		content += " no"
+		
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

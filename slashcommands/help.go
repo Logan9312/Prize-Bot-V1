@@ -33,19 +33,13 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Description: "This bot currently only supports Auctions.",
 					Timestamp:   "",
 					Color:       0,
-					Footer:      &discordgo.MessageEmbedFooter{},
-					Image:       &discordgo.MessageEmbedImage{},
-					Thumbnail:   &discordgo.MessageEmbedThumbnail{},
-					Video:       &discordgo.MessageEmbedVideo{},
-					Provider:    &discordgo.MessageEmbedProvider{},
-					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields: []*discordgo.MessageEmbedField{
 						{
-							Name:  "`/Help`:",
+							Name:  "**/Help**:",
 							Value: "A command that displays bot functionality.",
 						},
 						{
-							Name:  "`/Auction`:",
+							Name:  "**/Auction**:",
 							Value: "Allows you to put an item up for auction.",
 						},
 					},
@@ -56,10 +50,10 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 
-	switch i.MessageComponentData().CustomID {
-	case "1":
-		content += "Bid Successful"
-	case "2":
-		content += " no"
+	if i.MessageComponentData().CustomID == "closehelp" {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: 7,
+			Data: &discordgo.InteractionResponseData{},
+		})
 	}
 }
