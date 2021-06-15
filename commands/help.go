@@ -14,7 +14,7 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							Label:    "Close Help Menu",
+							Label:    "Close Help menu",
 							Style:    3,
 							Disabled: false,
 							Emoji: discordgo.ButtonEmoji{
@@ -32,7 +32,7 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					URL:         "",
 					Type:        "",
 					Title:       "Discord Bot Help",
-					Description: "This bot currently only supports Auctions.",
+					Description: "With slash commands you can use any of the following features. In the future I will be adding Inventory tracking and other related commands.",
 					Timestamp:   "",
 					Color:       0,
 					Fields: []*discordgo.MessageEmbedField{
@@ -53,10 +53,10 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 }
 
-func HelpButton (s *discordgo.Session, i *discordgo.InteractionCreate) {
+func HelpButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := s.ChannelMessageDelete(i.ChannelID, i.Message.ID)
-	
+
 	if err != nil {
-	fmt.Println(err)
+		fmt.Println(err)
 	}
 }

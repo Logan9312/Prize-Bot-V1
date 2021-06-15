@@ -17,13 +17,13 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Components: []discordgo.MessageComponent{
 						&discordgo.Button{
 							Label:    "Lower your bid",
-							Style:    1,
+							Style:    2,
 							Disabled: false,
 							Emoji:    discordgo.ButtonEmoji{},
 							CustomID: "auction1",
 						},
 						&discordgo.Button{
-							Label:    "**Bid:** " + initialBid + " 🍓",
+							Label:    "Bid: " + initialBid + " 🍓",
 							Style:    3,
 							Disabled: false,
 							Emoji:    discordgo.ButtonEmoji{
@@ -36,9 +36,10 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						&discordgo.Button{
 							Label:    "Raise your bid",
-							Style:    1,
+							Style:    2,
 							Disabled: false,
-							Emoji:    discordgo.ButtonEmoji{},
+							Emoji:    discordgo.ButtonEmoji{
+							},
 							CustomID: "auction3",
 						},
 					},

@@ -12,15 +12,15 @@ const token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWc
 var BotID string
 var Prefix = "!"
 var GuildID = "835209409109557289"
+var AppID = "829527477268774953"
 
 var Scommands = []*discordgo.ApplicationCommand{
-	{
-		ID:          BotID,
-		Name:        "help",
-		Description: "A Helpful Command",
+	{	
+		Name:          "help",
+		Description: "Basic bot functionality",
+		Options: []*discordgo.ApplicationCommandOption{},
 	},
-	{
-		Name:        "auction",
+	{	Name:        "auction",
 		Description: "Put an item up for auction!",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
@@ -41,13 +41,6 @@ var Scommands = []*discordgo.ApplicationCommand{
 
 func main() {
 	dg, err := discordgo.New("Bot " + token)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -79,6 +72,9 @@ func main() {
 		fmt.Println("Command Applied")
 	}
 
+dg.ApplicationCommandDelete(AppID, "", "removehelp")
+dg.ApplicationCommandDelete(AppID, "", "removeauction")
+
 	fmt.Println("Bot is running!")
 
 	<-make(chan struct{})
@@ -97,12 +93,7 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.MessageComponentData().CustomID {
 	case "Help":
 		commands.HelpButton(s, i)
-	case "auction1":
-		commands.AuctionButton(s, i)
-	case "auction2":
-		commands.AuctionButton(s, i)	
-	case "auction3":
-		commands.AuctionButton(s, i)
-	
+	case "auction1", "auction2", "auction3":
+        commands.AuctionButton(s, i)
 	}
 }
