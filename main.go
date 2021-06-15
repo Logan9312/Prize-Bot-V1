@@ -11,7 +11,7 @@ const token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWc
 
 var BotID string
 var Prefix = "!"
-var GuildID = "840768614142967809"
+var GuildID = "835209409109557289"
 
 var Scommands = []*discordgo.ApplicationCommand{
 	{
