@@ -106,12 +106,19 @@ func Builder(s *discordgo.Session, m *discordgo.MessageCreate, CommandSlice []st
 }
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	commands.AuctionButton(s, i)
+	//commands.AuctionButton(s, i)
 
 	switch i.ApplicationCommandData().Name {
 	case "help":
 		slashcommands.Help(s, i)
 	case "Auction":
 		slashcommands.Auction(s, i)
+	}
+
+	switch i.MessageComponentData().CustomID {
+	case "Help":
+		slashcommands.HelpButton(s, i)
+	case "Auction":
+		slashcommands.AuctionButton(s, i)
 	}
 }

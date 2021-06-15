@@ -49,13 +49,15 @@ func Auction(s *discordgo.Session, m *discordgo.MessageCreate, details []string)
 
 }
 
-func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+/* func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	content := ""
 	switch i.MessageComponentData().CustomID {
 	case "1":
 		content += "Bid Successful"
 	case "2":
 		content += " no"
+	default: 
+		return
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -93,4 +95,4 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 
-}
+} */

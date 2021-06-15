@@ -20,7 +20,7 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 								ID:       "",
 								Animated: false,
 							},
-							CustomID: "closehelp",
+							CustomID: "Help",
 						},
 					},
 				},
@@ -46,14 +46,11 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 			},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},
-			Flags:           0,
 		},
 	})
 
-	if i.MessageComponentData().CustomID == "closehelp" {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: 7,
-			Data: &discordgo.InteractionResponseData{},
-		})
-	}
+}
+
+func HelpButton (s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.WebhookDelete(i.Message.WebhookID)
 }

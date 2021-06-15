@@ -8,8 +8,8 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Components:      []discordgo.MessageComponent{},
-			Embeds:          []*discordgo.MessageEmbed{
+			Components: []discordgo.MessageComponent{},
+			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Item:" + "Grapes",
 					Description: "",
@@ -21,7 +21,6 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 }
 
-
 func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	content := ""
 	switch i.MessageComponentData().CustomID {
@@ -29,7 +28,7 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content += "Bid Successful"
 	case "2":
 		content += " no"
-		
+
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
