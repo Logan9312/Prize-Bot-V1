@@ -65,7 +65,16 @@ func main() {
 		return
 	}
 
-	fmt.Println("Bot is running!")
+	for _, v := range Scommands {
+        acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
+        if err != nil {
+            fmt.Println(err)
+			fmt.Println(acc.ID)
+        }
+
+	}
+
+
 
 	<-make(chan struct{})
 
