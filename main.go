@@ -15,7 +15,7 @@ var GuildID = "835209409109557289"
 var AppID = "829527477268774953"
 
 var Scommands = []*discordgo.ApplicationCommand{
-	{ID: "deletehelp",
+	{
 		Name:        "help",
 		Description: "Basic bot functionality",
 		Version:     "",
@@ -69,9 +69,11 @@ func main() {
         acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
         if err != nil {
             fmt.Println(err)
-			fmt.Println(acc.ID)
-        }
-
+		err = dg.ApplicationCommandDelete(AppID, "", acc.ID)
+		if err != nil {
+            fmt.Println(err)
+        	}
+		}
 	}
 
 
