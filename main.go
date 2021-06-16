@@ -14,13 +14,16 @@ var Prefix = "!"
 var GuildID = "835209409109557289"
 var AppID = "829527477268774953"
 
+var commandMap map[string]*discordgo.ApplicationCommand = make(map[string]*discordgo.ApplicationCommand)
+
 var Scommands = []*discordgo.ApplicationCommand{
-	{	
-		Name:          "help",
+	{ID: "deletehelp",
+		Name:        "help",
 		Description: "Basic bot functionality",
-		Options: []*discordgo.ApplicationCommandOption{},
+		Version:     "",
+		Options:     []*discordgo.ApplicationCommandOption{},
 	},
-	{	Name:        "auction",
+	{Name: "auction",
 		Description: "Put an item up for auction!",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
@@ -65,15 +68,22 @@ func main() {
 	}
 
 	for _, v := range Scommands {
-		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println("Command Applied")
-	}
+        acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
+        if err != nil {
+            fmt.Println(err)
+        }
 
-dg.ApplicationCommandDelete(AppID, "", "removehelp")
-dg.ApplicationCommandDelete(AppID, "", "removeauction")
+        commandMap[v.Name] = acc
+        fmt.Println("Command Applied")
+    	acdErr := dg.ApplicationCommandDelete(AppID, "", acc.ID)
+    
+		if acdErr != nil {
+			fmt.Println(acdErr.Error())
+			return
+		  } else {
+			fmt.Printf("Deleted: %s", v.Name)
+		  }
+	}
 
 	fmt.Println("Bot is running!")
 
@@ -94,6 +104,6 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "Help":
 		commands.HelpButton(s, i)
 	case "auction1", "auction2", "auction3":
-        commands.AuctionButton(s, i)
+		commands.AuctionButton(s, i)
 	}
 }
