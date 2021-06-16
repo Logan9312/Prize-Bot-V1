@@ -14,8 +14,6 @@ var Prefix = "!"
 var GuildID = "835209409109557289"
 var AppID = "829527477268774953"
 
-var commandMap map[string]*discordgo.ApplicationCommand = make(map[string]*discordgo.ApplicationCommand)
-
 var Scommands = []*discordgo.ApplicationCommand{
 	{ID: "deletehelp",
 		Name:        "help",
@@ -65,24 +63,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 		return
-	}
-
-	for _, v := range Scommands {
-        acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-        if err != nil {
-            fmt.Println(err)
-        }
-
-        commandMap[v.Name] = acc
-        fmt.Println("Command Applied")
-    	acdErr := dg.ApplicationCommandDelete(AppID, "", acc.ID)
-    
-		if acdErr != nil {
-			fmt.Println(acdErr.Error())
-			return
-		  } else {
-			fmt.Printf("Deleted: %s", v.Name)
-		  }
 	}
 
 	fmt.Println("Bot is running!")
