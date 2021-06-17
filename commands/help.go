@@ -5,6 +5,11 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 )
+var HelpCommand =	discordgo.ApplicationCommand{
+	Name:        "help",
+	Description: "Basic bot functionality",
+	Options:     []*discordgo.ApplicationCommandOption{},
+}
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"example.com/m/commands"
+	"example.com/m/cfunctions"
 	"example.com/m/keys"
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,31 +16,8 @@ var AppID = keys.AppID
 const Token string = keys.Token
 
 var Scommands = []*discordgo.ApplicationCommand{
-	{
-		Name:        "help",
-		Description: "Basic bot functionality",
-		Version:     "",
-		Options:     []*discordgo.ApplicationCommandOption{},
-	},
-	{Name: "auction",
-		Description: "Put an item up for auction!",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "item",
-				Description: "Choose an Item to put up for auction",
-				Required:    true,
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "bid",
-				Description: "Starting Bid Amount",
-				Required:    true,
-			},
-		},
-	},
+	cfunctions.Help, 
 }
-
 func main() {
 	dg, err := discordgo.New("Bot " + Token)
 
