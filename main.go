@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"example.com/m/commands"
-	"example.com/m/cfunctions"
 	"example.com/m/keys"
 	"github.com/bwmarrin/discordgo"
 )
@@ -13,11 +12,13 @@ var BotID string
 var Prefix = "!"
 var GuildID = "835209409109557289"
 var AppID = keys.AppID
+
 const Token string = keys.Token
 
 var Scommands = []*discordgo.ApplicationCommand{
-	cfunctions.Help, 
+	&commands.HelpCommand, &commands.AuctionCommand,
 }
+
 func main() {
 	dg, err := discordgo.New("Bot " + Token)
 
@@ -44,17 +45,15 @@ func main() {
 	}
 
 	for _, v := range Scommands {
-        acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-        if err != nil {
-            fmt.Println(err)
-		err = dg.ApplicationCommandDelete(AppID, "", acc.ID)
+		acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
 		if err != nil {
-            fmt.Println(err)
-        	}
+			fmt.Println(err)
+			err = dg.ApplicationCommandDelete(AppID, "", acc.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
-
-
 
 	<-make(chan struct{})
 
