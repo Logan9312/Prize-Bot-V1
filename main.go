@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"example.com/m/commands"
+	"example.com/m/keys"
 	"github.com/bwmarrin/discordgo"
 )
-
-const token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWcY"
 
 var BotID string
 var Prefix = "!"
 var GuildID = "835209409109557289"
-var AppID = "829527477268774953"
+var AppID = keys.AppID
+const Token string = keys.Token
 
 var Scommands = []*discordgo.ApplicationCommand{
 	{
@@ -41,7 +41,7 @@ var Scommands = []*discordgo.ApplicationCommand{
 }
 
 func main() {
-	dg, err := discordgo.New("Bot " + token)
+	dg, err := discordgo.New("Bot " + Token)
 
 	if err != nil {
 		fmt.Println(err.Error())
