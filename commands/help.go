@@ -5,9 +5,10 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 )
+
 var HelpCommand =	discordgo.ApplicationCommand{
-	Name:        "help",
-	Description: "Basic bot functionality",
+	Name:          "help",
+	Description:   "Basic bot functionality",
 }
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -48,6 +49,10 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 							Name:  "**/Auction**:",
 							Value: "Allows you to put an item up for auction.",
 						},
+						{
+							Name:  "**/Inventory**:",
+							Value: "Displays the items that an user has acquired",
+						},
 					},
 				},
 			},
@@ -64,3 +69,8 @@ func HelpButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 }
+
+
+//Help Command Plans.
+
+// Use slashCommands to create an auto updating help command. 

@@ -19,7 +19,8 @@ var InventoryCommand =	discordgo.ApplicationCommand{
 
 func Inventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	
-	username := i.ApplicationCommandData().Options[0].UserValue(nil).ID
+	userID := i.ApplicationCommandData().Options[0].UserValue(nil).ID
+	username := i.ApplicationCommandData().Options[0].UserValue(nil).Username
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -30,7 +31,10 @@ func Inventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			Embeds:          []*discordgo.MessageEmbed{
 				{
-					Title: "Inventory For" + username,
+					URL:   "",
+					Type:  "",
+					Title: "Profile: " + username + "test",
+					Description: "Inventory For: " + "<@" + userID + ">",
 				},
 			},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},

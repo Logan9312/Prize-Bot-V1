@@ -19,6 +19,7 @@ var slashCommands = []*discordgo.ApplicationCommand{
 	&commands.HelpCommand, 
 	&commands.AuctionCommand,
 	&commands.InventoryCommand,
+	&commands.RolesCommand,
 }
 
 func main() {
@@ -55,6 +56,8 @@ func main() {
 		fmt.Println("Command Finished")
 	}
 
+
+
 	fmt.Println("Bot is running")
 
 	<-make(chan struct{})
@@ -70,6 +73,8 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commands.Auction(s, i)
 	case "inventory":
 		commands.Inventory(s, i)
+	case "roles":
+		commands.Roles(s,i)
 	}
 
 	switch i.MessageComponentData().CustomID {
@@ -77,5 +82,7 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commands.HelpButton(s, i)
 	case "auction1", "auction2", "auction3":
 		commands.AuctionButton(s, i)
+	case "roles1":
+		commands.RolesButton(s, i)
 	}
 }
