@@ -14,7 +14,7 @@ var AuctionCommand = discordgo.ApplicationCommand{Name: "auction",
 			Required:    true,
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
+			Type:        discordgo.ApplicationCommandOptionInteger,
 			Name:        "bid",
 			Description: "Starting Bid Amount",
 			Required:    true,
@@ -44,7 +44,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 							Label:    "Bid: " + initialBid + " 🍓",
 							Style:    3,
 							Disabled: false,
-							Emoji:    discordgo.ButtonEmoji{
+							Emoji: discordgo.ButtonEmoji{
 								Name:     "check",
 								ID:       "623703744592347146",
 								Animated: false,
@@ -56,8 +56,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 							Label:    "Raise your bid",
 							Style:    2,
 							Disabled: false,
-							Emoji:    discordgo.ButtonEmoji{
-							},
+							Emoji:    discordgo.ButtonEmoji{},
 							CustomID: "auction3",
 						},
 					},
@@ -90,11 +89,11 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: &discordgo.InteractionResponseData{
-			Content:         content,
-			Components:      []discordgo.MessageComponent{},
-			Embeds:          []*discordgo.MessageEmbed{
+			Content:    content,
+			Components: []discordgo.MessageComponent{},
+			Embeds: []*discordgo.MessageEmbed{
 				{
-					Title: "Item: Test Item", 
+					Title:       "Item: Test Item",
 					Description: content,
 				},
 			},

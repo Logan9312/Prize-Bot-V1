@@ -15,8 +15,10 @@ var AppID = keys.AppID
 
 const Token string = keys.Token
 
-var Scommands = []*discordgo.ApplicationCommand{
-	&commands.HelpCommand, &commands.AuctionCommand,
+var slashCommands = []*discordgo.ApplicationCommand{
+	&commands.HelpCommand, 
+	&commands.AuctionCommand,
+	&commands.InventoryCommand,
 }
 
 func main() {
@@ -44,16 +46,16 @@ func main() {
 		return
 	}
 
-	for _, v := range Scommands {
-		acc, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-		if err != nil {
+	for _, v := range slashCommands {
+		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
 			fmt.Println(err)
-			err = dg.ApplicationCommandDelete(AppID, "", acc.ID)
 			if err != nil {
 				fmt.Println(err)
 			}
-		}
+		fmt.Println("Command Finished")
 	}
+
+	fmt.Println("Bot is running")
 
 	<-make(chan struct{})
 
@@ -66,6 +68,8 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commands.Help(s, i)
 	case "auction":
 		commands.Auction(s, i)
+	case "inventory":
+		commands.Inventory(s, i)
 	}
 
 	switch i.MessageComponentData().CustomID {
