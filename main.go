@@ -56,7 +56,7 @@ func main() {
 		fmt.Println("Command Finished")
 	}
 
-
+commands.HelpBuilder(slashCommands)
 
 	fmt.Println("Bot is running")
 
@@ -67,7 +67,7 @@ func main() {
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.ApplicationCommandData().Name {
-	case "help":
+	case "help", "bid":
 		commands.Help(s, i)
 	case "auction":
 		commands.Auction(s, i)
@@ -80,8 +80,8 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.MessageComponentData().CustomID {
 	case "Help":
 		commands.HelpButton(s, i)
-	case "auction1", "auction2", "auction3":
-		commands.AuctionButton(s, i)
+	case "auction1":
+		commands.AuctionButtons(s, i)
 	case "roles1":
 		commands.RolesButton(s, i)
 	}

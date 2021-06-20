@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -9,6 +10,19 @@ import (
 var HelpCommand =	discordgo.ApplicationCommand{
 	Name:          "help",
 	Description:   "Basic bot functionality",
+}
+
+var fields []*discordgo.MessageEmbedField
+
+func HelpBuilder (slashCommands []*discordgo.ApplicationCommand) {
+for _, command := range slashCommands {
+	field := &discordgo.MessageEmbedField{
+	  Name: "/" + strings.Title(fmt.Sprintf("**%s**", command.Name)),
+	  Value: fmt.Sprintf("```%s```", command.Description),
+	}
+  
+	fields = append(fields, field)
+  }
 }
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -38,22 +52,8 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Type:        "",
 					Title:       "Discord Bot Help",
 					Description: "With slash commands you can use any of the following features. In the future I will be adding Inventory tracking and other related commands.",
-					Timestamp:   "",
-					Color:       0,
-					Fields: []*discordgo.MessageEmbedField{
-						{
-							Name:  "**/Help**:",
-							Value: "A command that displays bot functionality.",
-						},
-						{
-							Name:  "**/Auction**:",
-							Value: "Allows you to put an item up for auction.",
-						},
-						{
-							Name:  "**/Inventory**:",
-							Value: "Displays the items that an user has acquired",
-						},
-					},
+					Color:       0x8073ff,
+					Fields: fields,
 				},
 			},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},

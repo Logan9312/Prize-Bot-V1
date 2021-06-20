@@ -39,6 +39,7 @@ func Roles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Title: "**__Testing Reaction Roles__**",
 					Description: "Select your roles here!",
 					Timestamp: "",
+					Color: 0x8073ff,
 				},
 			},
 		},
