@@ -57,6 +57,11 @@ func main() {
 
 	fmt.Println("Bot is running")
 
+	if err != nil {
+		fmt.Println()
+		return
+	}
+
 	<-make(chan struct{})
 
 }
