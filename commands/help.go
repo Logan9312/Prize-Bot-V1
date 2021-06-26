@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -20,7 +19,7 @@ for _, command := range slashCommands {
 	  Name: "/" + strings.Title(fmt.Sprintf("**%s**", command.Name)),
 	  Value: fmt.Sprintf("```%s```", command.Description),
 	}
-  
+
 	fields = append(fields, field)
   }
 }
@@ -48,12 +47,18 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					URL:         "",
-					Type:        "",
-					Title:       "Discord Bot Help",
-					Description: "With slash commands you can use any of the following features. In the future I will be adding Inventory tracking and other related commands.",
-					Color:       0x8073ff,
-					Fields: fields,
+					URL: "",
+					Type: "",
+					Title: "Discord Bot Help",
+					Description: "Developed by Logan. Thank you for using my bot!",
+					Timestamp: "",
+					Color:     0x8073ff,
+					Footer:    &discordgo.MessageEmbedFooter{
+						Text:         "Powered by Aftermath Gaming",
+					},
+					Image:     &discordgo.MessageEmbedImage{},
+					Thumbnail: &discordgo.MessageEmbedThumbnail{},
+					Fields:    fields,
 				},
 			},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},
@@ -69,8 +74,3 @@ func HelpButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 }
-
-
-//Help Command Plans.
-
-// Use slashCommands to create an auto updating help command. 

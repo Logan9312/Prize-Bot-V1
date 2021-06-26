@@ -4,22 +4,20 @@ import (
 	"fmt"
 
 	"example.com/m/commands"
-	"example.com/m/keys"
 	"github.com/bwmarrin/discordgo"
 )
 
 var BotID string
 var Prefix = "!"
 var GuildID = "835209409109557289"
-var AppID = keys.AppID
+var AppID = "829527477268774953"
 
-const Token string = keys.Token
+const Token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWcY"
 
 var slashCommands = []*discordgo.ApplicationCommand{
 	&commands.HelpCommand, 
 	&commands.AuctionCommand,
 	&commands.InventoryCommand,
-	&commands.RolesCommand,
 }
 
 func main() {
@@ -49,14 +47,13 @@ func main() {
 
 	for _, v := range slashCommands {
 		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-			fmt.Println(err)
 			if err != nil {
 				fmt.Println(err)
 			}
 		fmt.Println("Command Finished")
 	}
 
-commands.HelpBuilder(slashCommands)
+	commands.HelpBuilder(slashCommands)
 
 	fmt.Println("Bot is running")
 
@@ -67,14 +64,12 @@ commands.HelpBuilder(slashCommands)
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.ApplicationCommandData().Name {
-	case "help", "bid":
+	case "help":
 		commands.Help(s, i)
 	case "auction":
 		commands.Auction(s, i)
 	case "inventory":
 		commands.Inventory(s, i)
-	case "roles":
-		commands.Roles(s,i)
 	}
 
 	switch i.MessageComponentData().CustomID {
@@ -82,7 +77,5 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commands.HelpButton(s, i)
 	case "auction1":
 		commands.AuctionButtons(s, i)
-	case "roles1":
-		commands.RolesButton(s, i)
 	}
 }

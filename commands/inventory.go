@@ -40,16 +40,6 @@ func Inventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Timestamp: "",
 					Color: 0x8073ff,
 					Fields:    []*discordgo.MessageEmbedField{
-						{
-							Name:   "**Super Breeding Ticket**" + " x1",
-							Value:  "Use this ticket to breed any dinos in Ark, including non-breedables",
-							Inline: false,
-						},
-						{
-							Name:   "**Auction Prize: Max dino of Choice**" + " x4",
-							Value:  "Claim this to spawn any max dino",
-							Inline: false,
-						},
 					},
 				},
 			},
