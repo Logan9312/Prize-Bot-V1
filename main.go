@@ -68,13 +68,17 @@ func main() {
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	fmt.Println("Selecting Function")
+
 	switch i.ApplicationCommandData().Name {
 	case "help":
 		commands.Help(s, i)
 	case "auction":
-		commands.Auction(s, i)
+		commands.Auction(s, i, AppID)
 	case "inventory":
 		commands.Inventory(s, i)
+	case "bidtest":
+		commands.BidTest(s, i, AppID)
 	}
 
 	switch i.MessageComponentData().CustomID {
