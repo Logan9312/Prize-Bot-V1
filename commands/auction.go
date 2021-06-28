@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -35,16 +36,16 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 	Details := i.ApplicationCommandData().Options[0].StringValue()
 	InitialBid := int(i.ApplicationCommandData().Options[1].IntValue())
 
-	s.InteractionRespond(i.Interaction , &discordgo.InteractionResponse{
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: 4,
 		Data: &discordgo.InteractionResponseData{
-			Components:      []discordgo.MessageComponent{},
-			Embeds:          []*discordgo.MessageEmbed{
+			Components: []discordgo.MessageComponent{},
+			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Item: " + Details,
 					Description: "Current Highest Bid: " + fmt.Sprint(InitialBid) + " 🍓",
 					Color:       0x00bfff,
-					Fields:    []*discordgo.MessageEmbedField{
+					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:   "**Current Winner:**",
 							Value:  "I'm lazy so Im typing this",
@@ -57,9 +58,9 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 	})
 
 	var BidCommand = discordgo.ApplicationCommand{
-		Name:          "bidtest",
-		Description:   "bid on an existing auction!",
-		Options:       []*discordgo.ApplicationCommandOption{
+		Name:        "bidtest",
+		Description: "bid on an existing auction!",
+		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "bidprice",
@@ -71,51 +72,47 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 
 	s.ApplicationCommandCreate(AppID, i.GuildID, &BidCommand)
 
-
 }
 
-func BidTest (s *discordgo.Session, i *discordgo.InteractionCreate, appID string) {
+func BidTest(s *discordgo.Session, i *discordgo.InteractionCreate, appID string) {
 
 	newbid := int(i.ApplicationCommandData().Options[0].IntValue())
-
-		s.InteractionRespond(i.Interaction , &discordgo.InteractionResponse{
-			Type: 4,
-			Data: &discordgo.InteractionResponseData{
-				Content:         "Successful Bid",
-				Flags:           64,
-			},
-		})
-
-		bidupdate := discordgo.WebhookEdit{
-			Content:         "",
-			Embeds:          []*discordgo.MessageEmbed{
-				{	Title:       "Item: " + Details,
-					Description: "Current Highest Bid: " + fmt.Sprint(newbid) + " 🍓",
-					Color:       0x00bfff,
-					Fields:    []*discordgo.MessageEmbedField{
-						{
-							Name:   "**Current Winner:**",
-							Value:  "I'm lazy so Im typing this",
-							Inline: false,
-						},
-					},
-				},
-			},
-		}
-
-		s.InteractionResponseEdit(appID, AuctionData, &bidupdate)
-
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: 4,
 		Data: &discordgo.InteractionResponseData{
-			Content:         "Bid failed. Please select a larger value",
+			Content: "Successful Bid",
+			Flags:   64,
 		},
 	})
 
+	bidupdate := discordgo.WebhookEdit{
+		Content: "",
+		Embeds: []*discordgo.MessageEmbed{
+			{Title: "Item: " + Details,
+				Description: "Current Highest Bid: " + fmt.Sprint(newbid) + " 🍓",
+				Color:       0x00bfff,
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:   "**Current Winner:**",
+						Value:  "I'm lazy so Im typing this",
+						Inline: false,
+					},
+				},
+			},
+		},
+	}
+
+	s.InteractionResponseEdit(appID, AuctionData, &bidupdate)
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: 4,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Bid failed. Please select a larger value",
+		},
+	})
 
 }
-
 
 func AuctionButtons(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
