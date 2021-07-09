@@ -28,13 +28,15 @@ var initialBid int = 500
 
 var AuctionData *discordgo.Interaction
 var Details string
-var InitialBid int
+var InitialBid int64
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string) {
 
 	AuctionData = i.Interaction
+
 	Details := i.ApplicationCommandData().Options[0].StringValue()
-	InitialBid := int(i.ApplicationCommandData().Options[1].IntValue())
+	InitialBid := i.ApplicationCommandData().Options[1].IntValue()
+	bidder := i.Interaction.Member.User.Username
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: 4,
@@ -48,7 +50,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:   "**Current Winner:**",
-							Value:  "I'm lazy so Im typing this",
+							Value:  bidder,
 							Inline: false,
 						},
 					},
@@ -76,7 +78,8 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 
 func BidTest(s *discordgo.Session, i *discordgo.InteractionCreate, appID string) {
 
-	newbid := int(i.ApplicationCommandData().Options[0].IntValue())
+	newbid := i.ApplicationCommandData().Options[0].IntValue()
+	bidder := i.Interaction.Member.User.Username
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: 4,
@@ -95,7 +98,7 @@ func BidTest(s *discordgo.Session, i *discordgo.InteractionCreate, appID string)
 				Fields: []*discordgo.MessageEmbedField{
 					{
 						Name:   "**Current Winner:**",
-						Value:  "I'm lazy so Im typing this",
+						Value:  bidder,
 						Inline: false,
 					},
 				},

@@ -36,14 +36,12 @@ func Inventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Embeds:          []*discordgo.MessageEmbed{
 				{
 					Title: "**__" + username + "__**" + "#" + Discriminator,
-					Description: "Inventory For: " + "<@" + userID + ">",
+					Description: "Inventory For: <@" + userID + ">",
 					Timestamp: "",
 					Color: 0x8073ff,
-					Fields:    []*discordgo.MessageEmbedField{
-					},
+					Fields:    []*discordgo.MessageEmbedField{},
 				},
 			},
-			AllowedMentions: &discordgo.MessageAllowedMentions{},
 		},
 	})
 }

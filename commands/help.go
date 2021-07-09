@@ -15,6 +15,11 @@ var fields []*discordgo.MessageEmbedField
 
 func HelpBuilder (slashCommands []*discordgo.ApplicationCommand) {
 for _, command := range slashCommands {
+	
+	if command.Name == "help" {
+		continue
+	}
+
 	field := &discordgo.MessageEmbedField{
 	  Name: "/" + strings.Title(fmt.Sprintf("**%s**", command.Name)),
 	  Value: fmt.Sprintf("```%s```", command.Description),
@@ -47,11 +52,8 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					URL: "",
-					Type: "",
 					Title: "Discord Bot Help",
 					Description: "Developed by Logan. Thank you for using my bot!",
-					Timestamp: "",
 					Color:     0x8073ff,
 					Footer:    &discordgo.MessageEmbedFooter{
 						Text:         "Powered by Aftermath Gaming",
@@ -61,13 +63,13 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Fields:    fields,
 				},
 			},
-			AllowedMentions: &discordgo.MessageAllowedMentions{},
 		},
 	})
 
 }
 
 func HelpButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	
 	err := s.ChannelMessageDelete(i.ChannelID, i.Message.ID)
 
 	if err != nil {
