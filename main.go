@@ -16,17 +16,13 @@ const Token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWc
 
 var slashCommands = []*discordgo.ApplicationCommand{
 	{
-		Name:          "help",
-		Description:   "Basic bot functionality",
+		Name:        "help",
+		Description: "Basic bot functionality",
 	},
 	{
-		Name:          "terrible",
-		Description:   "you have done a terrible thing",
-	},
-	{
-		Name:          "inventory",
-		Description:   "Displays a user's inventory.",
-		Options:       []*discordgo.ApplicationCommandOption{
+		Name:        "inventory",
+		Description: "Displays a user's inventory.",
+		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionUser,
 				Name:        "username",
@@ -38,7 +34,7 @@ var slashCommands = []*discordgo.ApplicationCommand{
 		},
 	},
 	{
-		Name: "auction",
+		Name:        "auction",
 		Description: "Put an item up for auction!",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
@@ -84,9 +80,9 @@ func main() {
 
 	for _, v := range slashCommands {
 		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-			if err != nil {
-				fmt.Println(err)
-			}
+		if err != nil {
+			fmt.Println(err)
+		}
 		fmt.Println("Command Finished")
 	}
 
@@ -105,23 +101,24 @@ func main() {
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	fmt.Println("Selecting Function")
-
-	switch i.ApplicationCommandData().Name {
-	case "help":
-		commands.Help(s, i)
-	case "auction":
-		commands.Auction(s, i, AppID)
-	case "inventory":
-		commands.Inventory(s, i)
-	case "bidtest":
-		commands.BidTest(s, i, AppID)
+	if i.Type == 2 {
+		switch i.ApplicationCommandData().Name {
+		case "help":
+			commands.Help(s, i)
+		case "auction":
+			commands.Auction(s, i, AppID)
+		case "inventory":
+			commands.Inventory(s, i)
+		case "bidtest":
+			commands.BidTest(s, i, AppID)
+		}
 	}
-
-	switch i.MessageComponentData().CustomID {
-	case "Help":
-		commands.HelpButton(s, i)
-	case "auction1":
-		commands.AuctionButtons(s, i)
+	if i.Type == 3 {
+		switch i.MessageComponentData().CustomID {
+		case "Help":
+			commands.HelpButton(s, i)
+		case "auction1":
+			commands.AuctionButtons(s, i)
+		}
 	}
 }
