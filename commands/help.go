@@ -6,11 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var HelpCommand =	discordgo.ApplicationCommand{
-	Name:          "help",
-	Description:   "Basic bot functionality",
-}
-
 var fields []*discordgo.MessageEmbedField
 
 func HelpBuilder (slashCommands []*discordgo.ApplicationCommand) {

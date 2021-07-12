@@ -6,24 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var AuctionCommand = discordgo.ApplicationCommand{Name: "auction",
-	Description: "Put an item up for auction!",
-	Options: []*discordgo.ApplicationCommandOption{
-		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "item",
-			Description: "Choose an Item to put up for auction",
-			Required:    true,
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionInteger,
-			Name:        "startingbid",
-			Description: "Starting Bid Amount",
-			Required:    true,
-		},
-	},
-}
-
 var initialBid int = 500
 
 var AuctionData *discordgo.Interaction

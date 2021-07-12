@@ -4,22 +4,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-
-var InventoryCommand =	discordgo.ApplicationCommand{
-	Name:          "inventory",
-	Description:   "Displays a user's inventory.",
-	Options:       []*discordgo.ApplicationCommandOption{
-		{
-			Type:        discordgo.ApplicationCommandOptionUser,
-			Name:        "username",
-			Description: "Chose who's inventory to display",
-			Required:    true,
-			Choices:     []*discordgo.ApplicationCommandOptionChoice{},
-			Options:     []*discordgo.ApplicationCommandOption{},
-		},
-	},
-}
-
 func Inventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	userID := i.ApplicationCommandData().Options[0].UserValue(s).ID

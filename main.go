@@ -15,9 +15,46 @@ var AppID = "829527477268774953"
 const Token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWcY"
 
 var slashCommands = []*discordgo.ApplicationCommand{
-	&commands.HelpCommand, 
-	&commands.AuctionCommand,
-	&commands.InventoryCommand,
+	{
+		Name:          "help",
+		Description:   "Basic bot functionality",
+	},
+	{
+		Name:          "terrible",
+		Description:   "you have done a terrible thing",
+	},
+	{
+		Name:          "inventory",
+		Description:   "Displays a user's inventory.",
+		Options:       []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "username",
+				Description: "Chose who's inventory to display",
+				Required:    true,
+				Choices:     []*discordgo.ApplicationCommandOptionChoice{},
+				Options:     []*discordgo.ApplicationCommandOption{},
+			},
+		},
+	},
+	{
+		Name: "auction",
+		Description: "Put an item up for auction!",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "item",
+				Description: "Choose an Item to put up for auction",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "startingbid",
+				Description: "Starting Bid Amount",
+				Required:    true,
+			},
+		},
+	},
 }
 
 func main() {
