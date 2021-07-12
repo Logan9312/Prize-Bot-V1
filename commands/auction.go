@@ -60,9 +60,6 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 
 func BidTest(s *discordgo.Session, i *discordgo.InteractionCreate, appID string) {
 
-	newbid := i.ApplicationCommandData().Options[0].IntValue()
-	bidder := i.Interaction.Member.User.Username
-
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: 4,
 		Data: &discordgo.InteractionResponseData{
@@ -70,37 +67,8 @@ func BidTest(s *discordgo.Session, i *discordgo.InteractionCreate, appID string)
 			Flags:   64,
 		},
 	})
-
-	bidupdate := discordgo.WebhookEdit{
-		Content: "",
-		Embeds: []*discordgo.MessageEmbed{
-			{Title: "Item: " + Details,
-				Description: "Current Highest Bid: " + fmt.Sprint(newbid) + " 🍓",
-				Color:       0x00bfff,
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:   "**Current Winner:**",
-						Value:  bidder,
-						Inline: false,
-					},
-				},
-			},
-		},
-	}
-
-	s.InteractionResponseEdit(appID, AuctionData, &bidupdate)
-
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: 4,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Bid failed. Please select a larger value",
-		},
-	})
-
 }
 
 func AuctionButtons(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
 	fmt.Println(initialBid)
-
 }
