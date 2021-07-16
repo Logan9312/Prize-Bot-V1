@@ -106,7 +106,7 @@ func main() {
 
 	commands.HelpBuilder(slashCommands)
 
-	fmt.Println("Bot is running")
+	fmt.Println("Bot is running!")
 
 	if err != nil {
 		fmt.Println()
