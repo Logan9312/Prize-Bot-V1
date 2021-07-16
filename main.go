@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"example.com/m/commands"
 	"github.com/bwmarrin/discordgo"
@@ -78,6 +79,23 @@ func main() {
 		return
 	}
 
+	err = dg.UpdateStatusComplex(discordgo.UpdateStatusData{
+		IdleSince:  new(int),
+		Activities: []*discordgo.Activity{
+			{
+				Name:          "bruh",
+				Type:          4,
+				Details:       "test",
+			},
+		},
+		AFK:        false,
+		Status:     "test",
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	for _, v := range slashCommands {
 		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
 		if err != nil {
@@ -94,6 +112,22 @@ func main() {
 		fmt.Println()
 		return
 	}
+
+	infoFile, err := os.OpenFile("info.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	nb, err := infoFile.WriteString("test")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(nb)
+	infoFile.WriteString("hi")
+
+	fileread, _ := os.ReadFile("info.txt")
+
+	fmt.Println(string(fileread))
 
 	<-make(chan struct{})
 
