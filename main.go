@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -108,26 +109,7 @@ func main() {
 
 	fmt.Println("Bot is running!")
 
-	if err != nil {
-		fmt.Println()
-		return
-	}
-
-	infoFile, err := os.OpenFile("info.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	nb, err := infoFile.WriteString("test")
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(nb)
-	infoFile.WriteString("hi")
-
-	fileread, _ := os.ReadFile("info.txt")
-
-	fmt.Println(string(fileread))
+	filetesting()
 
 	<-make(chan struct{})
 
@@ -155,4 +137,32 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			commands.AuctionButtons(s, i)
 		}
 	}
+}
+
+func filetesting () {
+
+type baseStruct struct {
+	Name string `json:"name"`
+	Number int `json:"number"`
+}
+
+	testStruct := baseStruct{"Logan", 5}
+
+	testByte, _ := json.Marshal(&testStruct)
+
+	infoFile, err := os.OpenFile("info.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	nb, err := infoFile.Write(testByte)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(nb)
+
+	fileread, _ := os.ReadFile("info.json")
+
+	fmt.Println(string(fileread))
 }

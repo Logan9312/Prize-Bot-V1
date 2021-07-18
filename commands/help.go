@@ -35,11 +35,12 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 							Label:    "Close Help menu",
 							Style:    3,
 							Disabled: false,
-							Emoji: discordgo.ButtonEmoji{
-								Name:     "",
-								ID:       "",
-								Animated: false,
-							},
+							Emoji:    discordgo.ComponentEmoji{
+									Name:     "",
+									ID:       "",
+									Animated: false,
+								},
+							URL:      "",
 							CustomID: "Help",
 						},
 					},
