@@ -25,4 +25,4 @@ COPY --from=build_base /tmp/app/main /main
 COPY --from=build_base /tmp/app/scripts/startup.sh /scripts/startup.sh
 
 # Run the startup script
-CMD "/main"
+CMD ["sh", "/scripts/startup.sh"]
