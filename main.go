@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 
 	"example.com/m/commands"
 	"github.com/bwmarrin/discordgo"
@@ -109,8 +107,6 @@ func main() {
 
 	fmt.Println("Bot is running!")
 
-	filetesting()
-
 	<-make(chan struct{})
 
 }
@@ -137,32 +133,4 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			commands.AuctionButtons(s, i)
 		}
 	}
-}
-
-func filetesting () {
-
-type baseStruct struct {
-	Name string `json:"name"`
-	Number int `json:"number"`
-}
-
-	testStruct := baseStruct{"Logan", 5}
-
-	testByte, _ := json.Marshal(&testStruct)
-
-	infoFile, err := os.OpenFile("info.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	nb, err := infoFile.Write(testByte)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(nb)
-
-	fileread, _ := os.ReadFile("info.json")
-
-	fmt.Println(string(fileread))
 }
