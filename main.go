@@ -78,18 +78,7 @@ func main() {
 		return
 	}
 
-	err = dg.UpdateStatusComplex(discordgo.UpdateStatusData{
-		IdleSince:  new(int),
-		Activities: []*discordgo.Activity{
-			{
-				Name:          "bruh",
-				Type:          4,
-				Details:       "test",
-			},
-		},
-		AFK:        false,
-		Status:     "test",
-	})
+	err = dg.UpdateGameStatus(0, "Aftermath Ark")
 
 	if err != nil {
 		fmt.Println(err)
