@@ -62,6 +62,7 @@ err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 	},
 })
 
-fmt.Println(err)
-
+if err != nil {
+	fmt.Println(err.Error())
+}
 }
