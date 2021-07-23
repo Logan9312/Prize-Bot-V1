@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"example.com/m/commands"
 	"github.com/bwmarrin/discordgo"
+	"github.com/gorilla/mux"
 )
 
 var BotID string
@@ -15,42 +18,10 @@ var AppID = "829527477268774953"
 const Token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWcY"
 
 var slashCommands = []*discordgo.ApplicationCommand{
-	{
-		Name:        "help",
-		Description: "Basic bot functionality",
-	},
-	{
-		Name:        "inventory",
-		Description: "Displays a user's inventory.",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionUser,
-				Name:        "username",
-				Description: "Chose who's inventory to display",
-				Required:    true,
-				Choices:     []*discordgo.ApplicationCommandOptionChoice{},
-				Options:     []*discordgo.ApplicationCommandOption{},
-			},
-		},
-	},
-	{
-		Name:        "auction",
-		Description: "Put an item up for auction!",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "item",
-				Description: "Choose an Item to put up for auction",
-				Required:    true,
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionInteger,
-				Name:        "startingbid",
-				Description: "Starting Bid Amount",
-				Required:    true,
-			},
-		},
-	},
+	&commands.HelpCommand,
+	&commands.ProfileCommand,
+	&commands.AuctionCommand,
+	&commands.SelectCommand,
 }
 
 func main() {
@@ -60,6 +31,7 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
+
 
 	u, err := dg.User("@me")
 
@@ -79,17 +51,14 @@ func main() {
 	}
 
 	err = dg.UpdateGameStatus(0, "Aftermath Ark")
-
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	for _, v := range slashCommands {
-		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, GuildID, v)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println("Command Finished")
+	//Builds local commands
+	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, GuildID, slashCommands)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	commands.HelpBuilder(slashCommands)
@@ -109,17 +78,38 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "auction":
 			commands.Auction(s, i, AppID)
 		case "inventory":
-			commands.Inventory(s, i)
+			commands.Profile(s, i)
 		case "bidtest":
 			commands.BidTest(s, i, AppID)
+		case "select-test":
+			commands.Select(s, i)
 		}
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
 		case "Help":
 			commands.HelpButton(s, i)
-		case "auction1":
-			commands.AuctionButtons(s, i)
 		}
 	}
+}
+
+type StatusOutput struct {
+	Message string `json:"message"`
+}
+  
+func HandleRequests() {
+	r := mux.NewRouter().StrictSlash(true)
+	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
+}
+  
+// GetStatus responds with the availability status of this service
+func GetStatus(w http.ResponseWriter, r *http.Request) {
+	status := StatusOutput{
+	Message: "Bot is available",
+	}
+  
+w.Header().Set("Content-Type", "application/json")
+w.WriteHeader(200)
+json.NewEncoder(w).Encode(status)
+
 }

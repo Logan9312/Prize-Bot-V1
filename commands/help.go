@@ -8,6 +8,11 @@ import (
 
 var fields []*discordgo.MessageEmbedField
 
+var HelpCommand = discordgo.ApplicationCommand{
+	Name:        "help",
+	Description: "Basic bot functionality",
+}
+
 func HelpBuilder (slashCommands []*discordgo.ApplicationCommand) {
 for _, command := range slashCommands {
 	

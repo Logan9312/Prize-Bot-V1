@@ -6,18 +6,29 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var initialBid int = 500
-
-var AuctionData *discordgo.Interaction
-var Details string
-var InitialBid int64
+var AuctionCommand = discordgo.ApplicationCommand{
+	Name:        "auction",
+	Description: "Put an item up for auction!",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "item",
+			Description: "Choose an Item to put up for auction",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionInteger,
+			Name:        "startingbid",
+			Description: "Starting Bid Amount",
+			Required:    true,
+		},
+	},
+}
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string) {
 
-	AuctionData = i.Interaction
-
 	Details := i.ApplicationCommandData().Options[0].StringValue()
-	InitialBid := i.ApplicationCommandData().Options[1].IntValue()
+	initialBid := i.ApplicationCommandData().Options[1].IntValue()
 	bidder := i.Interaction.Member.User.Username
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -27,7 +38,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Item: " + Details,
-					Description: "Current Highest Bid: " + fmt.Sprint(InitialBid) + " 🍓",
+					Description: "Current Highest Bid: " + fmt.Sprint(initialBid) + " 🍓",
 					Color:       0x00bfff,
 					Fields: []*discordgo.MessageEmbedField{
 						{
@@ -67,8 +78,4 @@ func BidTest(s *discordgo.Session, i *discordgo.InteractionCreate, appID string)
 			Flags:   64,
 		},
 	})
-}
-
-func AuctionButtons(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	fmt.Println(initialBid)
 }
