@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"example.com/m/commands"
@@ -65,7 +66,9 @@ func main() {
 
 	fmt.Println("Bot is running!")
 
-	<-make(chan struct{})
+	r := mux.NewRouter().StrictSlash(true)
+	HandleRequests(r)
+	log.Fatal(http.ListenAndServe(":8080", r))
 
 }
 
@@ -103,9 +106,8 @@ type StatusOutput struct {
 	Message string `json:"message"`
 }
 
-func HandleRequests() {
-	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
+func HandleRequests(r *mux.Router) {
+    r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
 }
 
 // GetStatus responds with the availability status of this service
