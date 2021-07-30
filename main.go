@@ -18,6 +18,7 @@ var AppID = "829527477268774953"
 const Token string = "ODI5NTI3NDc3MjY4Nzc0OTUz.YG5bqg.5qESTPXLoiooMNTr3jUv_BXZWcY"
 
 var slashCommands = []*discordgo.ApplicationCommand{
+	&commands.DynamicVotingCommand,
 	&commands.HelpCommand,
 	&commands.ProfileCommand,
 	&commands.AuctionCommand,
@@ -71,6 +72,8 @@ func main() {
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+
+
 	if i.Type == 2 {
 		switch i.ApplicationCommandData().Name {
 		case "help":
@@ -83,6 +86,12 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			commands.BidTest(s, i, AppID)
 		case "select-test":
 			commands.Select(s, i)
+		}
+		switch i.ApplicationCommandData().Options[0].Name {
+		case "create":
+			commands.DynamicCreate(s, i)
+		case "add":
+			commands.DynamicEdit(s, i)
 		}
 	}
 	if i.Type == 3 {

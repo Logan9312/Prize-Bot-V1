@@ -13,56 +13,56 @@ var SelectCommand = discordgo.ApplicationCommand{
 
 func Select(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-	Type: discordgo.InteractionResponseChannelMessageWithSource,
-	Data: &discordgo.InteractionResponseData{
-		Components:      []discordgo.MessageComponent{
-		discordgo.ActionsRow{
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
 			Components: []discordgo.MessageComponent{
-				discordgo.SelectMenu{
-					CustomID:    "test",
-					Placeholder: "Test Menu",
-					MinValues:   1,
-					MaxValues:   1,
-					Options:     []discordgo.SelectMenuOption{
-						{
-							Label:       "Option1",
-							Value:       "one",
-							Description: "This is Option 1",
-							Emoji:       discordgo.ComponentEmoji{
-								Name:     "😁",
-								ID:       "",
-								Animated: false,
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.SelectMenu{
+							CustomID:    "test",
+							Placeholder: "Test Menu",
+							MinValues:   1,
+							MaxValues:   1,
+							Options: []discordgo.SelectMenuOption{
+								{
+									Label:       "Option1",
+									Value:       "one",
+									Description: "This is Option 1",
+									Emoji: discordgo.ComponentEmoji{
+										Name:     "😁",
+										ID:       "",
+										Animated: false,
+									},
+									Default: false,
+								},
+								{
+									Label:       "Option2",
+									Value:       "two",
+									Description: "This is Option 2",
+									Emoji: discordgo.ComponentEmoji{
+										Name:     "😁",
+										ID:       "",
+										Animated: false,
+									},
+									Default: false,
+								},
 							},
-							Default:     false,
-						},
-						{
-							Label:       "Option2",
-							Value:       "two",
-							Description: "This is Option 2",
-							Emoji:       discordgo.ComponentEmoji{
-								Name:     "😁",
-								ID:       "",
-								Animated: false,
-							},
-							Default:     false,
 						},
 					},
 				},
 			},
-		},
-		},
-		Embeds:          []*discordgo.MessageEmbed{
-			{
-				Title:       "Select Test",
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title: "Select Test",
+				},
 			},
+			AllowedMentions: &discordgo.MessageAllowedMentions{},
+			Flags:           0,
 		},
-		AllowedMentions: &discordgo.MessageAllowedMentions{},
-		Flags:           0,
-	},
-})
+	})
 
-if err != nil {
-	fmt.Println(err.Error())
-}
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }

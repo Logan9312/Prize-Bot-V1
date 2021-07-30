@@ -3,7 +3,7 @@ module example.com/m
 go 1.16
 
 require (
-	github.com/bwmarrin/discordgo v0.23.3-0.20210627161652-421e14965030
+	github.com/bwmarrin/discordgo v0.23.3-0.20210725173931-083bf5c1d918
 	github.com/gorilla/mux v1.8.0
 )
 
