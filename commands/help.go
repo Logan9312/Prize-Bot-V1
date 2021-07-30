@@ -59,8 +59,6 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Footer:    &discordgo.MessageEmbedFooter{
 						Text:         "Powered by Aftermath Gaming",
 					},
-					Image:     &discordgo.MessageEmbedImage{},
-					Thumbnail: &discordgo.MessageEmbedThumbnail{},
 					Fields:    fields,
 				},
 			},

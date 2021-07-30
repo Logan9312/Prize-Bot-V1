@@ -69,31 +69,15 @@ message := discordgo.MessageSend{
 		Footer:      &discordgo.MessageEmbedFooter{
 			Text:         "DSV | Sent By: " + i.Member.Nick,
 		},
-		Fields:      []*discordgo.MessageEmbedField{
-			{
-				Name:   "Example Stat",
-				Value:  "Current Vote: No Vote",
-				Inline: false,
-			},
-		},
 	},
 	Components: []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.SelectMenu{
-					CustomID:    "testnew",
-					Placeholder: "Newtest",
-					MinValues:   1,
-					MaxValues:   1,
-					Options:     []discordgo.SelectMenuOption{
-						{
-							Label:       "TEST",
-							Value:       "testone",
-							Description: "This is a test",
-							Emoji:       discordgo.ComponentEmoji{},
-							Default:     true,
-						},
-					},
+					CustomID:    "defaultstat",
+					Placeholder: "No Stats Added!",
+					MinValues:   0,
+					MaxValues:   0,
 				},
 			},
 		},
@@ -136,33 +120,29 @@ newfield := []*discordgo.MessageEmbedField{
 messageEdit := discordgo.NewMessageEdit(channelID, messageID)
 messageEdit.Embed = &discordgo.MessageEmbed{
 	Fields:      append(returnMessage.Embeds[0].Fields, newfield[0]),
+	Title:       "__**Dynamic Stats Voting**__",
+	Description: "Please vote below using the provided select menu.",
+	Footer:      &discordgo.MessageEmbedFooter{
+		Text:         "DSV | Sent By: " + i.Member.Nick,
+	},
 }
 
 messageEdit.Components = []discordgo.MessageComponent{
 	discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.SelectMenu{
-				CustomID:    "testnew",
-				Placeholder: "Newtest",
-				MinValues:   1,
-				MaxValues:   1,
-				Options:     []discordgo.SelectMenuOption{
-					{
-						Label:       "TEST",
-						Value:       "testone",
-						Description: "This is a test",
-						Emoji:       discordgo.ComponentEmoji{},
-						Default:     true,
-					},
-				},
+				CustomID:    "defaultstat",
+				Placeholder: "No Stats Added!",
+				MinValues:   0,
+				MaxValues:   0,
 			},
 		},
 	},
 }
 
-_, err = s.ChannelMessageEditComplex(messageEdit)
-if err != nil {
-	fmt.Println(err)
-}
+	_, err = s.ChannelMessageEditComplex(messageEdit)
+	if err != nil {
+		fmt.Println(err)
+	}
 	
 }

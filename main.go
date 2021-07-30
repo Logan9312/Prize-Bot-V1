@@ -33,7 +33,6 @@ var slashCommands = []*discordgo.ApplicationCommand{
 
 func main() {
 	environment := Environment{}
-
 	if err := env.Parse(&environment); err != nil {
 		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
 	}
@@ -69,8 +68,9 @@ func main() {
 		}
 	}
 
+	//Builds prod commands
 	if environment.Environment == "prod" {
-		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, GuildID, slashCommands)
+		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", slashCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
