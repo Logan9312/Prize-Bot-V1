@@ -33,7 +33,6 @@ func main() {
 		return
 	}
 
-
 	u, err := dg.User("@me")
 
 	if err != nil {
@@ -72,8 +71,6 @@ func main() {
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-
-
 	if i.Type == 2 {
 		switch i.ApplicationCommandData().Name {
 		case "help":
@@ -105,20 +102,20 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 type StatusOutput struct {
 	Message string `json:"message"`
 }
-  
+
 func HandleRequests() {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
 }
-  
+
 // GetStatus responds with the availability status of this service
 func GetStatus(w http.ResponseWriter, r *http.Request) {
 	status := StatusOutput{
-	Message: "Bot is available",
+		Message: "Bot is available",
 	}
-  
-w.Header().Set("Content-Type", "application/json")
-w.WriteHeader(200)
-json.NewEncoder(w).Encode(status)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(status)
 
 }
