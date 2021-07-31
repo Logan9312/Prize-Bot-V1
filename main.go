@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"io/ioutil"
 
 	"example.com/m/commands"
 	"github.com/bwmarrin/discordgo"
@@ -28,10 +29,12 @@ var slashCommands = []*discordgo.ApplicationCommand{
 	&commands.HelpCommand,
 	&commands.ProfileCommand,
 	&commands.AuctionCommand,
-	&commands.SelectCommand,
 }
 
 func main() {
+	
+	FileRead()
+
 	environment := Environment{}
 	if err := env.Parse(&environment); err != nil {
 		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
@@ -98,8 +101,6 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			commands.Profile(s, i)
 		case "bidtest":
 			commands.BidTest(s, i, s.State.User.ID)
-		case "select-test":
-			commands.Select(s, i)
 		}
 		switch i.ApplicationCommandData().Options[0].Name {
 		case "create":
@@ -134,4 +135,16 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(status)
 
+}
+
+
+func FileRead () {
+	files, err := ioutil.ReadDir("commands")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, file := range files {
+        fmt.Println(file.Name())
+    }
 }
