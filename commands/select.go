@@ -34,7 +34,7 @@ func Select(s *discordgo.Session, i *discordgo.InteractionCreate) {
 										ID:       "",
 										Animated: false,
 									},
-									Default: false,
+									Default: true,
 								},
 								{
 									Label:       "Option2",
@@ -58,7 +58,6 @@ func Select(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 			},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},
-			Flags:           0,
 		},
 	})
 
