@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"io/ioutil"
 
 	"example.com/m/commands"
 	"github.com/bwmarrin/discordgo"
@@ -32,7 +32,7 @@ var slashCommands = []*discordgo.ApplicationCommand{
 }
 
 func main() {
-	
+
 	FileRead()
 
 	environment := Environment{}
@@ -81,12 +81,11 @@ func main() {
 
 	commands.HelpBuilder(slashCommands)
 
-	fmt.Println("Bot is running!")
+	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
 	r := mux.NewRouter().StrictSlash(true)
 	HandleRequests(r)
 	log.Fatal(http.ListenAndServe(":8080", r))
-
 }
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -134,17 +133,15 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(status)
-
 }
 
-
-func FileRead () {
+func FileRead() {
 	files, err := ioutil.ReadDir("commands")
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    for _, file := range files {
-        fmt.Println(file.Name())
-    }
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
 }
