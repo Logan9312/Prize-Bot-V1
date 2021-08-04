@@ -362,7 +362,3 @@ variable "apply_immediately" {
   type        = bool
   description = "Specifies whether any database modifications are applied immediately, or during the next maintenance window"
 }
-
-terraform {
-  experiments = [variable_validation]
-}
