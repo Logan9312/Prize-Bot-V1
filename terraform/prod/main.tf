@@ -182,7 +182,7 @@ resource "aws_security_group_rule" "allow_service_ingress_to_redis" {
 }
 
 module "rds_instance" {
-  source               = "git::https://github.com/cloudposse/terraform-aws-rds.git?ref=tags/0.27.0"
+  source               = "git::https://github.com/cloudposse/terraform-aws-rds.git?ref=tags/0.37.0"
   database_name        = module.label.id
   database_user        = var.database_user
   database_password    = var.database_password
