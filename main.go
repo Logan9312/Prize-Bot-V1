@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"example.com/m/commands"
+	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"github.com/bwmarrin/discordgo"
 	"github.com/caarlos0/env"
 	"github.com/gorilla/mux"

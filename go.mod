@@ -1,4 +1,4 @@
-module example.com/m
+module gitlab.com/logan9312/discord-auction-bot
 
 go 1.16
 
