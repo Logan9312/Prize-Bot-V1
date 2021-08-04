@@ -182,7 +182,7 @@ resource "aws_security_group_rule" "allow_service_ingress_to_redis" {
 }
 
 module "rds_instance" {
-  source               = "git::https://github.com/cloudposse/terraform-aws-rds.git?ref=tags/0.37.0"
+  source               = "git::https://github.com/cloudposse/terraform-aws-rds.git?ref=tags/0.25.0"
   database_name        = module.label.id
   database_user        = var.database_user
   database_password    = var.database_password
@@ -200,7 +200,6 @@ module "rds_instance" {
   subnet_ids           = var.private_subnet_ids
   security_group_ids   = [var.vpc_default_security_group_id]
   apply_immediately    = var.apply_immediately
-  availability_zone    = var.availability_zone
 }
 
 resource "aws_security_group_rule" "allow_service_ingress_to_db" {

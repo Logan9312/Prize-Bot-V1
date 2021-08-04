@@ -157,5 +157,3 @@ db_parameter_group = "postgres12"
 publicly_accessible = true
 
 apply_immediately = true
-
-availability_zone = "us-west-2a"

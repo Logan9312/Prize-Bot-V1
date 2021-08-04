@@ -291,12 +291,6 @@ variable "multi_az" {
   description = "Set to true if multi AZ deployment must be supported"
 }
 
-variable "availability_zone" {
-  type        = string
-  default     = null
-  description = "The AZ for the RDS instance. Specify one of `subnet_ids`, `db_subnet_group_name` or `availability_zone`. If `availability_zone` is provided, the instance will be placed into the default VPC or EC2 Classic"
-}
-
 variable "db_subnet_group_name" {
   type        = string
   default     = null
