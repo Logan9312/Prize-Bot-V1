@@ -132,3 +132,13 @@ output "rds_hostname" {
   value       = module.rds_instance.hostname
   description = "DNS host name of the instance"
 }
+
+output "ecr_arn" {
+  value = aws_ecr_repository.default.arn
+  description = "Full ARN of the repository"
+}
+
+output "cloudwatch_arn" {
+  value = aws_cloudwatch_log_group.default.arn
+  description = "The Amazon Resource Name (ARN) specifying the log group"
+}

@@ -132,8 +132,6 @@ EOF
 
 deletion_protection = false
 
-database_name = "auction-bot"
-
 database_port = 3306
 
 multi_az = false
