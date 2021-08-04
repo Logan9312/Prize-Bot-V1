@@ -140,7 +140,7 @@ storage_type = "gp2"
 
 storage_encrypted = false
 
-allocated_storage = 5
+allocated_storage = 20
 
 engine = "postgres"
 
