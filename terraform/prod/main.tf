@@ -83,7 +83,7 @@ resource "aws_ecr_repository" "default" {
 module "container_definition" {
   source                       = "git::https://github.com/cloudposse/terraform-aws-ecs-container-definition.git?ref=tags/0.21.0"
   container_name               = module.label.id
-  container_image              = format("%s:%s", module.aws_ecr_repository.default.repository_url, module.label.stage)
+  container_image              = format("%s:%s", aws_ecr_repository.default.repository_url, module.label.stage)
   container_memory             = var.container_memory
   container_memory_reservation = var.container_memory_reservation
   container_cpu                = var.container_cpu
@@ -96,7 +96,7 @@ module "container_definition" {
     logDriver = "awslogs"
     options = {
       "awslogs-region"        = var.region
-      "awslogs-group"         = module.aws_cloudwatch_log_group.default.name
+      "awslogs-group"         = aws_cloudwatch_log_group.default.name
       "awslogs-stream-prefix" = "ecs"
     }
     secretOptions = null
@@ -169,16 +169,6 @@ resource "aws_security_group_rule" "allow_tpc_ingress" {
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = module.ecs_alb_service_task.service_security_group_id
-}
-
-resource "aws_security_group_rule" "allow_service_ingress_to_redis" {
-  count                    = var.redis_enabled ? 1 : 0
-  type                     = "ingress"
-  from_port                = var.redis_port
-  to_port                  = var.redis_port
-  protocol                 = "tcp"
-  source_security_group_id = module.ecs_alb_service_task.service_security_group_id
-  security_group_id        = var.redis_security_group_id
 }
 
 module "rds_instance" {
