@@ -23,6 +23,11 @@ private_subnet_ids = [
   "subnet-008e39bacbb19d2e6",
 ]
 
+public_subnet_ids = [
+  "subnet-0c763e5f33d145555",
+  "subnet-070314421800f96c5",
+]
+
 load_balancer_listener_arn = "arn:aws:elasticloadbalancing:us-west-2:357595321916:listener/app/disc-prod-bots/780f559464828620/18b256984fa9b334"
 
 load_balancer_listener_paths = ["/auction-bot/*"]
@@ -85,7 +90,7 @@ ecs_launch_type = "FARGATE"
 
 ignore_changes_task_definition = true
 
-network_mode = "null"
+network_mode = "awsvpc"
 
 assign_public_ip = false
 

@@ -173,7 +173,10 @@ resource "aws_security_group_rule" "allow_tpc_ingress" {
 
 module "rds_instance" {
   source               = "git::https://github.com/cloudposse/terraform-aws-rds.git?ref=tags/0.25.0"
-  database_name        = module.label.id
+  namespace            = var.namespace
+  stage                = var.stage
+  name                 = var.name
+  database_name        = module.label.name
   database_user        = var.database_user
   database_password    = var.database_password
   database_port        = var.database_port
@@ -187,7 +190,7 @@ module "rds_instance" {
   db_parameter_group   = var.db_parameter_group
   publicly_accessible  = var.publicly_accessible
   vpc_id               = var.vpc_id
-  subnet_ids           = var.private_subnet_ids
+  subnet_ids           = var.public_subnet_ids
   security_group_ids   = [var.vpc_default_security_group_id]
   apply_immediately    = var.apply_immediately
 }

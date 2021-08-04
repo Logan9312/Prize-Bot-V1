@@ -189,6 +189,10 @@ variable "private_subnet_ids" {
   type = list(string)
 }
 
+variable "public_subnet_ids" {
+  type = list(string)
+}
+
 variable "ignore_changes_task_definition" {
   type        = bool
   description = "Ignore changes to task definition"
