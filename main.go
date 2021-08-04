@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -32,8 +31,6 @@ var slashCommands = []*discordgo.ApplicationCommand{
 }
 
 func main() {
-
-	FileRead()
 
 	environment := Environment{}
 	if err := env.Parse(&environment); err != nil {
@@ -133,15 +130,4 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(status)
-}
-
-func FileRead() {
-	files, err := ioutil.ReadDir("commands")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, file := range files {
-		fmt.Println(file.Name())
-	}
 }
