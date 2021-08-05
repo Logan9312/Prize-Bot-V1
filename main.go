@@ -24,7 +24,7 @@ type Environment struct {
 }
 
 var slashCommands = []*discordgo.ApplicationCommand{
-	&commands.DynamicVotingCommand,
+	//&commands.DynamicVotingCommand,
 	&commands.HelpCommand,
 	&commands.ProfileCommand,
 	&commands.AuctionCommand,
@@ -99,12 +99,12 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "bidtest":
 			commands.BidTest(s, i, s.State.User.ID)
 		}
-		switch i.ApplicationCommandData().Options[0].Name {
+		/*switch i.ApplicationCommandData().Options[0].Name {
 		case "create":
 			commands.DynamicCreate(s, i)
 		case "add":
 			commands.DynamicEdit(s, i)
-		}
+		}*/
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
