@@ -19,9 +19,13 @@ type Environment struct {
 	Migrate      bool   `env:"MIGRATE"`
 }
 
-var slashCommands = []*discordgo.ApplicationCommand{
-	//&commands.DynamicVotingCommand,
+var prodCommands = []*discordgo.ApplicationCommand{
+	
 	&commands.HelpCommand,
+}
+
+var localCommands = []*discordgo.ApplicationCommand{
+	//&commands.DynamicVotingCommand,
 	&commands.ProfileCommand,
 	&commands.AuctionCommand,
 }
@@ -62,8 +66,13 @@ func main() {
 
 	//Builds local commands
 	if environment.Environment == "local" {
+
+		for _, v := range localCommands {
+			v.Description = "EXPERIMENTAL: " + v.Description
+		}
+
 		for _, v := range s.State.Guilds {
-			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, slashCommands)
+			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, localCommands)
 			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
 				fmt.Println(err)
@@ -73,13 +82,13 @@ func main() {
 
 	//Builds prod commands
 	if environment.Environment == "prod" {
-		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", slashCommands)
+		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	commands.HelpBuilder(slashCommands)
+	commands.HelpBuilder(prodCommands)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
