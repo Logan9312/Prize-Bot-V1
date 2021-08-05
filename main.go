@@ -10,8 +10,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/caarlos0/env"
 	"github.com/gorilla/mux"
-	"gorm.io/gorm"
-	"gorm.io/driver/sqlite"
 )
 
 var BotID string
