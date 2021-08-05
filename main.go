@@ -44,12 +44,12 @@ func main() {
 		return
 	}
 
-	if environment.Environment == "local"{
-	s.AddHandler(commands.CommandHandlerLocal)
+	if environment.Environment == "local" {
+		s.AddHandler(commands.CommandHandlerLocal)
 	}
 
 	if environment.Environment == "prod" {
-	s.AddHandler(commands.CommandHandlerProd)
+		s.AddHandler(commands.CommandHandlerProd)
 	}
 
 	err = s.Open()
@@ -78,24 +78,18 @@ func main() {
 				fmt.Println(err)
 			}
 		}
+		commands.HelpBuilder(localCommands)
 	}
 
 	//Builds prod commands
 	if environment.Environment == "prod" {
-		
-		for _, guilds := range s.State.Guilds{
-			currentCommands, _ := s.ApplicationCommands(s.State.User.ID, guilds.ID)
-			for _, v := range currentCommands{
-				s.ApplicationCommandDelete(v.ApplicationID, guilds.ID, v.ID)
-			}
-		}
+
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
+		commands.HelpBuilder(prodCommands)
 	}
-
-	commands.HelpBuilder(prodCommands)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
