@@ -20,12 +20,12 @@ type Environment struct {
 }
 
 var prodCommands = []*discordgo.ApplicationCommand{
-	
 	&commands.HelpCommand,
 }
 
 var localCommands = []*discordgo.ApplicationCommand{
 	//&commands.DynamicVotingCommand,
+	&commands.HelpCommand,
 	&commands.ProfileCommand,
 	&commands.AuctionCommand,
 }
@@ -82,6 +82,13 @@ func main() {
 
 	//Builds prod commands
 	if environment.Environment == "prod" {
+		
+		for _, guilds := range s.State.Guilds{
+			currentCommands, _ := s.ApplicationCommands(s.State.User.ID, guilds.ID)
+			for _, v := range currentCommands{
+				s.ApplicationCommandDelete(v.ApplicationID, guilds.ID, v.ID)
+			}
+		}
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
