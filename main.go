@@ -60,8 +60,9 @@ func main() {
 
 	//Builds local commands
 	if environment.Environment == "local" {
-		for range s.State.Guilds {
-			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, GuildID, slashCommands)
+		for _, v := range s.State.Guilds {
+			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, slashCommands)
+			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
 				fmt.Println(err)
 			}
