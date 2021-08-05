@@ -48,6 +48,7 @@ var info InfoType
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
+			//auction bid alert button
 		}
 	}
 }
