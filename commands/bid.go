@@ -18,6 +18,6 @@ var BidCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Bid (s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (info InfoType) Bid (s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 }

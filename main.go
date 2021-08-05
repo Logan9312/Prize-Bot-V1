@@ -6,15 +6,11 @@ import (
 	"log"
 	"net/http"
 
-	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"github.com/bwmarrin/discordgo"
 	"github.com/caarlos0/env"
 	"github.com/gorilla/mux"
+	"gitlab.com/logan9312/discord-auction-bot/commands"
 )
-
-var BotID string
-var Prefix = "!"
-var GuildID = "835209409109557289"
 
 // Environment struct
 type Environment struct {
@@ -44,7 +40,13 @@ func main() {
 		return
 	}
 
-	s.AddHandler(InteractionHandler)
+	if environment.Environment == "local"{
+	s.AddHandler(commands.CommandHandlerLocal)
+	}
+
+	if environment.Environment == "prod" {
+	s.AddHandler(commands.CommandHandlerProd)
+	}
 
 	err = s.Open()
 
@@ -84,34 +86,6 @@ func main() {
 	r := mux.NewRouter().StrictSlash(true)
 	HandleRequests(r)
 	log.Fatal(http.ListenAndServe(":8080", r))
-}
-
-func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	if i.Type == 2 {
-		switch i.ApplicationCommandData().Name {
-		case "help":
-			commands.Help(s, i)
-		case "auction":
-			commands.Auction(s, i, s.State.User.ID)
-		case "inventory":
-			commands.Profile(s, i)
-		case "bidtest":
-			commands.BidTest(s, i, s.State.User.ID)
-		}
-		/*switch i.ApplicationCommandData().Options[0].Name {
-		case "create":
-			commands.DynamicCreate(s, i)
-		case "add":
-			commands.DynamicEdit(s, i)
-		}*/
-	}
-	if i.Type == 3 {
-		switch i.MessageComponentData().CustomID {
-		case "Help":
-			commands.HelpButton(s, i)
-		}
-	}
 }
 
 type StatusOutput struct {

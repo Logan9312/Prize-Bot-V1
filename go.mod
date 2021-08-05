@@ -7,8 +7,6 @@ require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/stretchr/testify v1.7.0 // indirect
-	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.21.12
 )
 
 replace github.com/bwmarrin/discordgo => github.com/FedorLap2006/discordgo v0.22.1-0.20210730172215-d44abc7f915e

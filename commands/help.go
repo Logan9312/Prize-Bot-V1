@@ -29,10 +29,11 @@ for _, command := range slashCommands {
   }
 }
 
-func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (info InfoType) Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
+			Flags: 64,
 			Components: []discordgo.MessageComponent{
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
@@ -65,13 +66,4 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 
-}
-
-func HelpButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	
-	err := s.ChannelMessageDelete(i.ChannelID, i.Message.ID)
-
-	if err != nil {
-		fmt.Println(err)
-	}
 }

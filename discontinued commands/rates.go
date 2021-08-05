@@ -60,7 +60,7 @@ var DynamicVotingCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func DynamicCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Dynamiccreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 message := discordgo.MessageSend{
 	Embed:           &discordgo.MessageEmbed{
