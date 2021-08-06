@@ -10,6 +10,7 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/gorilla/mux"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 )
 
 // Environment struct
@@ -33,8 +34,6 @@ var localCommands = []*discordgo.ApplicationCommand{
 }
 
 func main() {
-
-
 
 	environment := Environment{}
 	if err := env.Parse(&environment); err != nil {
@@ -94,6 +93,8 @@ func main() {
 		}
 		commands.HelpBuilder(prodCommands)
 	}
+
+	database.DatabaseConnect (environment.Host, environment.Password)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
