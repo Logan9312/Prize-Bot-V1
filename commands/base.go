@@ -38,6 +38,19 @@ var info InfoType
 			info.Profile(s, i)
 		case "bid":
 			info.Bid(s, i)
+		default:
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds:          []*discordgo.MessageEmbed{
+						{
+							Title:       "Command Selection Error",
+							Description: "Command response has not been set properly, please contact Logan to fix",
+						},
+					},
+					Flags:           64,
+				},
+			})
 		}
 		/*switch i.ApplicationCommandData().Options[0].Name {
 		case "create":

@@ -1,6 +1,6 @@
 package commands
 
-import (
+/*import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
@@ -145,4 +145,4 @@ messageEdit.Components = []discordgo.MessageComponent{
 		fmt.Println(err)
 	}
 	
-}
+}*/

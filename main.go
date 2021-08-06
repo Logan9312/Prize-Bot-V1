@@ -17,6 +17,8 @@ type Environment struct {
 	Environment  string `env:"ENVIRONMENT,required"`
 	DiscordToken string `env:"DISCORD_TOKEN,required"`
 	Migrate      bool   `env:"MIGRATE"`
+	Host 		 string `env:"DB_HOST"`
+	Password	 string `env:"DB_PASSWORD"`
 }
 
 var prodCommands = []*discordgo.ApplicationCommand{
@@ -31,6 +33,8 @@ var localCommands = []*discordgo.ApplicationCommand{
 }
 
 func main() {
+
+
 
 	environment := Environment{}
 	if err := env.Parse(&environment); err != nil {
