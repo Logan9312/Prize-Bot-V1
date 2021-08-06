@@ -10,7 +10,7 @@ import (
 type User struct {
 	gorm.Model
 	Name string
-  }
+}
 
 func DatabaseConnect(host, password string) {
 	dbuser := "auctionbot"
