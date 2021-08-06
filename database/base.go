@@ -18,8 +18,7 @@ func DatabaseConnect(host, password string) {
 	dbname := "auction"
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", host, port, dbuser, dbname, password)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-	})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -27,4 +26,6 @@ func DatabaseConnect(host, password string) {
 	user := User{Name: "Logan"}
 
 	db.Create(&user)
+	db.Find(&user)
+
 }
