@@ -1,6 +1,6 @@
 package commands
 
-/*import (
+import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
@@ -60,7 +60,7 @@ var DynamicVotingCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Dynamiccreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func DynamicCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 message := discordgo.MessageSend{
 	Embed:           &discordgo.MessageEmbed{
@@ -145,4 +145,4 @@ messageEdit.Components = []discordgo.MessageComponent{
 		fmt.Println(err)
 	}
 	
-}*/
+}

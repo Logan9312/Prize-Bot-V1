@@ -52,12 +52,12 @@ var info InfoType
 				},
 			})
 		}
-		/*switch i.ApplicationCommandData().Options[0].Name {
+		switch i.ApplicationCommandData().Options[0].Name {
 		case "create":
-			commands.DynamicCreate(s, i)
+			DynamicCreate(s, i)
 		case "add":
-			commands.DynamicEdit(s, i)
-		}*/
+			DynamicEdit(s, i)
+		}
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {

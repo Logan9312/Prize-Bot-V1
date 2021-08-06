@@ -27,7 +27,6 @@ var prodCommands = []*discordgo.ApplicationCommand{
 }
 
 var localCommands = []*discordgo.ApplicationCommand{
-	//&commands.DynamicVotingCommand,
 	&commands.HelpCommand,
 	&commands.ProfileCommand,
 	&commands.AuctionCommand,
