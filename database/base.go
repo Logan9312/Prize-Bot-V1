@@ -7,17 +7,25 @@ import (
 	"gorm.io/gorm"
 )
 
-func DatabaseConnect (host, password string){
-	user := "auctionbot"
+type User struct {
+	gorm.Model
+	Name string
+  }
+
+func DatabaseConnect(host, password string) {
+	dbuser := "auctionbot"
 	port := "3306"
 	dbname := "bot-prod-auction"
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", host, port, user, dbname, password)
-	db, err := gorm.Open(postgres.Open(dsn), )
+	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", host, port, dbuser, dbname, password)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	})
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println(db)
+	user := User{Name: "Logan"}
+	db.Create(&user)
 
+	fmt.Println(db.Find(&user))
 }
