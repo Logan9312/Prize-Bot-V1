@@ -15,7 +15,7 @@ type User struct {
 func DatabaseConnect(host, password string) {
 	dbuser := "auctionbot"
 	port := "3306"
-	dbname := "bot-prod-auction"
+	dbname := "bot"
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", host, port, dbuser, dbname, password)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
