@@ -25,7 +25,6 @@ func DatabaseConnect(host, password string) {
 	}
 
 	user := User{Name: "Logan"}
-	db.Create(&user)
 
-	fmt.Println(db.Find(&user))
+	db.Create(&user)
 }
