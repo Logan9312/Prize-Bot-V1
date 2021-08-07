@@ -24,6 +24,7 @@ type Environment struct {
 
 var prodCommands = []*discordgo.ApplicationCommand{
 	&commands.HelpCommand,
+	&commands.SpawnExactDinoCommand,
 }
 
 var localCommands = []*discordgo.ApplicationCommand{
