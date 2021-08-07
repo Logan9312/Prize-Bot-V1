@@ -26,6 +26,6 @@ func DatabaseConnect(host, password string) {
 	user := User{Name: "Logan"}
 
 	db.AutoMigrate(&user)
-	fmt.Println(db.Find(&user))
+	fmt.Println(db.First(&user, 1))
 
 }
