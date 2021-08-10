@@ -43,11 +43,11 @@ func BotConnect(token, environment string) {
 
 	if environment == "prod" {
 		slashCommands = prodCommands
+		s.AddHandler(commands.CommandHandlerProd)
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
-		commands.HelpBuilder(prodCommands)
 	}
 
 	for _, v := range guilds {
@@ -57,6 +57,8 @@ func BotConnect(token, environment string) {
 			fmt.Println(err)
 		}
 	}
+
+	commands.HelpBuilder(slashCommands)
 
 	err = s.Open()
 
