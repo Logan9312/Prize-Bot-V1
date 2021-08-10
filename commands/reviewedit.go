@@ -1,5 +1,4 @@
-package grungerson
-
+package commands
 import (
 	"fmt"
 	"strings"
