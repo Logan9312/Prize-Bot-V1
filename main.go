@@ -21,6 +21,7 @@ type Environment struct {
 	Migrate      bool   `env:"MIGRATE"`
 	Host 		 string `env:"DB_HOST"`
 	Password	 string `env:"DB_PASSWORD"`
+	Grungerson 	string 	`env:"GRUNGERSON"`
 }
 
 var prodCommands = []*discordgo.ApplicationCommand{
@@ -42,7 +43,7 @@ func main() {
 	}
 
 	s, err := discordgo.New("Bot " + environment.DiscordToken)
-	grungerson.GrungersonSetup()
+	grungerson.GrungersonSetup(environment.Grungerson)
 
 	if err != nil {
 		fmt.Println(err.Error())

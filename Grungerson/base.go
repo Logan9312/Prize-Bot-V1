@@ -6,7 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var Token string = "ODY0OTMwNDI4NjM5NzcyNjky.YO8nOw.zYwpAkzEDD9lMmtemBDb9oINggI"
 var BotID string
 var GuildID = "863122466485174323"
 var AppID = "864930428639772692"
@@ -281,7 +280,7 @@ var slashCommands = []*discordgo.ApplicationCommand{
 	},
 }
 
-func GrungersonSetup() {
+func GrungersonSetup(Token string) {
 	dg, err := discordgo.New("Bot " + Token)
 
 	if err != nil {
