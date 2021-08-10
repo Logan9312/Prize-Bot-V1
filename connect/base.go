@@ -23,6 +23,18 @@ func BotConnect(token, environment, botName string) {
 
 	s, err := discordgo.New("Bot " + token)
 
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = s.Open()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	prodCommands = append(prodCommands, commands.ReviewCommands[0], commands.ReviewCommands[1])
 
 	if err != nil {
@@ -64,13 +76,6 @@ func BotConnect(token, environment, botName string) {
 		commands.HelpBuilder(prodCommands)
 		
 		s.AddHandler(commands.CommandHandlerProd)
-	}
-
-	err = s.Open()
-
-	if err != nil {
-		fmt.Println(err)
-		return
 	}
 
 	BotStatus(s)
