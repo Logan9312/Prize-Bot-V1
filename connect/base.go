@@ -45,8 +45,6 @@ func BotConnect(token, environment, botName string) {
 	//Builds local commands
 	if environment == "local" {
 
-		
-
 		for _, v := range localCommands {
 			v.Description = "EXPERIMENTAL: " + v.Description
 		}

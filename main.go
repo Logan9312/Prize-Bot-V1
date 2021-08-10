@@ -29,10 +29,10 @@ func main() {
 	}
 
 	//Connects main bot
-	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
+	go connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
 	
 	//Connects Sir Grungerson
-	// BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
+	go connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
 
 	//Connects database
 	//database.DatabaseConnect(environment.Host, environment.Password)
