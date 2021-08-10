@@ -52,13 +52,11 @@ func BotConnect(token, environment, botName string) {
 	//Builds prod commands
 	if environment == "prod" {
 
-		s.AddHandler(commands.CommandHandlerProd)
-
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
-		
+
 		commands.HelpBuilder(prodCommands)
 	}
 
