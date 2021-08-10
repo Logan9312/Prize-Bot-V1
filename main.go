@@ -5,9 +5,11 @@ import (
 	"log"
 
 	"github.com/caarlos0/env"
+	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/routers"
+	"github.com/bwmarrin/discordgo"
 )
 
 // Environment struct
@@ -20,6 +22,17 @@ type Environment struct {
 	Grungerson 	string 	`env:"GRUNGERSON"`
 }
 
+var prodCommands = []*discordgo.ApplicationCommand{
+	&commands.HelpCommand,
+	&commands.SpawnExactDinoCommand,
+}
+
+var localCommands = []*discordgo.ApplicationCommand{
+	&commands.HelpCommand,
+	&commands.ProfileCommand,
+	&commands.AuctionCommand,
+}
+
 func main() {
 
 	environment := Environment{}
@@ -29,10 +42,10 @@ func main() {
 	}
 
 	//Connects main bot
-	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
+	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot", prodCommands, localCommands)
 
 	//Connects Sir Grungerson
-	connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
+	connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson", prodCommands, localCommands)
 
 	//Connects database
 	database.DatabaseConnect(environment.Host, environment.Password)
