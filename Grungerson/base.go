@@ -280,7 +280,7 @@ var slashCommands = []*discordgo.ApplicationCommand{
 	},
 }
 
-func GrungersonSetup(Token string) {
+func GrungersonSetup (Token string) {
 	dg, err := discordgo.New("Bot " + Token)
 
 	if err != nil {
@@ -314,8 +314,6 @@ func GrungersonSetup(Token string) {
 		fmt.Println(err)
 		return
 	}
-
-	<-make(chan struct{})
 
 }
 
