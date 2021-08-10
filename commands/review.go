@@ -266,7 +266,7 @@ var editOptions = []*discordgo.ApplicationCommandOption{
 	},
 }
 
-var reviewCommands = []*discordgo.ApplicationCommand{
+var ReviewCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:          "review",
 		Description:   "Leave your review here!",
