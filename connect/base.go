@@ -35,8 +35,6 @@ func BotConnect(token, environment, botName string) {
 		return
 	}
 
-	prodCommands = append(prodCommands, commands.ReviewCommands[0], commands.ReviewCommands[1])
-
 	if err != nil {
 		fmt.Println(err)
 		return
