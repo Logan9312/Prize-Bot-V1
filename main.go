@@ -14,7 +14,7 @@ import (
 
 var prodCommands = []*discordgo.ApplicationCommand{
 	&commands.HelpCommand,
-	&commands.SpawnExactDinoCommand,
+
 }
 
 var localCommands = []*discordgo.ApplicationCommand{
@@ -47,7 +47,7 @@ func main() {
 	BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
 
 	//Connects Sir Grungerson
-	BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
+	// BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
 
 	//Connects database
 	//database.DatabaseConnect(environment.Host, environment.Password)
@@ -88,16 +88,6 @@ func BotConnect(token, environment, botName string) {
 		commands.HelpBuilder(localCommands)
 	}
 
-	if environment == "prod" {
-
-		s.AddHandler(commands.CommandHandlerProd)
-		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		commands.HelpBuilder(prodCommands)
-	}
 
 	err = s.Open()
 
