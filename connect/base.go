@@ -54,7 +54,7 @@ func BotConnect(token, environment, botName string) {
 	//Builds prod commands
 	if environment == "prod" {
 
-		
+		fmt.Println(prodCommands[0].Name)
 
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
