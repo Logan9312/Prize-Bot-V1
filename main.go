@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
+	"gitlab.com/logan9312/discord-auction-bot/grungerson"
 )
 
 // Environment struct
@@ -41,6 +42,7 @@ func main() {
 	}
 
 	s, err := discordgo.New("Bot " + environment.DiscordToken)
+	grungerson.GrungersonSetup()
 
 	if err != nil {
 		fmt.Println(err.Error())
