@@ -33,7 +33,7 @@ func BotConnect(token, environment, botName string) {
 	//Builds local commands
 	if environment == "local" {
 
-		s.AddHandler(commands.CommandHandlerLocal)
+		
 
 		for _, v := range localCommands {
 			v.Description = "EXPERIMENTAL: " + v.Description
@@ -47,17 +47,23 @@ func BotConnect(token, environment, botName string) {
 			}
 		}
 		commands.HelpBuilder(localCommands)
+		
+		s.AddHandler(commands.CommandHandlerLocal)
 	}
 
 	//Builds prod commands
 	if environment == "prod" {
 
+		
+
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
-
+		
 		commands.HelpBuilder(prodCommands)
+		
+		s.AddHandler(commands.CommandHandlerProd)
 	}
 
 	err = s.Open()
