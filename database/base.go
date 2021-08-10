@@ -20,19 +20,19 @@ func DatabaseConnect(host, password string) {
 	dbname := "auction"
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", host, port, dbuser, dbname, password)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	_, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Database Connected!")
+	defer fmt.Println("Database Connected!")
 
-	user := User{Name: "Logan"}
+/* 	user := User{Name: "Logan"}
 
 	db.AutoMigrate(&User{})
 	db.Create(user)
 	test := User{}
 
 	db.First(&test, 1)
-	fmt.Println(test)
+	fmt.Println(test) */
 }
