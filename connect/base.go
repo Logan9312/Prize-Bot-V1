@@ -7,7 +7,18 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 )
 
-func BotConnect(token, environment, botName string, prodCommands, localCommands []*discordgo.ApplicationCommand) {
+var prodCommands = []*discordgo.ApplicationCommand{
+	&commands.HelpCommand,
+	&commands.SpawnExactDinoCommand,
+}
+
+var localCommands = []*discordgo.ApplicationCommand{
+	&commands.HelpCommand,
+	&commands.ProfileCommand,
+	&commands.AuctionCommand,
+}
+
+func BotConnect(token, environment, botName string) {
 
 	fmt.Println(botName + " Starting Up...")
 
@@ -39,12 +50,12 @@ func BotConnect(token, environment, botName string, prodCommands, localCommands 
 	if environment == "prod" {
 
 		s.AddHandler(commands.CommandHandlerProd)
-		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
+		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", localCommands)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		commands.HelpBuilder(prodCommands)
+		commands.HelpBuilder(localCommands)
 	}
 
 	err = s.Open()
