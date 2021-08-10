@@ -18,11 +18,11 @@ var localCommands = []*discordgo.ApplicationCommand{
 	&commands.AuctionCommand,
 }
 
-var guilds []*discordgo.Guild
-
 var slashCommands []*discordgo.ApplicationCommand
 
-func BotConnect(token, environment string) {
+func BotConnect(token, environment, botName string) {
+
+	fmt.Println(botName + " Starting Up...")
 
 	s, err := discordgo.New("Bot " + token)
 	
@@ -38,21 +38,20 @@ func BotConnect(token, environment string) {
 		for _, v := range slashCommands {
 			v.Description = "EXPERIMENTAL: " + v.Description
 		}
-		guilds = s.State.Guilds
+
+		for _, v := range s.State.Guilds {
+			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, slashCommands)
+			fmt.Println("Commands added to guild: " + v.Name)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 
 	if environment == "prod" {
 		slashCommands = prodCommands
 		s.AddHandler(commands.CommandHandlerProd)
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	for _, v := range guilds {
-		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, slashCommands)
-		fmt.Println("Commands added to guild: " + v.Name)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -68,4 +67,6 @@ func BotConnect(token, environment string) {
 	}
 
 	BotStatus(s)
+
+	defer fmt.Println(botName + " Startup Complete!")
 }

@@ -13,6 +13,8 @@ type User struct {
 }
 
 func DatabaseConnect(host, password string) {
+	fmt.Println("Connecting to Database...")
+
 	dbuser := "auctionbot"
 	port := "3306"
 	dbname := "auction"
@@ -23,12 +25,14 @@ func DatabaseConnect(host, password string) {
 		fmt.Println(err)
 	}
 
+	fmt.Println("Database Connected!")
+
 	user := User{Name: "Logan"}
 
-	db.AutoMigrate(&user)
+	db.AutoMigrate(&User{})
+	db.Create(user)
 	test := User{}
 
 	db.First(&test, 1)
 	fmt.Println(test)
-
 }
