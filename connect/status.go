@@ -19,6 +19,7 @@ case "829527477268774953":
 err := s.UpdateGameStatus(0, status)
 if err != nil {
 	fmt.Println(err)
+	return
 }
 
 }

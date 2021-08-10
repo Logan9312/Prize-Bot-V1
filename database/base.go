@@ -23,6 +23,7 @@ func DatabaseConnect(host, password string) {
 	_, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	defer fmt.Println("Database Connected!")

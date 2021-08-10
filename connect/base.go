@@ -28,10 +28,10 @@ func BotConnect(token, environment, botName string) {
 	
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	if environment == "local" {
-		slashCommands = localCommands
 		s.AddHandler(commands.CommandHandlerLocal)
 
 		for _, v := range slashCommands {
@@ -43,25 +43,27 @@ func BotConnect(token, environment, botName string) {
 			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
 				fmt.Println(err)
+				return
 			}
 		}
+		commands.HelpBuilder(localCommands)
 	}
 
 	if environment == "prod" {
-		slashCommands = prodCommands
 		s.AddHandler(commands.CommandHandlerProd)
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", prodCommands)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
+		commands.HelpBuilder(prodCommands)
 	}
-
-	commands.HelpBuilder(slashCommands)
 
 	err = s.Open()
 
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	BotStatus(s)

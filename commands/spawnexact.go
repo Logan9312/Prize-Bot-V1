@@ -214,6 +214,7 @@ func SpawnExactDino(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		points, err := strconv.Atoi(v)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		newbase[num] = v
 		baseLevel = baseLevel + points
@@ -230,6 +231,7 @@ func SpawnExactDino(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 
 		newadded[num] = v

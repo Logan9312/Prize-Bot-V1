@@ -107,6 +107,7 @@ for _, v := range i.ApplicationCommandData().Options[0].Options {
 returnMessage, err := s.ChannelMessage(channelID, messageID)
 if err != nil {
 	fmt.Println(err)
+	return
 }
 
 newfield := []*discordgo.MessageEmbedField{
@@ -143,6 +144,7 @@ messageEdit.Components = []discordgo.MessageComponent{
 	_, err = s.ChannelMessageEditComplex(messageEdit)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	
 }
