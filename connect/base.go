@@ -18,8 +18,6 @@ var localCommands = []*discordgo.ApplicationCommand{
 	&commands.AuctionCommand,
 }
 
-var slashCommands []*discordgo.ApplicationCommand
-
 func BotConnect(token, environment, botName string) {
 
 	fmt.Println(botName + " Starting Up...")
@@ -34,12 +32,12 @@ func BotConnect(token, environment, botName string) {
 	if environment == "local" {
 		s.AddHandler(commands.CommandHandlerLocal)
 
-		for _, v := range slashCommands {
+		for _, v := range localCommands {
 			v.Description = "EXPERIMENTAL: " + v.Description
 		}
 
 		for _, v := range s.State.Guilds {
-			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, slashCommands)
+			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, localCommands)
 			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
 				fmt.Println(err)
@@ -48,6 +46,8 @@ func BotConnect(token, environment, botName string) {
 		}
 		commands.HelpBuilder(localCommands)
 	}
+
+fmt.Println(prodCommands)
 
 	if environment == "prod" {
 		s.AddHandler(commands.CommandHandlerProd)
