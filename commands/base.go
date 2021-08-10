@@ -15,6 +15,7 @@ func CommandHandlerLocal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	input := make([]reflect.Value, 2)
 	input[0] = reflect.ValueOf(s)
 	input[1] = reflect.ValueOf(i)
+	fmt.Print("Command Input: ")
 	fmt.Println(input)
 
 	if i.Type == 2 {

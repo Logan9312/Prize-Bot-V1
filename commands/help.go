@@ -34,24 +34,6 @@ func (info InfoType) Help(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Flags: 64,
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label:    "Close Help menu",
-							Style:    3,
-							Disabled: false,
-							Emoji:    discordgo.ComponentEmoji{
-									Name:     "",
-									ID:       "",
-									Animated: false,
-								},
-							URL:      "",
-							CustomID: "Help",
-						},
-					},
-				},
-			},
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title: "Discord Bot Help",

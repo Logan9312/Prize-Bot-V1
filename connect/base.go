@@ -27,8 +27,7 @@ func BotConnect(token, environment, botName string) {
 	s, err := discordgo.New("Bot " + token)
 	
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		fmt.Println(err)
 	}
 
 	if environment == "local" {
@@ -62,8 +61,7 @@ func BotConnect(token, environment, botName string) {
 	err = s.Open()
 
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		fmt.Println(err)
 	}
 
 	BotStatus(s)
