@@ -30,6 +30,7 @@ for _, command := range slashCommands {
 }
 
 func (info InfoType) Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
