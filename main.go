@@ -6,7 +6,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
-	//"gitlab.com/logan9312/discord-auction-bot/database"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/routers"
 )
 
@@ -35,7 +35,7 @@ func main() {
 	go connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
 
 	//Connects database
-	//database.DatabaseConnect(environment.Host, environment.Password)
+	database.DatabaseConnect(environment.Host, environment.Password)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
