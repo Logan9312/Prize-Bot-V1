@@ -14,6 +14,7 @@ type User struct {
 
 func DatabaseConnect(host, password string) {
 	fmt.Println("Connecting to Database...")
+	defer fmt.Println("Bot has finished attempting to connect to the database!")
 
 	dbuser := "auctionbot"
 	port := "3306"
@@ -26,14 +27,4 @@ func DatabaseConnect(host, password string) {
 		return
 	}
 
-	defer fmt.Println("Database Connected!")
-
-/* 	user := User{Name: "Logan"}
-
-	db.AutoMigrate(&User{})
-	db.Create(user)
-	test := User{}
-
-	db.First(&test, 1)
-	fmt.Println(test) */
 }
