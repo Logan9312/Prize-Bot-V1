@@ -26,6 +26,7 @@ func DatabaseConnect(host, password string) {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("Database connected, trying to do the thing")
 
 	test := User{}
 
@@ -37,13 +38,13 @@ func DatabaseConnect(host, password string) {
 		return
 	}
 
-	db.Create(logan)
+	db.Create(&logan)
 
-	db.First(&test, 1)
+	db.First(&test)
 
 	_, err = fmt.Println(test.Name)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error printing name " + err.Error())
 		return
 	}
 }
