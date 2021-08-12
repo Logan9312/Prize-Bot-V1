@@ -25,7 +25,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func (info InfoType) Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string) {
+func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string) {
 
 	Details := i.ApplicationCommandData().Options[0].StringValue()
 	initialBid := i.ApplicationCommandData().Options[1].IntValue()

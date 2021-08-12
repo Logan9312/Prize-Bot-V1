@@ -19,7 +19,7 @@ var ProfileCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func (info InfoType) Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	userID := i.ApplicationCommandData().Options[0].UserValue(s).ID
 	username := i.ApplicationCommandData().Options[0].UserValue(s).Username

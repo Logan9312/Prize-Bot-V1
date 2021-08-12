@@ -1,44 +1,22 @@
 package commands 
 
 import (
-	"reflect"
-	"strings"
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 )
 
 type InfoType struct {}
 
-func CommandHandlerLocal(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var info InfoType
-
-	input := make([]reflect.Value, 2)
-	input[0] = reflect.ValueOf(s)
-	input[1] = reflect.ValueOf(i)
-	fmt.Print("Command Input: ")
-	fmt.Println(input)
-
-	if i.Type == 2 {
-	name := strings.Title(i.ApplicationCommandData().Name)
-	reflect.ValueOf(info).MethodByName(name).Call(input)
-	} else if i.Type == 3 {
-		name := strings.Title(i.MessageComponentData().CustomID) + "Button"
-		reflect.ValueOf(info).MethodByName(name).Call(input)
-	}
-}
-
-func CommandHandlerProd(s *discordgo.Session, i *discordgo.InteractionCreate) {
-var info InfoType
+func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type == 2 {
 		switch i.ApplicationCommandData().Name {
 		case "help":
-			info.Help(s, i)
+			Help(s, i)
 		case "auction":
-			info.Auction(s, i, s.State.User.ID)
+			Auction(s, i, s.State.User.ID)
 		case "inventory":
-			info.Profile(s, i)
+			Profile(s, i)
 		case "bid":
-			info.Bid(s, i)
+			Bid(s, i)
 		default:
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,

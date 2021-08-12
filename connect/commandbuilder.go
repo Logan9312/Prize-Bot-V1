@@ -24,8 +24,6 @@ func CommandBuilder(s *discordgo.Session, environment string, localCommands, pro
 			}
 		}
 		commands.HelpBuilder(localCommands)
-
-		s.AddHandler(commands.CommandHandlerLocal)
 	}
 
 	//Builds prod commands
@@ -37,8 +35,6 @@ func CommandBuilder(s *discordgo.Session, environment string, localCommands, pro
 		}
 
 		commands.HelpBuilder(prodCommands)
-
-		s.AddHandler(commands.CommandHandlerProd)
 	}
-
+	s.AddHandler(commands.CommandHandler)
 }

@@ -65,7 +65,5 @@ func BotConnect(token, environment, botName string) {
 		return
 	}
 
-	Random(s)
-
 	defer fmt.Println(botName + " Startup Complete!")
 }
