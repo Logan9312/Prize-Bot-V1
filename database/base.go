@@ -33,7 +33,7 @@ func DatabaseConnect(host, password string) {
 
 	db.Create(logan)
 
-	db.First(test, 1)
+	db.First(&test, 1)
 
 	fmt.Println(test.Name)
 }
