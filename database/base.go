@@ -31,9 +31,19 @@ func DatabaseConnect(host, password string) {
 
 	logan := User{Name: "Logan"}
 
+	err = db.AutoMigrate(User{})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	db.Create(logan)
 
 	db.First(&test, 1)
 
-	fmt.Println(test.Name)
+	_, err = fmt.Println(test.Name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
