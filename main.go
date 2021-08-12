@@ -35,7 +35,7 @@ func main() {
 	go connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
 
 	//Connects database
-	database.DatabaseConnect(environment.Host, environment.Password)
+	go database.DatabaseConnect(environment.Host, environment.Password)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 

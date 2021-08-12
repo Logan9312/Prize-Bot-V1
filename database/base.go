@@ -29,6 +29,10 @@ func DatabaseConnect(host, password string) {
 
 	test := User{}
 
+	logan := User{Name: "Logan"}
+
+	db.Create(logan)
+
 	db.First(test, 1)
 
 	fmt.Println(test.Name)
