@@ -48,13 +48,14 @@ func BotConnect(token, environment, botName string) {
 		return
 	}
 
+	fmt.Println("User ID: " + s.State.User.ID)
 	switch s.State.User.ID {
 	case mainID:
 		status = "Aftermath Ark"
 		prodCommands = append(prodCommands, MainCommands...)
-		
+
 	case grungyID:
-		status = "Grungy's Gaming Garage"
+		status = "suggon"
 		prodCommands = append(prodCommands, GrungyCommands...)
 	}
 
