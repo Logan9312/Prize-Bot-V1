@@ -26,7 +26,8 @@ func DatabaseConnect(host, password string) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("Database connected, trying to do the thing")
+	
+	fmt.Println("Database connected")
 
 	test := User{}
 

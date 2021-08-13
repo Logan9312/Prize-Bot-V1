@@ -33,8 +33,6 @@ func CommandBuilder(s *discordgo.Session, environment string, localCommands, pro
 		if err != nil {
 			fmt.Println(err)
 		}
-
 		commands.HelpBuilder(prodCommands)
 	}
-	s.AddHandler(commands.CommandHandler)
 }

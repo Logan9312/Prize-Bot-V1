@@ -17,19 +17,10 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Profile(s, i)
 		case "bid":
 			Bid(s, i)
+		case "queue":
+			Queue(s, i)
 		default:
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds:          []*discordgo.MessageEmbed{
-						{
-							Title:       "Command Selection Error",
-							Description: "Command response has not been set properly, please contact Logan to fix",
-						},
-					},
-					Flags:           64,
-				},
-			})
+			DefaultResponse(s, i)
 		}
 		switch i.ApplicationCommandData().Options[0].Name {
 		case "create":
@@ -44,3 +35,27 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 }
+
+func DefaultResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:          []*discordgo.MessageEmbed{
+				{
+					Title:       "Command Selection Error",
+					Description: "Command response has not been set properly, please contact Logan to fix",
+				},
+			},
+			Flags:           64,
+		},
+	})
+}
+
+/*func ParseSlashCommand(ic *discordgo.InteractionCreate) map[string]interface{} {
+    var options map[string]interface{} = make(map[string]interface{})
+    for _, option := range ic.ApplicationCommandData().Options {
+        options[option.Name] = option.Value
+    }
+
+    return options
+}*/

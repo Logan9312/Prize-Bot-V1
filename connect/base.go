@@ -52,12 +52,15 @@ func BotConnect(token, environment, botName string) {
 	case mainID:
 		status = "Aftermath Ark"
 		prodCommands = append(prodCommands, MainCommands...)
+		
 	case grungyID:
 		status = "Grungy's Gaming Garage"
 		prodCommands = append(prodCommands, GrungyCommands...)
 	}
 
 	CommandBuilder(s, environment, localCommands, prodCommands)
+
+	s.AddHandler(commands.CommandHandler)
 
 	err = s.UpdateGameStatus(0, status)
 	if err != nil {
