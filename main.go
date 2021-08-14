@@ -29,15 +29,14 @@ func main() {
 	}
 
 	//Connects main bot
-	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
+	go connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
 
 	//Connects Sir Grungerson
-	connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
+	go connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
 
 	//Connects database
-	if environment.Environment == "prod" {
 		go database.DatabaseConnect(environment.Host, environment.Password)
-	}
+	
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 

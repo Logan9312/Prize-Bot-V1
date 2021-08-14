@@ -10,19 +10,6 @@ import (
 var mainID = "829527477268774953"
 var grungyID = "864930428639772692"
 
-var prodCommands = []*discordgo.ApplicationCommand{
-	&commands.HelpCommand,
-}
-
-var localCommands = []*discordgo.ApplicationCommand{
-	&commands.HelpCommand,
-	&commands.ProfileCommand,
-	&commands.AuctionCommand,
-
-}
-
-var status string
-
 var MainCommands = []*discordgo.ApplicationCommand{}
 
 var GrungyCommands = []*discordgo.ApplicationCommand{
@@ -31,6 +18,18 @@ var GrungyCommands = []*discordgo.ApplicationCommand{
 }
 
 func BotConnect(token, environment, botName string) {
+
+	var prodCommands = []*discordgo.ApplicationCommand{
+		&commands.HelpCommand,
+	}
+
+	var localCommands = []*discordgo.ApplicationCommand{
+		&commands.HelpCommand,
+		&commands.ProfileCommand,
+		&commands.AuctionCommand,
+	}
+
+	var status string
 
 	fmt.Println(botName + " Starting Up...")
 
