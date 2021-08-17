@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/bwmarrin/discordgo"
+
 	"github.com/caarlos0/env"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
@@ -34,17 +34,6 @@ func main() {
 
 	//Connects Sir Grungerson
 	go connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
-
-	connect.Banana()
-
-	s, err := discordgo.New("qwe011235@gmail.com QWERTY011235")
-	if err != nil {
-		fmt.Println(err)
-	}
-	s.Open()
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	//Connects database
 	if environment.Environment == "prod"{
