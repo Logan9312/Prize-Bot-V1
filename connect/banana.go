@@ -12,7 +12,6 @@ func Banana() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(s)
 
 	err = s.Open()
 	if err != nil {
@@ -21,7 +20,5 @@ func Banana() {
 	}
 
 	s.ChannelMessageSend("835209409616412704", "test")
-
-	<- make(chan struct{})
 
 }
