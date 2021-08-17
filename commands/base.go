@@ -1,4 +1,4 @@
-package commands 
+package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
@@ -15,23 +15,20 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Auction(s, i, s.State.User.ID)
 		case "inventory":
 			Profile(s, i)
-		case "bid":
-			Bid(s, i)
 		case "queue":
 			Queue(s, i)
 		default:
 			DefaultResponse(s, i)
 		}
-		switch i.ApplicationCommandData().Options[0].Name {
-		case "create":
-			DynamicCreate(s, i)
-		case "add":
-			DynamicEdit(s, i)
-		}
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
-			//auction bid alert button
+		case "startbid":
+			AuctionButton(s, i)
+		case "placebid":
+			Bid(s, i)
+		default:
+			DefaultResponse(s, i)
 		}
 	}
 }
@@ -51,11 +48,11 @@ func DefaultResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 }
 
-/*func ParseSlashCommand(ic *discordgo.InteractionCreate) map[string]interface{} {
+func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
     var options map[string]interface{} = make(map[string]interface{})
-    for _, option := range ic.ApplicationCommandData().Options {
+    for _, option := range i.ApplicationCommandData().Options {
         options[option.Name] = option.Value
     }
 
     return options
-}*/
+}

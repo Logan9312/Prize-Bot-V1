@@ -11,11 +11,6 @@ func CommandBuilder(s *discordgo.Session, environment string, localCommands, pro
 
 	//Builds local commands
 	if environment == "local" {
-
-		for _, v := range localCommands {
-			v.Description = "EXPERIMENTAL: " + v.Description
-		}
-
 		for _, v := range s.State.Guilds {
 			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, localCommands)
 			fmt.Println("Commands added to guild: " + v.Name)

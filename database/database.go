@@ -3,13 +3,15 @@ package database
 import (
 	"fmt"
 
+	"github.com/bwmarrin/discordgo"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type User struct {
+type Auction struct {
 	gorm.Model
-	Name string
+	Bid string
+	Message discordgo.Message
 }
 
 func DatabaseConnect(host, password string) {
@@ -26,26 +28,12 @@ func DatabaseConnect(host, password string) {
 		fmt.Println(err)
 		return
 	}
-	
+
 	fmt.Println("Database connected")
 
-	test := User{}
-
-	logan := User{Name: "Logan"}
-
-	err = db.AutoMigrate(User{})
+	err = db.AutoMigrate(Auction{})
 	if err != nil {
 		fmt.Println(err)
-		return
-	}
-
-	db.Create(&logan)
-
-	db.First(&test)
-
-	_, err = fmt.Println(test.Name)
-	if err != nil {
-		fmt.Println("Error printing name " + err.Error())
 		return
 	}
 }

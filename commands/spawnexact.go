@@ -8,15 +8,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-/*func parseSlashCommand(ic *discordgo.InteractionCreate) map[string]interface{} {
-    var options map[string]interface{} = make(map[string]interface{})
-    for _, option := range ic.ApplicationCommandData().Options {
-        options[option.Name] = option.Value
-    }
-
-    return options
-}*/
-
 var SpawnExactDinoCommand = discordgo.ApplicationCommand{
 	Name:        "spawn-exact-dino",
 	Description: "A command for spawning a dino with setup stat points. (Local)",

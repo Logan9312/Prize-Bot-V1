@@ -10,24 +10,29 @@ import (
 var mainID = "829527477268774953"
 var grungyID = "864930428639772692"
 
-var MainCommands = []*discordgo.ApplicationCommand{}
-
-var GrungyCommands = []*discordgo.ApplicationCommand{
-	&commands.ReviewCommand,
-	&commands.ReviewEditCommand,
+type slashCommands struct{
+	local, prod, grungerson, auction []*discordgo.ApplicationCommand
 }
 
 func BotConnect(token, environment, botName string) {
 
-	var prodCommands = []*discordgo.ApplicationCommand{
-		&commands.HelpCommand,
+	var c = slashCommands{
+		local: []*discordgo.ApplicationCommand{
+			&commands.HelpCommand,
+			&commands.ProfileCommand,
+			&commands.AuctionCommand,
+		},
+		prod: []*discordgo.ApplicationCommand{
+			&commands.HelpCommand,
+		},
+		auction: []*discordgo.ApplicationCommand{},
+		grungerson: []*discordgo.ApplicationCommand{
+			&commands.ReviewCommand,
+			&commands.ReviewEditCommand,
+		},
 	}
+		
 
-	var localCommands = []*discordgo.ApplicationCommand{
-		&commands.HelpCommand,
-		&commands.ProfileCommand,
-		&commands.AuctionCommand,
-	}
 
 	var status string
 
@@ -51,14 +56,13 @@ func BotConnect(token, environment, botName string) {
 	switch s.State.User.ID {
 	case mainID:
 		status = "Aftermath Ark"
-		prodCommands = append(prodCommands, MainCommands...)
 
 	case grungyID:
 		status = "suggon"
-		prodCommands = append(prodCommands, GrungyCommands...)
+		c.prod = append(c.prod, c.grungerson...)
 	}
 
-	CommandBuilder(s, environment, localCommands, prodCommands)
+	CommandBuilder(s, environment, c.local, c.prod)
 
 	s.AddHandler(commands.CommandHandler)
 
