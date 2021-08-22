@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -31,6 +33,15 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			DefaultResponse(s, i)
 		}
 	}
+}
+
+func MessageHandler (s *discordgo.Session, m *discordgo.MessageCreate) {
+	for _, v := range m.Mentions{
+		if v == s.State.User{
+			fmt.Println("Bot was mentioned")
+		}
+	}
+
 }
 
 func DefaultResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {

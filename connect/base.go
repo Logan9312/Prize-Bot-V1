@@ -7,11 +7,8 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 )
 
-var mainID = "829527477268774953"
-var grungyID = "864930428639772692"
-
 type slashCommands struct{
-	local, prod, grungerson, auction []*discordgo.ApplicationCommand
+	local, prod []*discordgo.ApplicationCommand
 }
 
 func BotConnect(token, environment, botName string) {
@@ -24,11 +21,6 @@ func BotConnect(token, environment, botName string) {
 		},
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,
-		},
-		auction: []*discordgo.ApplicationCommand{},
-		grungerson: []*discordgo.ApplicationCommand{
-			&commands.ReviewCommand,
-			&commands.ReviewEditCommand,
 		},
 	}
 		
@@ -52,19 +44,12 @@ func BotConnect(token, environment, botName string) {
 		return
 	}
 
-	fmt.Println("User ID: " + s.State.User.ID)
-	switch s.State.User.ID {
-	case mainID:
-		status = "Aftermath Ark"
-
-	case grungyID:
-		status = "suggon"
-		c.prod = append(c.prod, c.grungerson...)
-	}
+	status = "Aftermath Ark"
 
 	CommandBuilder(s, environment, c.local, c.prod)
 
 	s.AddHandler(commands.CommandHandler)
+	s.AddHandler(commands.MessageHandler)
 
 	err = s.UpdateGameStatus(0, status)
 	if err != nil {
@@ -72,5 +57,5 @@ func BotConnect(token, environment, botName string) {
 		return
 	}
 
-	defer fmt.Println(botName + " Startup Complete!")
+	fmt.Println(botName + " Startup Complete!")
 }

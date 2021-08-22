@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-
 	"github.com/caarlos0/env"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
@@ -18,7 +17,6 @@ type Environment struct {
 	Migrate      bool   `env:"MIGRATE"`
 	Host         string `env:"DB_HOST"`
 	Password     string `env:"DB_PASSWORD"`
-	Grungerson   string `env:"GRUNGERSON"`
 }
 
 func main() {
@@ -32,14 +30,11 @@ func main() {
 	//Connects main bot
 	go connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
 
-	//Connects Sir Grungerson
-	go connect.BotConnect(environment.Grungerson, environment.Environment, "Sir Grungerson")
-
 	//Connects database
-	if environment.Environment == "prod"{
-	go database.DatabaseConnect(environment.Host, environment.Password)
+	if environment.Environment == "prod" {
+		go database.DatabaseConnect(environment.Host, environment.Password)
 	}
-	
+
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
 	routers.BotStatus()
