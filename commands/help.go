@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"strings"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -13,20 +14,20 @@ var HelpCommand = discordgo.ApplicationCommand{
 	Description: "Basic bot functionality",
 }
 
-func HelpBuilder (slashCommands []*discordgo.ApplicationCommand) {
-for _, command := range slashCommands {
-	
-	if command.Name == "help" {
-		continue
-	}
+func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
+	for _, command := range slashCommands {
 
-	field := &discordgo.MessageEmbedField{
-	  Name: "/" + strings.Title(fmt.Sprintf("**%s**", command.Name)),
-	  Value: fmt.Sprintf("```%s```", command.Description),
-	}
+		if command.Name == "help" {
+			continue
+		}
 
-	fields = append(fields, field)
-  }
+		field := &discordgo.MessageEmbedField{
+			Name:  "/" + strings.Title(fmt.Sprintf("**%s**", command.Name)),
+			Value: fmt.Sprintf("```%s```", command.Description),
+		}
+
+		fields = append(fields, field)
+	}
 }
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -37,13 +38,13 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Flags: 64,
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					Title: "Discord Bot Help",
+					Title:       "Discord Bot Help",
 					Description: "Developed by Logan. Thank you for using my bot!",
-					Color:     0x8073ff,
-					Footer:    &discordgo.MessageEmbedFooter{
-						Text:         "Powered by Aftermath Gaming",
+					Color:       0x8073ff,
+					Footer: &discordgo.MessageEmbedFooter{
+						Text: "Powered by Aftermath Gaming",
 					},
-					Fields:    fields,
+					Fields: fields,
 				},
 			},
 		},
