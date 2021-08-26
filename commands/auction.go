@@ -148,7 +148,7 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					Fields:      []*discordgo.MessageEmbedField{
+					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:   "Select Bid Amount: ",
 							Value:  "0",
@@ -165,6 +165,6 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func Bid (s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Bid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 }
