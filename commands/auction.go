@@ -27,11 +27,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string) {
 
-	for _, v := range i.ApplicationCommandData().Options {
-		switch v.Name {
-		}
-	}
-
 	options := ParseSlashCommand(i)
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)

@@ -24,6 +24,7 @@ func main() {
 	environment := Environment{}
 
 	if err := env.Parse(&environment); err != nil {
+		fmt.Println(err)
 		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
 	}
 
