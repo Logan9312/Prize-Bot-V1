@@ -36,10 +36,4 @@ func DatabaseConnect(host, password string) {
 		fmt.Println(err)
 		return
 	}
-
-
-
-	tables := []string{}
-	db.Select(&tables, "SHOW TABLES")
-	fmt.Println(tables)
 }
