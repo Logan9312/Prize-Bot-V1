@@ -3,14 +3,14 @@ package database
 import (
 	"fmt"
 
-	"github.com/bwmarrin/discordgo"
 	"gorm.io/gorm"
 )
 
 type Auction struct {
 	gorm.Model
 	Bid     string
-	Message discordgo.Message
+	MessageID string
+	ChannelID string
 }
 
 func DatabaseConnect(password, host, env string) {
