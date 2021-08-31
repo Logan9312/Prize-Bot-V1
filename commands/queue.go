@@ -5,8 +5,8 @@ import (
 )
 
 var QueueCommand = discordgo.ApplicationCommand{
-	Name:        "auction",
-	Description: "Put an item up for auction!",
+	Name:        "queue",
+	Description: "Queue commands",
 	Options:     []*discordgo.ApplicationCommandOption{},
 }
 

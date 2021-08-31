@@ -18,6 +18,8 @@ func BotConnect(token, environment, botName string) {
 			&commands.HelpCommand,
 			&commands.ProfileCommand,
 			&commands.AuctionCommand,
+			&commands.SpawnExactDinoCommand,
+			&commands.QueueCommand,
 		},
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,

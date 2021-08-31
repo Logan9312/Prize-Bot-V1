@@ -32,9 +32,7 @@ func main() {
 	go connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
 
 	//Connects database
-	if environment.Environment == "prod" {
-		go database.DatabaseConnect(environment.Host, environment.Password)
-	}
+	go database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 

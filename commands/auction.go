@@ -25,7 +25,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string) {
+func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSlashCommand(i)
 	item := options["item"].(string)
@@ -39,9 +39,11 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, AppID string)
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							Label:    "Bid",
-							Style:    1,
-							Emoji:    discordgo.ComponentEmoji{},
+							Label:    "",
+							Style:    2,
+							Emoji:    discordgo.ComponentEmoji{
+								Name:     "📩",
+							},
 							CustomID: "startbid",
 						},
 					},

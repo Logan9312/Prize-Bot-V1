@@ -14,7 +14,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "help":
 			Help(s, i)
 		case "auction":
-			Auction(s, i, s.State.User.ID)
+			Auction(s, i)
 		case "inventory":
 			Profile(s, i)
 		case "queue":
