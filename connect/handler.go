@@ -1,22 +1,24 @@
-package commands
+package connect
 
 import (
 	"github.com/bwmarrin/discordgo"
+	c "gitlab.com/logan9312/discord-auction-bot/commands"
 )
+
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type == 2 {
 		switch i.ApplicationCommandData().Name {
 		case "help":
-			Help(s, i)
+			c.Help(s, i)
 		case "auction":
-			Auction(s, i)
+			c.Auction(s, i, Database)
 		case "inventory":
-			Profile(s, i)
+			c.Profile(s, i, Database)
 		case "queue":
-			Queue(s, i)
+			c.Queue(s, i)
 		case "spawn-exact-dino":
-			SpawnExactDino(s, i)
+			c.SpawnExactDino(s, i)
 		default:
 			CommandResponse(s, i)
 		}
@@ -24,11 +26,11 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
 		case "startbid":
-			AuctionButton(s, i)
+			c.AuctionButton(s, i)
 		case "placebid":
-			Bid(s, i)
+			c.Bid(s, i)
 		case "categorymenu":
-			CategorySelect(s, i)
+			c.CategorySelect(s, i, Database)
 		default:
 			CommandResponse(s, i)
 		}
@@ -48,21 +50,4 @@ func CommandResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Flags:           64,
 		},
 	})
-}
-
-func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-    var options map[string]interface{} = make(map[string]interface{})
-    for _, option := range i.ApplicationCommandData().Options {
-        options[option.Name] = option.Value
-    }
-
-    return options
-}
-func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-    var options map[string]interface{} = make(map[string]interface{})
-    for _, option := range i.ApplicationCommandData().Options[0].Options {
-        options[option.Name] = option.Value
-    }
-
-    return options
 }

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"gorm.io/gorm"
 )
 
 var ProfileCommand = discordgo.ApplicationCommand{
@@ -12,14 +13,11 @@ var ProfileCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionUser,
 			Name:        "username",
 			Description: "Chose who's profile to display",
-			Required:    true,
-			Choices:     []*discordgo.ApplicationCommandOptionChoice{},
-			Options:     []*discordgo.ApplicationCommandOption{},
 		},
 	},
 }
 
-func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Profile(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
 
 	userID := i.ApplicationCommandData().Options[0].UserValue(s).ID
 	username := i.ApplicationCommandData().Options[0].UserValue(s).Username
