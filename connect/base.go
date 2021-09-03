@@ -5,13 +5,14 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
+	"gorm.io/gorm"
 )
 
 type slashCommands struct {
 	local, prod []*discordgo.ApplicationCommand
 }
 
-func BotConnect(token, environment, botName string) {
+func BotConnect(token, environment, botName string, db *gorm.DB) {
 
 	var c = slashCommands{
 		local: []*discordgo.ApplicationCommand{
@@ -68,7 +69,6 @@ func BotConnect(token, environment, botName string) {
 	}
 
 	s.AddHandler(commands.CommandHandler)
-	s.AddHandler(commands.MessageHandler)
 
 	err = s.UpdateGameStatus(0, status)
 	if err != nil {

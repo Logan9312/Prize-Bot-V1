@@ -1,12 +1,8 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/bwmarrin/discordgo"
 )
-
-type InfoType struct {}
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type == 2 {
@@ -19,8 +15,10 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Profile(s, i)
 		case "queue":
 			Queue(s, i)
+		case "spawn-exact-dino":
+			SpawnExactDino(s, i)
 		default:
-			DefaultResponse(s, i)
+			CommandResponse(s, i)
 		}
 	}
 	if i.Type == 3 {
@@ -29,22 +27,15 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			AuctionButton(s, i)
 		case "placebid":
 			Bid(s, i)
+		case "categorymenu":
+			CategorySelect(s, i)
 		default:
-			DefaultResponse(s, i)
+			CommandResponse(s, i)
 		}
 	}
 }
 
-func MessageHandler (s *discordgo.Session, m *discordgo.MessageCreate) {
-	for _, v := range m.Mentions{
-		if v == s.State.User{
-			fmt.Println("Bot was mentioned")
-		}
-	}
-
-}
-
-func DefaultResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
+func CommandResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -62,6 +53,14 @@ func DefaultResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
 func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
     var options map[string]interface{} = make(map[string]interface{})
     for _, option := range i.ApplicationCommandData().Options {
+        options[option.Name] = option.Value
+    }
+
+    return options
+}
+func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
+    var options map[string]interface{} = make(map[string]interface{})
+    for _, option := range i.ApplicationCommandData().Options[0].Options {
         options[option.Name] = option.Value
     }
 

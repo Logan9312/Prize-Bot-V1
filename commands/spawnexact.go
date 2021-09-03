@@ -146,8 +146,8 @@ func SpawnExactDino(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	yOffset := int64(20)
 	zOffset := int64(20)
 	blueprint := ""
-	basestats := ""
-	addedstats := ""
+	basestats := "0,0,0,0,0,0,0,0"
+	addedstats := "0,0,0,0,0,0,0,0"
 	isCloned := false
 	isNeutered := false
 
@@ -198,8 +198,6 @@ func SpawnExactDino(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if isCloned {
 		cloned = 1
 	}
-
-	fmt.Println(isNeutered)
 
 	neutered := 0
 	if isNeutered {

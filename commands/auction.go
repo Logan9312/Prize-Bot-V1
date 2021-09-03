@@ -2,8 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/database"
+	"gorm.io/gorm"
 )
 
 var AuctionCommand = discordgo.ApplicationCommand{
@@ -11,21 +14,123 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	Description: "Put an item up for auction!",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "item",
-			Description: "Choose an Item to put up for auction",
-			Required:    true,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "help",
+			Description: "auction info",
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionInteger,
-			Name:        "startingbid",
-			Description: "Starting Bid Amount",
-			Required:    true,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "setup",
+			Description: "Setup auctions on your server",
+			Options:     []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "category",
+					Description: "Sets the category to create auctions in. Name must be an exact match",
+				},
+			},
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "create",
+			Description: "Create an Auction",
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "bid",
+			Description: "Bid on an Auction",
 		},
 	},
 }
 
-func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB){
+	switch i.ApplicationCommandData().Options[0].Name{
+	case "setup": 
+		AuctionSetup(s, i, db)
+	}
+}
+
+func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB){
+	options := ParseSubCommand(i)
+	category := options["category"].(string)
+	catIDs := make([]string, 0)
+	catMatch := false
+	status := "FAILED"
+	content := "There is no category in your discord server that matches the name: " + category
+	catMenu := make([]discordgo.SelectMenuOption, 0)
+	componentValue := []discordgo.MessageComponent{}
+
+	channels, err := s.GuildChannels(i.GuildID)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	
+	for n, v := range channels {
+		if v.Type == 4 {
+			if strings.EqualFold(category, v.Name) {
+				catMatch = true
+				catIDs = append(catIDs, v.ID)
+				menuOption := discordgo.SelectMenuOption{
+					Label:       fmt.Sprintf("%s (%s)", v.Name, v.ID),
+					Value:       v.ID,
+					Description: "Discord Channel number (includes all channels/categories): " + fmt.Sprint(n+1),
+					Emoji:       discordgo.ComponentEmoji{},
+					Default:     false,
+				}
+				catMenu = append(catMenu, menuOption)
+			}
+		}
+	}
+
+	if catMatch {
+		status = "SUCCESS"
+		content = "Successfully set the output to the category: `" + category + "`"
+		if len(catIDs) > 1 {
+			status = "PENDING INPUT"
+			content = "You have multiple categories that match the name: " + category + "**. Please select the correct one below."
+			catOptions := catMenu
+			componentValue = []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: 		[]discordgo.MessageComponent{
+						discordgo.SelectMenu{
+							CustomID:    "categorymenu",
+							Placeholder: "Select Category",
+							MinValues:   1,
+							MaxValues:   1,
+							Options:     catOptions,
+						},
+					},
+				},
+			}
+		} else {
+			info := database.GuildInfo{
+				GuildID: i.GuildID,
+				AuctionCategory: catIDs[0],
+			}
+			db.Create(&info)
+		}
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Components:      componentValue,
+			Embeds:          []*discordgo.MessageEmbed{
+				{
+					Title:       fmt.Sprintf("Auction Category Setup: __%s__", status),
+					Description: content,
+				},
+			},
+			Flags:           64,
+		},
+	})
+	if err != nil{
+		fmt.Println(err)
+	}
+}
+
+func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSlashCommand(i)
 	item := options["item"].(string)
@@ -65,7 +170,37 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	})
+}
 
+
+func CategorySelect (s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
+	
+	categoryID := i.MessageComponentData().Values[0]
+	fmt.Println("Category ID Stored: " + categoryID)
+
+	info := database.GuildInfo{
+		GuildID: i.GuildID,
+		AuctionCategory: categoryID,
+	}
+
+	db.Create(&info)
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:          []*discordgo.MessageEmbed{
+				{
+					Title:       "ID Saved Successfully!",
+					Description: "You may now create an auction",
+				},
+			},
+			Components:      []discordgo.MessageComponent{},
+			Flags:           64,
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -163,5 +298,4 @@ func AuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func Bid(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
 }

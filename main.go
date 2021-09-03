@@ -27,12 +27,12 @@ func main() {
 		fmt.Println(err)
 		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
 	}
+	
+	//Connects database
+	db := database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
 
 	//Connects main bot
-	go connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
-
-	//Connects database
-	go database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
+	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot", db)
 
 	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
 
