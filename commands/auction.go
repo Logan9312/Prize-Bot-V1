@@ -22,7 +22,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "setup",
 			Description: "Setup auctions on your server",
-			Options:     []*discordgo.ApplicationCommandOption{
+			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "category",
@@ -34,6 +34,20 @@ var AuctionCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "create",
 			Description: "Create an Auction",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The item you wish to auction off",
+					Required:    true,
+				},
+				{
+					Type:        10,
+					Name:        "startingbid",
+					Description: "The starting price to bid on",
+					Required:    true,
+				},
+			},
 		},
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -43,14 +57,16 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB){
-	switch i.ApplicationCommandData().Options[0].Name{
-	case "setup": 
+func Auction(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
+	switch i.ApplicationCommandData().Options[0].Name {
+	case "setup":
 		AuctionSetup(s, i, db)
+	case "create":
+		AuctionCreate(s, i, db)
 	}
 }
 
-func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB){
+func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
 	options := ParseSubCommand(i)
 	category := options["category"].(string)
 	catIDs := make([]string, 0)
@@ -65,7 +81,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	for n, v := range channels {
 		if v.Type == 4 {
 			if strings.EqualFold(category, v.Name) {
@@ -92,7 +108,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm
 			catOptions := catMenu
 			componentValue = []discordgo.MessageComponent{
 				discordgo.ActionsRow{
-					Components: 		[]discordgo.MessageComponent{
+					Components: []discordgo.MessageComponent{
 						discordgo.SelectMenu{
 							CustomID:    "categorymenu",
 							Placeholder: "Select Category",
@@ -105,81 +121,121 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm
 			}
 		} else {
 			info := database.GuildInfo{
-				GuildID: i.GuildID,
+				GuildID:         i.GuildID,
 				AuctionCategory: catIDs[0],
 			}
 			db.Create(&info)
 		}
 	}
 
+	fmt.Println("Catmatch: ", catMatch)
+	fmt.Println("catIDs: ", catIDs)
+
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Components:      componentValue,
-			Embeds:          []*discordgo.MessageEmbed{
+			Components: componentValue,
+			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       fmt.Sprintf("Auction Category Setup: __%s__", status),
 					Description: content,
 				},
 			},
-			Flags:           64,
+			Flags: 64,
 		},
 	})
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
 
-	options := ParseSlashCommand(i)
+	options := ParseSubCommand(i)
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)
 	bidder := i.Member.User.Mention()
+	info := database.GuildInfo{}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: 4,
-		Data: &discordgo.InteractionResponseData{
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label:    "",
-							Style:    2,
-							Emoji:    discordgo.ComponentEmoji{
-								Name:     "📩",
-							},
-							CustomID: "startbid",
-						},
-					},
+	db.First(&info, i.Interaction.GuildID)
+
+	channelInfo := discordgo.GuildChannelCreateData{
+		Name:     "Auction Test",
+		Type:     0,
+		ParentID: info.AuctionCategory,
+	}
+
+	channel, err := s.GuildChannelCreateComplex(i.Interaction.GuildID, channelInfo)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
+		Content:         "",
+		Embed:           &discordgo.MessageEmbed{
+			Title:       "Item: " + item,
+			Description: "Current Highest Bid: " + fmt.Sprint(initialBid) + " 🍓",
+			Color:       0x00bfff,
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   "**Current Winner:**",
+					Value:  bidder,
+					Inline: false,
 				},
 			},
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Item: " + item,
-					Description: "Current Highest Bid: " + fmt.Sprint(initialBid) + " 🍓",
-					Color:       0x00bfff,
-					Fields: []*discordgo.MessageEmbedField{
-						{
-							Name:   "**Current Winner:**",
-							Value:  bidder,
-							Inline: false,
+		},
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label: "",
+						Style: 2,
+						Emoji: discordgo.ComponentEmoji{
+							Name: "📩",
 						},
+						CustomID: "startbid",
 					},
 				},
 			},
 		},
 	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			TTS:             false,
+			Content:         "",
+			Components:      []discordgo.MessageComponent{},
+			Embeds:          []*discordgo.MessageEmbed{
+				{
+					Title:       "**Auction Started**",
+					Description: "Auction has successfully been started, I might have some bugs to work out so please contact me if there is a failure.",
+					Timestamp:   "",
+					Color:       0,
+				},
+			},
+			AllowedMentions: &discordgo.MessageAllowedMentions{},
+			Flags:           64,
+		},
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
+func CategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
 
-func CategorySelect (s *discordgo.Session, i *discordgo.InteractionCreate, db *gorm.DB) {
-	
 	categoryID := i.MessageComponentData().Values[0]
 	fmt.Println("Category ID Stored: " + categoryID)
 
 	info := database.GuildInfo{
-		GuildID: i.GuildID,
+		GuildID:         i.GuildID,
 		AuctionCategory: categoryID,
 	}
 
@@ -188,14 +244,14 @@ func CategorySelect (s *discordgo.Session, i *discordgo.InteractionCreate, db *g
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: &discordgo.InteractionResponseData{
-			Embeds:          []*discordgo.MessageEmbed{
+			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "ID Saved Successfully!",
 					Description: "You may now create an auction",
 				},
 			},
-			Components:      []discordgo.MessageComponent{},
-			Flags:           64,
+			Components: []discordgo.MessageComponent{},
+			Flags:      64,
 		},
 	})
 	if err != nil {
