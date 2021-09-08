@@ -320,6 +320,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	bidAmount := options["amount"].(float64)
 	var info database.Auction
+	info.ChannelID = i.ChannelID
 	database.DB.First(&info, i.ChannelID)
 	
 	if bidAmount > info.Bid {
@@ -343,11 +344,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		updateAuction.Embeds[0].Description = "Current Highest Bid: " + fmt.Sprint(info.Bid) + " 🍓"
 
-		s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Embed:           updateAuction.Embeds[0],
 			ID:              info.ChannelID,
 			Channel:         info.MessageID,
 		})
+		if err != nil {
+			fmt.Println(err)
+		}
 	} else {
 		fmt.Println("Bid is not higher than current bid")
 	}	
