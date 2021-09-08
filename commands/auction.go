@@ -326,6 +326,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if bidAmount > info.Bid {
 		info.Bid = bidAmount
 		info.Winner = fmt.Sprintf("<@%s>",i.Member.User.ID)
+		Winner := info.Winner
+		if options["secret_bidder"].(bool) == true {
+			Winner := "🤫"
+		}
 
 		database.DB.Model(&info).Updates(info)
 
@@ -342,8 +346,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name: "**Current Winner**",
-				Value: fmt.Sprint(info.Winner)
-			}
+				Value: fmt.Sprint(Winner)
+			},
 		}
 
 		updateAuction.Embeds[0].Description = "Current Highest Bid: " + fmt.Sprint(info.Bid) + " 🍓"
