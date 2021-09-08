@@ -364,6 +364,12 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		fmt.Println("Bid is not higher than current bid")
 	}	
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: discordgo.InteractionResponseData{
+			Content: "hooray it works",
+		},
+	})
 }
 
 func AuctionEnd(ChannelID string) {
