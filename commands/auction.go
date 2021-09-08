@@ -345,9 +345,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		updateAuction.Embeds[0].Description = "Current Highest Bid: " + fmt.Sprint(info.Bid) + " 🍓"
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Components:      updateAuction.Components,
 			Embed:           updateAuction.Embeds[0],
-			ID:              info.ChannelID,
-			Channel:         info.MessageID,
+			ID:              info.MessageID,
+			Channel:         info.ChannelID,
 		})
 		if err != nil {
 			fmt.Println(err)
@@ -359,7 +360,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func AuctionEnd(ChannelID string) {
 	var info database.Auction
+	info.ChannelID = ChannelID
 	database.DB.First(&info, ChannelID)
+
+	Session.ChannelMessageSend(ChannelID, "The winner is: " + info.Winner)
+	Session.ChannelMessageSend(ChannelID, "NOTE: This bot still needs an extreme amount of polish, winner announcement will be better integrated in the future.")
+	Session.ChannelMessageSend(ChannelID, "This channel will be deleted in 24h")
+
+time.Sleep(24 * time.Hour)
 
 	_, err := Session.ChannelDelete(ChannelID)
 	if err != nil {
