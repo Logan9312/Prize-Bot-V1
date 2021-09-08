@@ -12,9 +12,9 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "help":
 			c.Help(s, i)
 		case "auction":
-			c.Auction(s, i, Database)
+			c.Auction(s, i)
 		case "inventory":
-			c.Profile(s, i, Database)
+			c.Profile(s, i)
 		case "queue":
 			c.Queue(s, i)
 		case "spawn-exact-dino":
@@ -25,12 +25,10 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
-		case "startbid":
-			c.AuctionButton(s, i)
-		case "placebid":
-			c.Bid(s, i)
 		case "categorymenu":
-			c.CategorySelect(s, i, Database)
+			c.CategorySelect(s, i)
+		case "endauction":
+			c.AuctionEnd(i.ChannelID)
 		default:
 			CommandResponse(s, i)
 		}

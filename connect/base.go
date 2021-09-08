@@ -2,21 +2,18 @@ package connect
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 )
 
 type slashCommands struct {
 	local, prod []*discordgo.ApplicationCommand
 }
 
-var Database *gorm.DB
-
-func BotConnect(token, environment, botName string, db *gorm.DB) {
-
-	Database = db
+func BotConnect(token, environment, botName string) {
 
 	var c = slashCommands{
 		local: []*discordgo.ApplicationCommand{
@@ -36,6 +33,8 @@ func BotConnect(token, environment, botName string, db *gorm.DB) {
 	fmt.Println(botName + " Starting Up...")
 
 	s, err := discordgo.New("Bot " + token)
+
+	commands.Session = s
 
 	if err != nil {
 		fmt.Println(err)
@@ -74,6 +73,8 @@ func BotConnect(token, environment, botName string, db *gorm.DB) {
 
 	s.AddHandler(CommandHandler)
 
+	Timers()
+
 	err = s.UpdateGameStatus(0, status)
 	if err != nil {
 		fmt.Println(err)
@@ -81,4 +82,20 @@ func BotConnect(token, environment, botName string, db *gorm.DB) {
 	}
 
 	fmt.Println(botName + " Startup Complete!")
+}
+
+func Timers() {
+
+	var Auctions []database.Auction
+
+	database.DB.Find(&Auctions)
+
+	for _, v := range Auctions {
+		if v.EndTime.After(time.Now()) {
+			commands.AuctionEnd(v.ChannelID)
+		} else {
+			time.Sleep(time.Until(v.EndTime))
+			commands.AuctionEnd(v.ChannelID)
+		}
+	}
 }

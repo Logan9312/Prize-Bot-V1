@@ -3,14 +3,17 @@ package database
 import (
 	"fmt"
 
+	"time"
+
 	"gorm.io/gorm"
 )
 
 type Auction struct {
-	gorm.Model
-	Bid       string
+	ChannelID string `gorm:"primaryKey"`
+	Bid       float64
 	MessageID string
-	ChannelID string
+	EndTime   time.Time
+	Winner  string
 }
 
 type GuildInfo struct {
@@ -18,27 +21,20 @@ type GuildInfo struct {
 	AuctionCategory string
 }
 
-var db *gorm.DB
+var DB *gorm.DB
 
-func DatabaseConnect(password, host, env string) *gorm.DB {
+func DatabaseConnect(password, host, env string) {
 	fmt.Println("Connecting to Database...")
 	defer fmt.Println("Bot has finished attempting to connect to the database!")
 
 	if env == "prod" {
-		db = ProdDB(password, host)
+		DB = ProdDB(password, host)
 	} else if env == "local" {
-		db = LocalDB()
+		DB = LocalDB()
 	}
 
-	err := db.AutoMigrate(GuildInfo{}, Auction{})
+	err := DB.AutoMigrate(GuildInfo{}, Auction{})
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	return db
-
-}
-
-func GuildSetup(guildinfo GuildInfo) {
-
 }
