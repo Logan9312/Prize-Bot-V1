@@ -378,9 +378,9 @@ time.Sleep(24 * time.Hour)
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 if i.Member.Permissions != 8 {
+	fmt.Println("User" + i.Member.Nick + "does not have correct permissions. User permissions: ", i.Member.Permissions)
 	return
 }
-
 
 	err:= s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
