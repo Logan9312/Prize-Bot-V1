@@ -375,8 +375,14 @@ time.Sleep(24 * time.Hour)
 	}
 }
 
-func AuctionEndResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+if i.Member.Permissions != 8 {
+	return
+}
+
+
+	err:= s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content:         "",
@@ -394,6 +400,11 @@ func AuctionEndResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = Session.ChannelDelete(i.ChannelID)
 	if err != nil {
 		fmt.Println(err)
 	}

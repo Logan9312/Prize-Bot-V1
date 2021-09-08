@@ -28,7 +28,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "categorymenu":
 			c.CategorySelect(s, i)
 		case "endauction":
-			c.AuctionEnd(i.ChannelID)
+			c.AuctionEndButton(s, i)
 		default:
 			CommandResponse(s, i)
 		}
