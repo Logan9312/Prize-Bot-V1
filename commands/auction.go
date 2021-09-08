@@ -340,6 +340,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Value:  fmt.Sprintf("<t:%d>", info.EndTime.Unix()),
 				Inline: false,
 			},
+			{
+				Name: "**Current Winner**",
+				Value: fmt.Sprint(info.Winner)
+			}
 		}
 
 		updateAuction.Embeds[0].Description = "Current Highest Bid: " + fmt.Sprint(info.Bid) + " 🍓"
