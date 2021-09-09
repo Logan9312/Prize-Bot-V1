@@ -362,7 +362,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		updateAuction.Embeds[0].Description = fmt.Sprintf("Current Highest Bid: %s%f", currency, info.Bid)
+		updateAuction.Embeds[0].Description = fmt.Sprintf("Current Highest Bid: %s%s", currency, fmt.Sprint(info.Bid))
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components:      updateAuction.Components,
