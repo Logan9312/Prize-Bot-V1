@@ -399,7 +399,6 @@ func AuctionEnd(ChannelID string) {
 	database.DB.First(&info, ChannelID)
 
 	Session.ChannelMessageSend(ChannelID, "The winner is: " + info.Winner)
-	Session.ChannelMessageSend(ChannelID, "NOTE: This bot still needs an extreme amount of polish, winner announcement will be better integrated in the future.")
 	Session.ChannelMessageSend(ChannelID, "This channel will be deleted in 24h")
 
 time.Sleep(24 * time.Hour)
