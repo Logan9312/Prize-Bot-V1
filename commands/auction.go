@@ -228,6 +228,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 	endTime := currentTime.Add(duration)
+	currency := info.Currency
+	if currency == "" {
+		currency = "$"
+	}
 
 	if len(item) > 100 {
 		return
@@ -251,7 +255,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content:         "",
 		Embed:           &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
-			Description: "Current Highest Bid: " + fmt.Sprint(initialBid) + " 🍓",
+			Description: fmt.Sprintf("Current Highest Bid: %s%s", currency, fmt.Sprint(initialBid)),
 			Color:       0x00bfff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
@@ -320,8 +324,12 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	bidAmount := options["amount"].(float64)
 	var info database.Auction
+	var guildInfo database.GuildInfo
 	info.ChannelID = i.ChannelID
 	database.DB.First(&info, i.ChannelID)
+	database.DB.First(&guildInfo, i.GuildID)
+	currency := guildInfo.Currency
+	var Content string
 	
 	if bidAmount > info.Bid {
 		info.Bid = bidAmount
@@ -347,7 +355,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		updateAuction.Embeds[0].Description = "Current Highest Bid: " + fmt.Sprint(info.Bid) + " 🍓"
+		updateAuction.Embeds[0].Description = fmt.Sprintf("Current Highest Bid: %s%f", currency, info.Bid)
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components:      updateAuction.Components,
@@ -357,16 +365,19 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
+		Content = "Bid has successfully been placed"
 	} else {
 		fmt.Println("Bid is not higher than current bid")
+		Content = "You must bid higher than the current bid"
 	}	
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds:          []*discordgo.MessageEmbed{
 				{
-					Title:       "Your bid has been submitted",
+					Title:       Content,
 					Color:       0x00bfff,
 				},
 			},

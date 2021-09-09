@@ -19,6 +19,7 @@ type Auction struct {
 type GuildInfo struct {
 	GuildID         string `gorm:"primaryKey"`
 	AuctionCategory string
+	Currency		string
 }
 
 var DB *gorm.DB
