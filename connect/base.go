@@ -26,7 +26,6 @@ func BotConnect(token, environment, botName string) {
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,
 			&commands.AuctionCommand,
-			&commands.SpawnExactDinoCommand,
 		},
 	}
 
@@ -51,10 +50,6 @@ func BotConnect(token, environment, botName string) {
 	}
 
 	status = "Aftermath Ark"
-
-	for _, v := range c.local {
-		v.Description = "EXPERIMENTAL: " + v.Description
-	}
 
 	//Builds local commands
 	if environment == "local" {

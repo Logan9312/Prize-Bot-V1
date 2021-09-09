@@ -99,6 +99,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	category := options["category"].(string)
+	fmt.Println(category)
 	currency := options["currency"].(string)
 	catIDs := make([]string, 0)
 	catMatch := false
