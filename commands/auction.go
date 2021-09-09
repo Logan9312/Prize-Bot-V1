@@ -30,11 +30,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "category",
 					Description: "Sets the category to create auctions in. Name must be an exact match",
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency",
-					Description: "Sets the auction currency",
-				},
 			},
 		},
 		{
@@ -377,8 +372,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Content = "Bid has successfully been placed"
 	} else {
-		fmt.Println("Bid is not higher than current bid")
-		Content = "You must bid higher than the current bid"
+		Content = "You must bid higher than: " + fmt.Sprint(info.Bid)
 	}	
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
