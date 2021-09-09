@@ -30,6 +30,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "category",
 					Description: "Sets the category to create auctions in. Name must be an exact match",
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency",
+					Description: "Sets the auction currency",
+				},
 			},
 		},
 		{
@@ -94,6 +99,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	category := options["category"].(string)
+	currency := options["currency"].(string)
 	catIDs := make([]string, 0)
 	catMatch := false
 	status := "FAILED"
@@ -148,6 +154,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			info := database.GuildInfo{
 				GuildID:         i.GuildID,
 				AuctionCategory: catIDs[0],
+				Currency: currency,
 			}
 			database.DB.Create(&info)
 			database.DB.Model(&info).Update("AuctionCategory", catIDs[0])
