@@ -326,6 +326,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if bidAmount > info.Bid {
 		info.Bid = bidAmount
 		info.Winner = fmt.Sprintf("<@%s>",i.Member.User.ID)
+		Winner := info.Winner
 
 		database.DB.Model(&info).Updates(info)
 
@@ -339,6 +340,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Name:   "**Auction End Time:**",
 				Value:  fmt.Sprintf("<t:%d>", info.EndTime.Unix()),
 				Inline: false,
+			},
+			{
+				Name: "**Current Winner**",
+				Value: fmt.Sprint(Winner),
 			},
 		}
 
@@ -356,6 +361,12 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		fmt.Println("Bid is not higher than current bid")
 	}	
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "hooray it works",
+		},
+	})
 }
 
 func AuctionEnd(ChannelID string) {

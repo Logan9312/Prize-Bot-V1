@@ -79,7 +79,7 @@ func BotConnect(token, environment, botName string) {
 
 	s.AddHandler(CommandHandler)
 
-	Timers()
+	go Timers()
 
 	err = s.UpdateGameStatus(0, status)
 	if err != nil {
