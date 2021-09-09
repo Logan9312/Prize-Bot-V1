@@ -299,7 +299,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Title:       "**Auction Started**",
 					Description: "Auction has successfully been started, I might have some bugs to work out so please contact me if there is a failure.",
 					Timestamp:   "",
-					Color:       0,
+					Color:       0x00bfff,
 				},
 			},
 			Flags:           64,
@@ -364,7 +364,13 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "hooray it works",
+			Embeds:          []*discordgo.MessageEmbed{
+				{
+					Title:       "Your bid has been submitted",
+					Color:       0x00bfff,
+				},
+			},
+			Flags:           64,
 		},
 	})
 }

@@ -97,11 +97,15 @@ func Timers() {
 	database.DB.Find(&Auctions)
 
 	for _, v := range Auctions {
-		if v.EndTime.After(time.Now()) {
-			commands.AuctionEnd(v.ChannelID)
-		} else {
-			time.Sleep(time.Until(v.EndTime))
-			commands.AuctionEnd(v.ChannelID)
-		}
+		go SetTimer(v)
+	}
+}
+
+func SetTimer(v database.Auction) {
+	if v.EndTime.After(time.Now()) {
+		commands.AuctionEnd(v.ChannelID)
+	} else {
+		time.Sleep(time.Until(v.EndTime))
+		commands.AuctionEnd(v.ChannelID)
 	}
 }
