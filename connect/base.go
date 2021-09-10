@@ -98,9 +98,9 @@ func Timers() {
 
 func SetTimer(v database.Auction) {
 	if v.EndTime.Before(time.Now()) {
-		commands.AuctionEnd(v.ChannelID)
+		commands.AuctionEnd(v.ChannelID, v.GuildID)
 	} else {
 		time.Sleep(time.Until(v.EndTime))
-		commands.AuctionEnd(v.ChannelID)
+		commands.AuctionEnd(v.ChannelID, v.GuildID)
 	}
 }

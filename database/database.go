@@ -14,12 +14,14 @@ type Auction struct {
 	MessageID string
 	EndTime   time.Time
 	Winner  string
+	GuildID string
 }
 
 type GuildInfo struct {
 	GuildID         string `gorm:"primaryKey"`
 	AuctionCategory string
 	Currency		string
+	LogChannel	string
 }
 
 var DB *gorm.DB
