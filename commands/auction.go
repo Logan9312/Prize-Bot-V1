@@ -279,6 +279,9 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Inline: false,
 				},
 			},
+			Author:    &discordgo.MessageEmbedAuthor{
+				Name:         "Auction hosted by: " + i.Member.Mention(),
+			},
 		},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -320,9 +323,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Description: "Auction has successfully been started, I might have some bugs to work out so please contact me if there is a failure.",
 					Timestamp:   "",
 					Color:       0x00bfff,
-					Author:    &discordgo.MessageEmbedAuthor{
-						Name:         "Auction hosted by: " + i.Member.Mention(),
-					},
 				},
 			},
 			Flags: 64,
