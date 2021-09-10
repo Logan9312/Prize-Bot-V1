@@ -35,6 +35,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "currency",
 					Description: "Sets the auction currency",
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "log_channel",
+					Description: "Sets the channel where auctions will send outputs when they end",
+				},
 			},
 		},
 		{
@@ -101,11 +106,13 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	//Set Variables
 	currency := "$"
 	category := ""
+	auctionLog := ""
 
 	//Variable assignment
 	options := ParseSubCommand(i)
 	category = options["category"].(string)
 	currency = options["currency"].(string)
+	auctionLog = options["log_channel"].(string)
 	catIDs := make([]string, 0)
 	catMatch := false
 	status := "FAILED"
@@ -171,7 +178,13 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	info := database.GuildInfo{GuildID: i.GuildID}
 
+	if currency != "$"{
 	database.DB.Model(&info).Update("Currency", currency)
+	}
+
+	if auctionLog != ""{
+		database.DB.Model(&info).Update("LogChannel", auctionLog)
+	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -412,8 +425,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 	messageSend := discordgo.MessageSend{
 		Content:         "",
 		Embed:           &discordgo.MessageEmbed{
-			Title:       "",
-			Description: "",
+			Title:       "Auction Completed!",
+			Description: "Will be filling this out with info soon",
 			Timestamp:   "",
 			Color:       0x00bfff,
 			Fields:      []*discordgo.MessageEmbedField{},
