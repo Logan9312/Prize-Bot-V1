@@ -465,8 +465,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Member.Permissions != 8 {
-		fmt.Println("User "+i.Member.User.Username+" does not have correct permissions. User permissions: ", i.Member.Permissions)
+	if i.Member.Permissions & (1<<3) != 8 {
+		fmt.Println("User "+i.Member.User.Username+" does not have correct permissions. User permissions: ", fmt.Sprintf("%064b", i.Member.Permissions))
 		return
 	}
 
