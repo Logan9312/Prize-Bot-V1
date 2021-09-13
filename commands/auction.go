@@ -300,7 +300,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		EndTime:   endTime,
 		Winner:    "No bidders",
 		GuildID:   i.GuildID,
-		Item:		item,
+		Item:      item,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
