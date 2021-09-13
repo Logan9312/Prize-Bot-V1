@@ -106,6 +106,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	content := ""
 	componentValue := []discordgo.MessageComponent{}
+	category := &discordgo.Channel{}
 
 	if options["category"] != nil {
 		info := database.GuildInfo{
@@ -173,6 +174,12 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if info.AuctionCategory == "" {
 		info.AuctionCategory = "Not Set"
+	} else {
+		var err error
+		category, err = s.Channel(info.AuctionCategory)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	if info.Currency == "" {
 		info.Currency = "Not Set"
@@ -183,12 +190,9 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.LogChannel = fmt.Sprintf("<#%s>", info.LogChannel)
 	}
 
-	category, err := s.Channel(info.AuctionCategory)
-	if err != nil {
-		fmt.Println(err)
-	}
 
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Components: componentValue,
