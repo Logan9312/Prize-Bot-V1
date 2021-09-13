@@ -178,7 +178,12 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.LogChannel = "Not Set"
 	}
 
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	category, err := s.Channel(info.AuctionCategory)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Components: componentValue,
@@ -193,18 +198,15 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:   "**Category**",
-							Value:  info.AuctionCategory,
-							Inline: false,
+							Value:  category.Name,
 						},
 						{
 							Name:   "**Log Channel**",
 							Value:  fmt.Sprintf("<#%s>", info.LogChannel),
-							Inline: false,
 						},
 						{
 							Name:   "**Currency**",
 							Value:  info.Currency,
-							Inline: false,
 						},
 					},
 				},
