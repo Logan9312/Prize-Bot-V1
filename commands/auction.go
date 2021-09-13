@@ -263,7 +263,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content: "",
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
-			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s%s", i.Member.Mention(), currency, fmt.Sprint(initialBid)),
+			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s %s", i.Member.Mention(), currency, fmt.Sprint(initialBid)),
 			Color:       0x00bfff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
@@ -346,6 +346,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		database.DB.Model(&info).Updates(info)
 
+		if options["secret_bidder"] != nil {
+			info.Winner = "Anonymous"
+		}
+
 		updateAuction, err := s.ChannelMessage(info.ChannelID, info.MessageID)
 		if err != nil {
 			fmt.Println(err)
@@ -363,7 +367,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		updateAuction.Embeds[0].Description = fmt.Sprintf("Current Highest Bid: %s%s", currency, fmt.Sprint(info.Bid))
+		updateAuction.Embeds[0].Description = fmt.Sprintf("Current Highest Bid: %s %s", currency, fmt.Sprint(info.Bid))
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components: updateAuction.Components,
@@ -422,6 +426,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 		},
 	}
 
+	if guildInfo.LogChannel == "" {
+	Session.ChannelMessageSend(ChannelID, "ERROR: Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+	return
+	}
+
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
@@ -436,9 +445,13 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	content := ""
+
 	if i.Member.Permissions&(1<<3) != 8 {
-		fmt.Println("User "+i.Member.User.Username+" does not have correct permissions. User permissions: ", fmt.Sprintf("%064b", i.Member.Permissions))
-		return
+		content = "You must have an administrator role to end the auction!"
+	} else {
+		content = "Attempting to close auction..."
+		defer AuctionEnd(i.ChannelID, i.GuildID)
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -448,10 +461,10 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Components: []discordgo.MessageComponent{},
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					Title:       "**Auction Ended**",
-					Description: "",
+					Title:       "End Auction",
+					Description: content,
 					Timestamp:   "",
-					Color:       0,
+					Color:       0x00bfff,
 				},
 			},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},
@@ -462,6 +475,4 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	AuctionEnd(i.ChannelID, i.GuildID)
 }
