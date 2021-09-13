@@ -131,6 +131,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		}
+		content = content + "• Category has been successfully set.\n"
 	}
 
 	if options["currency"] != nil {
@@ -146,6 +147,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		}
+		content = content + "• Currency has been successfully set.\n"
 	}
 
 	if options["log_channel"] != nil {
@@ -161,6 +163,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		}
+		content = content + "• Log Channel has been successfully set.\n"
 	}
 
 	info := database.GuildInfo{
@@ -176,6 +179,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if info.LogChannel == "" {
 		info.LogChannel = "Not Set"
+	} else {
+		info.LogChannel = fmt.Sprintf("<#%s>", info.LogChannel)
 	}
 
 	category, err := s.Channel(info.AuctionCategory)
@@ -197,16 +202,16 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields: []*discordgo.MessageEmbedField{
 						{
-							Name:   "**Category**",
-							Value:  category.Name,
+							Name:  "**Category**",
+							Value: category.Name,
 						},
 						{
-							Name:   "**Log Channel**",
-							Value:  fmt.Sprintf("<#%s>", info.LogChannel),
+							Name:  "**Log Channel**",
+							Value: info.LogChannel,
 						},
 						{
-							Name:   "**Currency**",
-							Value:  info.Currency,
+							Name:  "**Currency**",
+							Value: info.Currency,
 						},
 					},
 				},
@@ -255,7 +260,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content: "",
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
-			Description: fmt.Sprintf("Current Highest Bid: %s%s", currency, fmt.Sprint(initialBid)),
+			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s%s", i.Member.Mention(), currency, fmt.Sprint(initialBid)),
 			Color:       0x00bfff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
@@ -263,9 +268,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Value:  fmt.Sprintf("<t:%d>", endTime.Unix()),
 					Inline: false,
 				},
-			},
-			Author: &discordgo.MessageEmbedAuthor{
-				Name: "Auction hosted by: " + i.Member.Mention(),
 			},
 		},
 		Components: []discordgo.MessageComponent{
@@ -388,11 +390,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func AuctionEnd(ChannelID, GuildID string) {
-	var info database.Auction
-	var auctionInfo database.GuildInfo
-	info.ChannelID = ChannelID
-	database.DB.First(&info, ChannelID)
-	database.DB.First(&auctionInfo, GuildID)
+	var auctionInfo database.Auction
+	var guildInfo database.GuildInfo
+	auctionInfo.ChannelID = ChannelID
+	database.DB.First(&auctionInfo, ChannelID)
+	database.DB.First(&guildInfo, GuildID)
 
 	messageSend := discordgo.MessageSend{
 		Content: "",
@@ -401,13 +403,23 @@ func AuctionEnd(ChannelID, GuildID string) {
 			Description: "Will be filling this out with info soon",
 			Timestamp:   "",
 			Color:       0x00bfff,
-			Fields:      []*discordgo.MessageEmbedField{},
+			Fields:      []*discordgo.MessageEmbedField{
+				{
+					Name:   "**Winner**",
+					Value:  auctionInfo.Winner,
+					Inline: false,
+				},
+			},
 		},
 	}
 
-	Session.ChannelMessageSendComplex(auctionInfo.LogChannel, &messageSend)
+	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	_, err := Session.ChannelDelete(ChannelID)
+	_, err = Session.ChannelDelete(ChannelID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -442,8 +454,5 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 
-	_, err = Session.ChannelDelete(i.ChannelID)
-	if err != nil {
-		fmt.Println(err)
-	}
+	AuctionEnd(i.ChannelID, i.GuildID)
 }
