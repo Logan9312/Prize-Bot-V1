@@ -37,7 +37,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Sets the auction currency",
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
+					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "log_channel",
 					Description: "Sets the channel where auctions will send outputs when they end",
 				},
@@ -104,21 +104,18 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	//Variable assignment
 	options := ParseSubCommand(i)
 	catIDs := make([]string, 0)
 	catMatch := false
-	status := "NO OPTIONS SET"
 	content := ""
 
 	catMenu := make([]discordgo.SelectMenuOption, 0)
 	componentValue := []discordgo.MessageComponent{}
 
-	info := database.GuildInfo{
-		GuildID: i.GuildID,
-	}
-
 	if options["category"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
 		category := options["category"].(string)
 		channels, err := s.GuildChannels(i.GuildID)
 		content = "There is no category in your discord server that matches the name: " + category
@@ -144,10 +141,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		if catMatch {
-			status = "SUCCESS"
 			content = "Successfully set the output to the category: `" + category + "`"
 			if len(catIDs) > 1 {
-				status = "PENDING INPUT"
 				content = "You have multiple categories that match the name: **" + category + "**. Please select the correct one below."
 				catOptions := catMenu
 				componentValue = []discordgo.MessageComponent{
@@ -175,10 +170,12 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 			}
 		}
-
 	}
 
 	if options["currency"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
 		info.Currency = options["currency"].(string)
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
@@ -191,7 +188,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if options["log_channel"] != nil {
-		info.Currency = options["log_channel"].(string)
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.LogChannel = options["log_channel"].(discordgo.Channel).ID
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
@@ -201,6 +201,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(result.Error.Error())
 		}
 	}
+	info := database.GuildInfo{
+		GuildID: i.GuildID,
+	}
+	database.DB.First(&info, i.GuildID)
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -208,8 +212,29 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Components: componentValue,
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					Title:       fmt.Sprintf("Auction Setup: __%s__", status),
+					Title:       "Auction Setup",
 					Description: content,
+					Timestamp:   "",
+					Color:       0x00bfff,
+					Thumbnail:   &discordgo.MessageEmbedThumbnail{},
+					Author:      &discordgo.MessageEmbedAuthor{},
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "Category",
+							Value:  info.AuctionCategory,
+							Inline: false,
+						},
+						{
+							Name:   "Log Channel",
+							Value:  info.LogChannel,
+							Inline: false,
+						},
+						{
+							Name:   "Currency",
+							Value:  info.Currency,
+							Inline: false,
+						},
+					},
 				},
 			},
 			Flags: 64,

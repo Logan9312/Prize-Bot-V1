@@ -10,7 +10,7 @@ import (
 
 type Auction struct {
 	ChannelID string `gorm:"primaryKey"`
-	Bid       float64
+	Bid       float64 
 	MessageID string
 	EndTime   time.Time
 	Winner  string
@@ -40,4 +40,5 @@ func DatabaseConnect(password, host, env string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 }

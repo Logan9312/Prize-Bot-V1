@@ -99,8 +99,10 @@ func Timers() {
 func SetTimer(v database.Auction) {
 	if v.EndTime.Before(time.Now()) {
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
+		database.DB.Delete(&v, v.ChannelID)
 	} else {
 		time.Sleep(time.Until(v.EndTime))
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
+		database.DB.Delete(&v, v.ChannelID)
 	}
 }
