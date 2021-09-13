@@ -202,9 +202,19 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 	info := database.GuildInfo{
-		GuildID: i.GuildID,
+		GuildID:         i.GuildID,
 	}
 	database.DB.First(&info, i.GuildID)
+
+	if info.AuctionCategory == "" {
+		info.AuctionCategory = "Not Set"
+	}
+	if info.Currency == "" {
+		info.Currency = "Not Set"
+	}
+	if info.LogChannel == "" {
+		info.LogChannel = "Not Set"
+	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -490,7 +500,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Member.Permissions & (1<<3) != 8 {
+	if i.Member.Permissions&(1<<3) != 8 {
 		fmt.Println("User "+i.Member.User.Username+" does not have correct permissions. User permissions: ", fmt.Sprintf("%064b", i.Member.Permissions))
 		return
 	}
