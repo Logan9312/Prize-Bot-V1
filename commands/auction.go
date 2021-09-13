@@ -413,6 +413,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 					Value:  auctionInfo.Winner,
 					Inline: false,
 				},
+				{
+					Name:   "**Payment Due**",
+					Value:  guildInfo.Currency + " " + fmt.Sprint(auctionInfo.Bid),
+					Inline: false,
+				},
 			},
 		},
 	}
