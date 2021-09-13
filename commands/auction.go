@@ -190,8 +190,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.LogChannel = fmt.Sprintf("<#%s>", info.LogChannel)
 	}
 
-
-
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -240,13 +238,14 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 	endTime := currentTime.Add(duration)
-	currency := info.Currency
 
 	if len(item) > 100 {
 		return
 	}
 
 	database.DB.First(&info, i.Interaction.GuildID)
+
+	currency := info.Currency
 
 	channelInfo := discordgo.GuildChannelCreateData{
 		Name:     "💸│" + item,
@@ -301,6 +300,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		EndTime:   endTime,
 		Winner:    "No bidders",
 		GuildID:   i.GuildID,
+		Item:		item,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -404,10 +404,10 @@ func AuctionEnd(ChannelID, GuildID string) {
 		Content: "",
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Auction Completed!",
-			Description: "Will be filling this out with info soon",
+			Description: auctionInfo.Item,
 			Timestamp:   "",
 			Color:       0x00bfff,
-			Fields:      []*discordgo.MessageEmbedField{
+			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Winner**",
 					Value:  auctionInfo.Winner,

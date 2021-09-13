@@ -10,18 +10,20 @@ import (
 
 type Auction struct {
 	ChannelID string `gorm:"primaryKey"`
-	Bid       float64 
+	Bid       float64
 	MessageID string
 	EndTime   time.Time
-	Winner  string
-	GuildID string
+	Winner    string
+	GuildID   string
+	Item	  string
+	
 }
 
 type GuildInfo struct {
 	GuildID         string `gorm:"primaryKey"`
 	AuctionCategory string
-	Currency		string
-	LogChannel	string
+	Currency        string
+	LogChannel      string
 }
 
 var DB *gorm.DB
