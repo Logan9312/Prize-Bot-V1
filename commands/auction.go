@@ -217,55 +217,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func CategorySelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	category := ""
-	categoryID := i.MessageComponentData().Values[0]
-	channels, err := s.GuildChannels(i.GuildID)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	info := database.GuildInfo{
-		GuildID:         i.GuildID,
-		AuctionCategory: categoryID,
-	}
-
-	result := database.DB.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "guild_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
-	}).Create(&info)
-
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-	}
-
-	for _, v := range channels {
-		if v.Type == 4 {
-			if categoryID == v.ID {
-				category = v.Name
-			}
-		}
-	}
-
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Auction Category Setup: __SUCCESS__",
-					Description: "Successfully set the output to the category: `" + category + "`",
-				},
-			},
-			Components: []discordgo.MessageComponent{},
-			Flags:      64,
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
 func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSubCommand(i)

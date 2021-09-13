@@ -25,8 +25,6 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if i.Type == 3 {
 		switch i.MessageComponentData().CustomID {
-		case "categorymenu":
-			c.CategorySelect(s, i)
 		case "endauction":
 			c.AuctionEndButton(s, i)
 		default:
