@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -27,7 +26,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 			Description: "Setup auctions on your server",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
+					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "category",
 					Description: "Sets the category to create auctions in. Name must be an exact match",
 				},
@@ -105,11 +104,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSubCommand(i)
-	catIDs := make([]string, 0)
-	catMatch := false
 	content := ""
-
-	catMenu := make([]discordgo.SelectMenuOption, 0)
 	componentValue := []discordgo.MessageComponent{}
 
 	if options["category"] != nil {
@@ -117,58 +112,24 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			GuildID: i.GuildID,
 		}
 		category := options["category"].(string)
-		channels, err := s.GuildChannels(i.GuildID)
-		content = "There is no category in your discord server that matches the name: " + category
+		ch, err := s.Channel(category)
 		if err != nil {
 			fmt.Println(err)
+			return
+		}
+		if ch.Type != 4 {
+			fmt.Println("channel is not right type")
+			return
 		}
 
-		for n, v := range channels {
-			if v.Type == 4 {
-				if strings.EqualFold(category, v.Name) {
-					catMatch = true
-					catIDs = append(catIDs, v.ID)
-					menuOption := discordgo.SelectMenuOption{
-						Label:       fmt.Sprintf("%s (%s)", v.Name, v.ID),
-						Value:       v.ID,
-						Description: "Discord Channel number (includes all channels/categories): " + fmt.Sprint(n+1),
-						Emoji:       discordgo.ComponentEmoji{},
-						Default:     false,
-					}
-					catMenu = append(catMenu, menuOption)
-				}
-			}
-		}
+		info.AuctionCategory = category
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
+		}).Create(&info)
 
-		if catMatch {
-			content = "Successfully set the output to the category: `" + category + "`"
-			if len(catIDs) > 1 {
-				content = "You have multiple categories that match the name: **" + category + "**. Please select the correct one below."
-				catOptions := catMenu
-				componentValue = []discordgo.MessageComponent{
-					discordgo.ActionsRow{
-						Components: []discordgo.MessageComponent{
-							discordgo.SelectMenu{
-								CustomID:    "categorymenu",
-								Placeholder: "Select Category",
-								MinValues:   1,
-								MaxValues:   1,
-								Options:     catOptions,
-							},
-						},
-					},
-				}
-			} else {
-				info.AuctionCategory = catIDs[0]
-				result := database.DB.Clauses(clause.OnConflict{
-					Columns:   []clause.Column{{Name: "guild_id"}},
-					DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
-				}).Create(&info)
-
-				if result.Error != nil {
-					fmt.Println(result.Error.Error())
-				}
-			}
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
 		}
 	}
 
@@ -191,7 +152,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info := database.GuildInfo{
 			GuildID: i.GuildID,
 		}
-		info.LogChannel = options["log_channel"].(discordgo.Channel).ID
+		info.LogChannel = options["log_channel"].(string)
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
@@ -201,8 +162,9 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(result.Error.Error())
 		}
 	}
+
 	info := database.GuildInfo{
-		GuildID:         i.GuildID,
+		GuildID: i.GuildID,
 	}
 	database.DB.First(&info, i.GuildID)
 
@@ -230,17 +192,17 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields: []*discordgo.MessageEmbedField{
 						{
-							Name:   "Category",
+							Name:   "**Category**",
 							Value:  info.AuctionCategory,
 							Inline: false,
 						},
 						{
-							Name:   "Log Channel",
-							Value:  info.LogChannel,
+							Name:   "**Log Channel**",
+							Value:  fmt.Sprintf("<#%s>", info.LogChannel),
 							Inline: false,
 						},
 						{
-							Name:   "Currency",
+							Name:   "**Currency**",
 							Value:  info.Currency,
 							Inline: false,
 						},
