@@ -349,7 +349,7 @@ if info.EndTime.Before(time.Now()) {
 		database.DB.Model(&info).Updates(info)
 
 		if options["secret_bidder"] != nil {
-			info.Winner = "Anonymous"
+			Winner = "🤫"
 		}
 
 		updateAuction, err := s.ChannelMessage(info.ChannelID, info.MessageID)
