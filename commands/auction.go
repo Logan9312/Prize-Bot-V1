@@ -199,7 +199,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				{
 					Title:       "Auction Setup",
 					Description: content,
-					Timestamp:   "",
 					Color:       0x00bfff,
 					Thumbnail:   &discordgo.MessageEmbedThumbnail{},
 					Author:      &discordgo.MessageEmbedAuthor{},
@@ -232,7 +231,9 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)
-	info := database.GuildInfo{}
+	info := database.GuildInfo{
+		GuildID: i.GuildID,
+	}
 	currentTime := time.Now()
 	duration, err := time.ParseDuration(fmt.Sprint(options["duration"].(float64)) + "h")
 	if err != nil {
@@ -244,10 +245,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	database.DB.First(&info, i.Interaction.GuildID)
-
-	currency := info.Currency
-	fmt.Println("Currency is: " + info.Currency)
+	database.DB.First(&info, i.GuildID)
 
 	channelInfo := discordgo.GuildChannelCreateData{
 		Name:     "💸│" + item,
@@ -265,7 +263,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content: "",
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
-			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s %s", i.Member.Mention(), currency, fmt.Sprint(initialBid)),
+			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s %s", i.Member.Mention(), info.Currency, fmt.Sprint(initialBid)),
 			Color:       0x00bfff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
