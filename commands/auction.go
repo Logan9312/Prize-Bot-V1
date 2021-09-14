@@ -339,7 +339,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	currency := guildInfo.Currency
 	var Content string
 
-	if bidAmount > info.Bid {
+if info.EndTime.Before(time.Now()) {
+	Content = "Cannot Bid, auction has ended"
+} else if bidAmount > info.Bid {
 		info.Bid = bidAmount
 		info.Winner = fmt.Sprintf("<@%s>", i.Member.User.ID)
 		Winner := info.Winner
@@ -383,6 +385,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		Content = "You must bid higher than: " + fmt.Sprint(info.Bid)
 	}
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
