@@ -431,11 +431,17 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
+
+
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
+
+	time.Sleep(1 * time.Hour)
 
 	_, err = Session.ChannelDelete(ChannelID)
 	if err != nil {
