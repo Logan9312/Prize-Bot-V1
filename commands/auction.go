@@ -140,6 +140,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			GuildID: i.GuildID,
 		}
 		info.Currency = options["currency"].(string)
+		fmt.Println(options["currency"].(string))
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"currency": info.Currency}),
@@ -173,7 +174,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database.DB.First(&info, i.GuildID)
 
 	if info.AuctionCategory == "" {
-		info.AuctionCategory = "Not Set"
+		category.Name = "Not Set"
 	} else {
 		var err error
 		category, err = s.Channel(info.AuctionCategory)
@@ -246,6 +247,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database.DB.First(&info, i.Interaction.GuildID)
 
 	currency := info.Currency
+	fmt.Println("Currency is: " + info.Currency)
 
 	channelInfo := discordgo.GuildChannelCreateData{
 		Name:     "💸│" + item,
@@ -427,8 +429,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 	}
 
 	if guildInfo.LogChannel == "" {
-	Session.ChannelMessageSend(ChannelID, "ERROR: Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
-	return
+		Session.ChannelMessageSend(ChannelID, "ERROR: Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+		return
 	}
 
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
