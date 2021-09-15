@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -40,6 +42,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "log_channel",
 					Description: "Sets the channel where auctions will send outputs when they end",
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "alert_role",
+					Description: "Set a role to get pinged whenever an auction starts",
+				},
 			},
 		},
 		{
@@ -60,9 +67,9 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:        10,
+					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "duration",
-					Description: "Time (in hours) that the auction will run for",
+					Description: "Time that auction will run for. (Example: 24h, or 1d)",
 					Required:    true,
 				},
 			},
@@ -92,6 +99,8 @@ var AuctionCommand = discordgo.ApplicationCommand{
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
+	case "help":
+		AuctionHelp(s, i)
 	case "setup":
 		AuctionSetup(s, i)
 	case "create":
@@ -101,7 +110,45 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title: "/Auction Help has not been setup yet",
+					Color: 0x00bfff,
+				},
+			},
+			Flags: 64,
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	if i.Member.Permissions&(1<<3) != 8 {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "User must be administrator to change auction settings",
+						Color:       0x00bfff,
+					},
+				},
+				Flags:           64,
+			},
+		})
+	
+		if err != nil {
+			fmt.Println(err)
+		}
+		return
+	}
 
 	options := ParseSubCommand(i)
 	content := ""
@@ -140,7 +187,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			GuildID: i.GuildID,
 		}
 		info.Currency = options["currency"].(string)
-		fmt.Println(options["currency"].(string))
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"currency": info.Currency}),
@@ -179,6 +225,22 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
+	if options["alert_role"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.AuctionRole = options["alert_role"].(string)
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"auction_role": info.AuctionRole}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Alert Role has been successfully set.\n"
+	}
+
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
@@ -195,6 +257,11 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if info.Currency == "" {
 		info.Currency = "Not Set"
+	}
+	if info.AuctionRole == "" {
+		info.AuctionRole = "Not Set"
+	} else {
+		info.AuctionRole = fmt.Sprintf("<@&%s>", info.AuctionRole)
 	}
 	if info.LogChannel == "" {
 		info.LogChannel = "Not Set"
@@ -224,6 +291,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 							Name:  "**Currency**",
 							Value: info.Currency,
 						},
+						{
+							Name:  "**Alert Role**",
+							Value: info.AuctionRole,
+						},
 					},
 				},
 			},
@@ -243,10 +314,23 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
+
 	currentTime := time.Now()
-	duration, err := time.ParseDuration(fmt.Sprint(options["duration"].(float64)) + "h")
+	inputDuration := options["duration"].(string)
+	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
+		inputDuration = strings.TrimSuffix(inputDuration, "d")
+		float, err := strconv.ParseFloat(inputDuration, 64)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		inputDuration = fmt.Sprint(float*24) + "h"
+	}
+
+	duration, err := time.ParseDuration(inputDuration)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	endTime := currentTime.Add(duration)
 
@@ -269,7 +353,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
-		Content: "",
+		Content: fmt.Sprintf("<@&%s>", info.AuctionRole),
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
 			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s %s", i.Member.Mention(), info.Currency, fmt.Sprint(initialBid)),
@@ -395,7 +479,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content = "You must bid higher than: " + fmt.Sprint(info.Bid)
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{
@@ -407,6 +491,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Flags: 64,
 		},
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func AuctionEnd(ChannelID, GuildID string) {
@@ -466,7 +553,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Member.Permissions&(1<<3) != 8 {
 		content = "You must have an administrator role to end the auction!"
 	} else {
-		content = "Attempting to close auction..."
+		content = "Auction Ending..."
 		defer AuctionEnd(i.ChannelID, i.GuildID)
 	}
 
