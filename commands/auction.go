@@ -119,7 +119,23 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 		if ch.Type != 4 {
-			fmt.Println("channel is not right type")
+			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Components: componentValue,
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Title:       "Auction Setup",
+							Description: "ERROR: You must select a category, not a channel",
+							Color:       0xff0000,
+						},
+					},
+					Flags: 64,
+				},
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
 			return
 		}
 
