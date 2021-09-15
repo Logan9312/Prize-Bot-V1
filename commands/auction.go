@@ -136,14 +136,14 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Data: &discordgo.InteractionResponseData{
 				Embeds: []*discordgo.MessageEmbed{
 					{
-						Title:       "User must be administrator to change auction settings",
-						Color:       0x00bfff,
+						Title: "User must be administrator to change auction settings",
+						Color: 0x00bfff,
 					},
 				},
-				Flags:           64,
+				Flags: 64,
 			},
 		})
-	
+
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -418,6 +418,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	time.Sleep(duration)
+	Session.ChannelMessageSend(channel.ID, "Auction has ended, channel will automatically delete in 1 hour")
+	time.Sleep(1 * time.Hour)
 	AuctionEnd(channel.ID, i.GuildID)
 }
 
@@ -530,17 +532,19 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
-	if err != nil {
-		fmt.Println(err)
-		return
+	if auctionInfo.EndTime != time.Date(1, time.January, 1, 1, 0, 0, 0, time.UTC) {
+		_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 
-	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
+	auctionInfo.EndTime = time.Date(1, time.January, 1, 1, 0, 0, 0, time.UTC)
 
-	time.Sleep(1 * time.Hour)
+	database.DB.Model(&auctionInfo).Updates(auctionInfo)
 
-	_, err = Session.ChannelDelete(ChannelID)
+	_, err := Session.ChannelDelete(ChannelID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -570,8 +574,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Color:       0x00bfff,
 				},
 			},
-			AllowedMentions: &discordgo.MessageAllowedMentions{},
-			Flags:           64,
+			Flags: 64,
 		},
 	})
 

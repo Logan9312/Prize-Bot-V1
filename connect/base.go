@@ -74,7 +74,7 @@ func BotConnect(token, environment, botName string) {
 
 	s.AddHandler(CommandHandler)
 
-	go Timers()
+	go Timers(s)
 
 	err = s.UpdateGameStatus(0, status)
 	if err != nil {
@@ -85,23 +85,27 @@ func BotConnect(token, environment, botName string) {
 	fmt.Println(botName + " Startup Complete!")
 }
 
-func Timers() {
+func Timers(s *discordgo.Session) {
 
 	var Auctions []database.Auction
 
 	database.DB.Find(&Auctions)
 
 	for _, v := range Auctions {
-		go SetTimer(v)
+		go SetTimer(v, s)
 	}
 }
 
-func SetTimer(v database.Auction) {
+func SetTimer(v database.Auction, s *discordgo.Session) {
 	if v.EndTime.Before(time.Now()) {
+		s.ChannelMessageSend(v.ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
+		time.Sleep(1 * time.Hour)
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
 		database.DB.Delete(&v, v.ChannelID)
 	} else {
 		time.Sleep(time.Until(v.EndTime))
+		s.ChannelMessageSend(v.ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
+		time.Sleep(1 * time.Hour)
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
 		database.DB.Delete(&v, v.ChannelID)
 	}
