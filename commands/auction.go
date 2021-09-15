@@ -241,7 +241,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info := database.GuildInfo{
 			GuildID: i.GuildID,
 		}
-		info.AuctionRole = options["alert_role"].(string)
+		info.AuctionRole = fmt.Sprintf("<@&%s>", options["alert_role"].(string))
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"auction_role": info.AuctionRole}),
@@ -272,8 +272,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if info.AuctionRole == "" {
 		info.AuctionRole = "Not Set"
-	} else {
-		info.AuctionRole = fmt.Sprintf("<@&%s>", info.AuctionRole)
 	}
 	if info.LogChannel == "" {
 		info.LogChannel = "Not Set"
@@ -374,7 +372,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
-		Content: fmt.Sprintf("<@&%s>", info.AuctionRole),
+		Content: info.AuctionRole,
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
 			Description: description,
@@ -476,7 +474,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content = "Cannot Bid, auction has ended"
 	} else if bidAmount > info.Bid {
 		info.Bid = bidAmount
-		info.Winner = fmt.Sprintf("<@%s>", i.Member.User.ID)
+		info.Winner = i.Member.Mention()
 		Winner := info.Winner
 
 		database.DB.Model(&info).Updates(info)
