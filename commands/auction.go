@@ -72,6 +72,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Time that auction will run for. (Example: 24h, or 1d)",
 					Required:    true,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "description",
+					Description: "Set a custom item description",
+					Required:    false,
+				},
 			},
 		},
 		{
@@ -311,6 +317,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)
+	description := ""
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
@@ -352,17 +359,31 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 
+	if options["description"] != nil {
+		description = options["description"].(string)
+	}
+
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
 		Content: fmt.Sprintf("<@&%s>", info.AuctionRole),
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: " + item,
-			Description: fmt.Sprintf("Auction hosted by: %s\nCurrent Highest Bid: %s %s", i.Member.Mention(), info.Currency, fmt.Sprint(initialBid)),
+			Description: description,
 			Color:       0x00bfff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Auction End Time:**",
 					Value:  fmt.Sprintf("<t:%d>", endTime.Unix()),
-					Inline: false,
+					Inline: true,
+				},
+				{
+					Name:   "**Starting Bid:**",
+					Value:  fmt.Sprint(initialBid),
+					Inline: true,
+				},
+				{
+					Name:   "**Auction Host:**",
+					Value:  i.Member.Mention(),
+					Inline: true,
 				},
 			},
 		},
@@ -394,6 +415,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Winner:    "No bidders",
 		GuildID:   i.GuildID,
 		Item:      item,
+		Host:      i.Member.Mention(),
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -456,15 +478,24 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "**Auction End Time:**",
 				Value:  fmt.Sprintf("<t:%d>", info.EndTime.Unix()),
-				Inline: false,
+				Inline: true,
 			},
 			{
-				Name:  "**Current Winner**",
-				Value: fmt.Sprint(Winner),
+				Name:   "**Current Highest Bid:**",
+				Value:  fmt.Sprintf("%s %s", currency, fmt.Sprint(info.Bid)),
+				Inline: true,
+			},
+			{
+				Name:   "**Current Winner**",
+				Value:  fmt.Sprint(Winner),
+				Inline: true,
+			},
+			{
+				Name:   "**Auction Host:**",
+				Value:  i.Member.Mention(),
+				Inline: false,
 			},
 		}
-
-		updateAuction.Embeds[0].Description = fmt.Sprintf("Current Highest Bid: %s %s", currency, fmt.Sprint(info.Bid))
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components: updateAuction.Components,

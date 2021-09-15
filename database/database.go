@@ -16,6 +16,7 @@ type Auction struct {
 	Winner    string
 	GuildID   string
 	Item      string
+	Host      string
 }
 
 type GuildInfo struct {
