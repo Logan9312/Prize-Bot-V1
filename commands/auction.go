@@ -486,8 +486,13 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	info.ChannelID = i.ChannelID
 	database.DB.First(&info, i.ChannelID)
 	database.DB.First(&guildInfo, i.GuildID)
+	host := info.Host
 	currency := guildInfo.Currency
 	var Content string
+
+	if info.Host == ""{
+		host = "No Host Recorded"
+	}
 
 	if info.EndTime.Before(time.Now()) {
 		Content = "Cannot Bid, auction has ended"
@@ -525,7 +530,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "**Auction Host:**",
-				Value:  i.Member.Mention(),
+				Value:  host,
 				Inline: false,
 			},
 		}
