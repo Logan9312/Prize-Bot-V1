@@ -119,36 +119,20 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 		if ch.Type != 4 {
-			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Components: componentValue,
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Title:       "Auction Setup",
-							Description: "ERROR: You must select a category, not a channel",
-							Color:       0xff0000,
-						},
-					},
-					Flags: 64,
-				},
-			})
-			if err != nil {
-				fmt.Println(err)
+			content = content + "• ERROR: Auction Category must be a category, not a channel.\n"
+		} else {
+
+			info.AuctionCategory = category
+			result := database.DB.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "guild_id"}},
+				DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
+			}).Create(&info)
+
+			if result.Error != nil {
+				fmt.Println(result.Error.Error())
 			}
-			return
+			content = content + "• Category has been successfully set.\n"
 		}
-
-		info.AuctionCategory = category
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
-		}).Create(&info)
-
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
-		content = content + "• Category has been successfully set.\n"
 	}
 
 	if options["currency"] != nil {
@@ -173,15 +157,26 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			GuildID: i.GuildID,
 		}
 		info.LogChannel = options["log_channel"].(string)
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
-		}).Create(&info)
 
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
+		ch, err := s.Channel(info.LogChannel)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
-		content = content + "• Log Channel has been successfully set.\n"
+
+		if ch.Type != 0 {
+			content = content + "• ERROR: Auction Log must be a text channel\n"
+		} else {
+			result := database.DB.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "guild_id"}},
+				DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
+			}).Create(&info)
+
+			if result.Error != nil {
+				fmt.Println(result.Error.Error())
+			}
+			content = content + "• Log Channel has been successfully set.\n"
+		}
 	}
 
 	info := database.GuildInfo{
@@ -216,8 +211,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Title:       "Auction Setup",
 					Description: content,
 					Color:       0x00bfff,
-					Thumbnail:   &discordgo.MessageEmbedThumbnail{},
-					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:  "**Category**",
@@ -355,9 +348,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	currency := guildInfo.Currency
 	var Content string
 
-if info.EndTime.Before(time.Now()) {
-	Content = "Cannot Bid, auction has ended"
-} else if bidAmount > info.Bid {
+	if info.EndTime.Before(time.Now()) {
+		Content = "Cannot Bid, auction has ended"
+	} else if bidAmount > info.Bid {
 		info.Bid = bidAmount
 		info.Winner = fmt.Sprintf("<@%s>", i.Member.User.ID)
 		Winner := info.Winner
@@ -449,8 +442,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 		Session.ChannelMessageSend(ChannelID, "ERROR: Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
 		return
 	}
-
-
 
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
