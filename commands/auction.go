@@ -387,7 +387,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		description = options["description"].(string)
 	}
 	if options["image"] != nil {
-		image = options["description"].(string)
+		image = options["image"].(string)
 	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
