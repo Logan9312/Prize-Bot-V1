@@ -78,6 +78,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set a custom item description",
 					Required:    false,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "image",
+					Description: "Must be a link",
+					Required:    false,
+				},
 			},
 		},
 		{
@@ -318,6 +324,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)
 	description := ""
+	image := ""
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
@@ -362,6 +369,9 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["description"] != nil {
 		description = options["description"].(string)
 	}
+	if options["image"] != nil {
+		image = options["description"].(string)
+	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
 		Content: fmt.Sprintf("<@&%s>", info.AuctionRole),
@@ -369,6 +379,12 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Title:       "Item: " + item,
 			Description: description,
 			Color:       0x00bfff,
+			Footer:      &discordgo.MessageEmbedFooter{
+				Text:         "To bid in this auction use /auction bid in the channel below!",
+			},
+			Image:       &discordgo.MessageEmbedImage{
+				URL:      image,
+			},
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Auction End Time:**",
