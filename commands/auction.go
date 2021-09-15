@@ -342,6 +342,25 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	duration, err := time.ParseDuration(inputDuration)
 	if err != nil {
 		fmt.Println(err)
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content:    "",
+				Components: []discordgo.MessageComponent{},
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "**Time Duration Error**",
+						Description: "Error message: " + err.Error(),
+						Color:       0x00bfff,
+					},
+				},
+				Flags: 64,
+			},
+		})
+	
+		if err != nil {
+			fmt.Println(err)
+		}
 		return
 	}
 	endTime := currentTime.Add(duration)
@@ -377,11 +396,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Title:       "Item: " + item,
 			Description: description,
 			Color:       0x00bfff,
-			Footer:      &discordgo.MessageEmbedFooter{
-				Text:         "To bid in this auction use /auction bid in the channel below!",
+			Footer: &discordgo.MessageEmbedFooter{
+				Text: "To bid in this auction use /auction bid in the channel below!",
 			},
-			Image:       &discordgo.MessageEmbedImage{
-				URL:      image,
+			Image: &discordgo.MessageEmbedImage{
+				URL: image,
 			},
 			Fields: []*discordgo.MessageEmbedField{
 				{
