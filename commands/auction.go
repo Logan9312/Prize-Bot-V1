@@ -357,7 +357,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Flags: 64,
 			},
 		})
-	
+
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -473,8 +473,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	time.Sleep(duration)
-	Session.ChannelMessageSend(channel.ID, "Auction has ended, channel will automatically delete in 1 hour")
-	time.Sleep(1 * time.Hour)
 	AuctionEnd(channel.ID, i.GuildID)
 }
 
@@ -490,7 +488,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	currency := guildInfo.Currency
 	var Content string
 
-	if info.Host == ""{
+	if info.Host == "" {
 		host = "No Host Recorded"
 	}
 
@@ -601,19 +599,21 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	if auctionInfo.EndTime != time.Date(1, time.January, 1, 1, 0, 0, 0, time.UTC) {
-		_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
+
+	time.Sleep(time.Hour)
+
+	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
 	auctionInfo.EndTime = time.Date(1, time.January, 1, 1, 0, 0, 0, time.UTC)
 
 	database.DB.Model(&auctionInfo).Updates(auctionInfo)
 
-	_, err := Session.ChannelDelete(ChannelID)
+	_, err = Session.ChannelDelete(ChannelID)
 	if err != nil {
 		fmt.Println(err)
 	}
