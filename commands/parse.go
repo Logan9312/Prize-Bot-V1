@@ -19,3 +19,15 @@ func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
 
 	return options
 }
+
+func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate){
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Components:      []discordgo.MessageComponent{},
+			Embeds:          []*discordgo.MessageEmbed{},
+			AllowedMentions: &discordgo.MessageAllowedMentions{},
+			Flags:           0,
+		},
+	})
+}

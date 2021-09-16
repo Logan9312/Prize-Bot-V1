@@ -601,7 +601,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
 
-	time.Sleep(time.Hour)
+
 
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
@@ -609,6 +609,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
+	time.Sleep(time.Hour)
+	
 	auctionInfo.EndTime = time.Date(1, time.January, 1, 1, 0, 0, 0, time.UTC)
 
 	database.DB.Model(&auctionInfo).Updates(auctionInfo)
