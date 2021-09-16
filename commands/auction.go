@@ -590,6 +590,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 					Value:  guildInfo.Currency + " " + fmt.Sprint(auctionInfo.Bid),
 					Inline: false,
 				},
+				{
+					Name:   "**Owner**",
+					Value:  "To claim your prize, please contact: " + auctionInfo.Host,
+					Inline: false,
+				},
 			},
 		},
 	}
@@ -599,7 +604,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 1 hour.")
+	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 5 minutes")
 
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
@@ -607,7 +612,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	time.Sleep(time.Hour)
+	time.Sleep(5 * time.Minute)
 
 	_, err = Session.ChannelDelete(ChannelID)
 	if err != nil {
