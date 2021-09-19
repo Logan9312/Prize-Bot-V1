@@ -27,6 +27,10 @@ type GuildInfo struct {
 	LogChannel      string
 }
 
+type UserProfile struct {
+	UserID string `gorm:"primaryKey"`
+}
+
 var DB *gorm.DB
 
 func DatabaseConnect(password, host, env string) {
@@ -43,5 +47,4 @@ func DatabaseConnect(password, host, env string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }

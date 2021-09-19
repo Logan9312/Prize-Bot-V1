@@ -583,12 +583,12 @@ func AuctionEnd(ChannelID, GuildID string) {
 				{
 					Name:   "**Winner**",
 					Value:  auctionInfo.Winner,
-					Inline: false,
+					Inline: true,
 				},
 				{
 					Name:   "**Payment Due**",
 					Value:  guildInfo.Currency + " " + fmt.Sprint(auctionInfo.Bid),
-					Inline: false,
+					Inline: true,
 				},
 				{
 					Name:   "**Owner**",
@@ -612,7 +612,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	time.Sleep(5 * time.Minute)
+	database.DB.Delete(&auctionInfo, ChannelID)
 
 	_, err = Session.ChannelDelete(ChannelID)
 	if err != nil {

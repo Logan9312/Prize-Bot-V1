@@ -98,15 +98,9 @@ func Timers(s *discordgo.Session) {
 
 func SetTimer(v database.Auction, s *discordgo.Session) {
 	if v.EndTime.Before(time.Now()) {
-		s.ChannelMessageSend(v.ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
-		time.Sleep(1 * time.Hour)
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
-		database.DB.Delete(&v, v.ChannelID)
 	} else {
 		time.Sleep(time.Until(v.EndTime))
-		s.ChannelMessageSend(v.ChannelID, "Auction has ended, channel will automatically delete in 1 hour")
-		time.Sleep(1 * time.Hour)
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
-		database.DB.Delete(&v, v.ChannelID)
 	}
 }
