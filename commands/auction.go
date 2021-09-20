@@ -122,21 +122,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title: "/Auction Help has not been setup yet",
-					Color: 0x00bfff,
-				},
-			},
-			Flags: 64,
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
+	ErrorResponse(s, i, "Help command has not been setup yet")
 }
 
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -209,6 +195,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ch, err := s.Channel(info.LogChannel)
 		if err != nil {
 			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
 			return
 		}
 
@@ -271,6 +258,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		category, err = s.Channel(info.AuctionCategory)
 		if err != nil {
 			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
 		}
 	}
 	if info.Currency == "" {
@@ -347,6 +336,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		float, err := strconv.ParseFloat(inputDuration, 64)
 		if err != nil {
 			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
 			return
 		}
 		inputDuration = fmt.Sprint(float*24) + "h"
@@ -355,25 +345,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	duration, err := time.ParseDuration(inputDuration)
 	if err != nil {
 		fmt.Println(err)
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content:    "",
-				Components: []discordgo.MessageComponent{},
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "**Time Duration Error**",
-						Description: "Error message: " + err.Error(),
-						Color:       0x00bfff,
-					},
-				},
-				Flags: 64,
-			},
-		})
-
-		if err != nil {
-			fmt.Println(err)
-		}
+		ErrorResponse(s, i, err.Error())
 		return
 	}
 	endTime := currentTime.Add(duration)
@@ -394,6 +366,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		fmt.Println(err)
+		ErrorResponse(s, i, err.Error())
+		return
 	}
 
 	if options["description"] != nil {
@@ -451,6 +425,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		fmt.Println(err)
+		ErrorResponse(s, i, err.Error())
+		return
 	}
 
 	database.DB.Create(&database.Auction{
@@ -506,8 +482,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if info.EndTime.Before(time.Now()) {
-		Content = "Cannot Bid, auction has ended"
-	} else if bidAmount > info.Bid {
+		ErrorResponse(s, i, "Cannot Bid, Auction has ended")
+		return
+	} 
+	
+	if bidAmount > info.Bid {
 		info.Bid = bidAmount
 		info.Winner = i.Member.Mention()
 		Winner := info.Winner
@@ -517,6 +496,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		updateAuction, err := s.ChannelMessage(info.ChannelID, info.MessageID)
 		if err != nil {
 			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
 		}
 
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
@@ -550,6 +531,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 		if err != nil {
 			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
 			return
 		}
 		Content = "Bid has successfully been placed"
