@@ -484,8 +484,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if info.EndTime.Before(time.Now()) {
 		ErrorResponse(s, i, "Cannot Bid, Auction has ended")
 		return
-	} 
-	
+	}
+
 	if bidAmount > info.Bid {
 		info.Bid = bidAmount
 		info.Winner = i.Member.Mention()
@@ -560,8 +560,16 @@ func AuctionEnd(ChannelID, GuildID string) {
 	var auctionInfo database.Auction
 	var guildInfo database.GuildInfo
 	auctionInfo.ChannelID = ChannelID
-	database.DB.First(&auctionInfo, ChannelID)
-	database.DB.First(&guildInfo, GuildID)
+
+	result := database.DB.First(&auctionInfo, ChannelID)
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+	}
+
+	result = database.DB.First(&guildInfo, GuildID)
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+	}
 
 	if auctionInfo.Winner == "" {
 		auctionInfo.Winner = "No winner detected. Please contact support to report this bug"
@@ -621,7 +629,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	result := database.DB.Delete(&auctionInfo, ChannelID)
+	result = database.DB.Delete(&auctionInfo, ChannelID)
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 	}
@@ -634,15 +642,22 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	guildInfo := database.GuildInfo{}
 	info := database.Auction{}
+
 	database.DB.First(&info, i.ChannelID)
+	database.DB.First(&guildInfo, i.GuildID)
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != info.Host {
 		ErrorResponse(s, i, "You must have an administrator role to end the auction early!")
 		return
 	}
 
-	defer AuctionEnd(i.ChannelID, i.GuildID)
+	if guildInfo.LogChannel == "" {
+		fmt.Println("Log channel has not been set for guild: " + i.GuildID)
+		ErrorResponse(s, i, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+		return
+	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -664,6 +679,8 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	
+	AuctionEnd(i.ChannelID, i.GuildID)
 }
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
