@@ -624,7 +624,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 				},
 				{
 					Name:   "**Auction Host**",
-					Value:  "This Auction was hosted by: " + auctionInfo.Host,
+					Value:  fmt.Sprintf("This Auction was hosted by: <@!%s>", auctionInfo.Host),
 					Inline: false,
 				},
 			},
