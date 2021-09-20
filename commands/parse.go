@@ -26,12 +26,18 @@ func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) {
 
-	command := "/" + i.ApplicationCommandData().Name
+	description := "There was an error trying to run that function. Please create a support ticket if you need help."
 
-	fmt.Println(errorText)
+	if i.Type == 2 {
+		command := "/" + i.ApplicationCommandData().Name
 
-	if i.ApplicationCommandData().Options[0].Type == discordgo.ApplicationCommandOptionSubCommand {
-		command += " " + i.ApplicationCommandData().Options[0].Name
+		fmt.Println(errorText)
+
+		if i.ApplicationCommandData().Options[0].Type == discordgo.ApplicationCommandOptionSubCommand {
+			command += " " + i.ApplicationCommandData().Options[0].Name
+		}
+
+		description = fmt.Sprintf("There was an error trying to run `%s`. Please create a support ticket if you need help.", command)
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -56,7 +62,7 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "Error",
-					Description: fmt.Sprintf("There was an error trying to run `%s`. Please create a support ticket if you need help.", command),
+					Description: description,
 					Color:       0xff0000,
 					Fields: []*discordgo.MessageEmbedField{
 						{
