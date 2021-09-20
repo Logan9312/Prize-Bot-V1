@@ -237,7 +237,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.Claiming = options["claiming"].(string)
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"claiming": info.AuctionRole}),
+			DoUpdates: clause.Assignments(map[string]interface{}{"claiming": info.Claiming}),
 		}).Create(&info)
 
 		if result.Error != nil {
