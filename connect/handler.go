@@ -27,6 +27,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		switch i.MessageComponentData().CustomID {
 		case "endauction":
 			c.AuctionEndButton(s, i)
+		case "claim_prize":
+			c.ClaimPrizeButton(s, i)
 		default:
 			CommandResponse(s, i)
 		}
