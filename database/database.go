@@ -17,6 +17,7 @@ type Auction struct {
 	GuildID   string
 	Item      string
 	Host      string
+	Currency  string
 }
 
 type GuildInfo struct {
@@ -25,7 +26,7 @@ type GuildInfo struct {
 	AuctionRole     string
 	Currency        string
 	LogChannel      string
-	Claiming		string
+	Claiming        string
 }
 
 type UserProfile struct {

@@ -85,6 +85,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency",
+					Description: "A one time currency to use for this auction.",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "image",
 					Description: "Must be a link",
 					Required:    false,
@@ -341,7 +347,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		inputDuration = fmt.Sprint(float*24) + "h"
 	}
-
 	duration, err := time.ParseDuration(inputDuration)
 	if err != nil {
 		fmt.Println(err)
@@ -355,6 +360,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	database.DB.First(&info, i.GuildID)
+
+	currency := info.Currency
 
 	channelInfo := discordgo.GuildChannelCreateData{
 		Name:     "💸│" + item,
@@ -375,6 +382,9 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if options["image"] != nil {
 		image = options["image"].(string)
+	}
+	if options["currency"] != nil {
+		currency = options["currency"].(string)
 	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
@@ -397,7 +407,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "**Starting Bid:**",
-					Value:  fmt.Sprint(initialBid),
+					Value:  currency + " " + fmt.Sprint(initialBid),
 					Inline: true,
 				},
 				{
@@ -438,6 +448,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		GuildID:   i.GuildID,
 		Item:      item,
 		Host:      i.Member.User.ID,
+		Currency: currency,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -476,6 +487,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	host := info.Host
 	currency := guildInfo.Currency
 	var Content string
+
+	if info.Currency != "" {
+		currency = info.Currency
+	}
 
 	if info.Host == "" {
 		host = "No Host Recorded"
