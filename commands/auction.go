@@ -448,7 +448,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		GuildID:   i.GuildID,
 		Item:      item,
 		Host:      i.Member.User.ID,
-		Currency: currency,
+		Currency:  currency,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -578,7 +578,14 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 	result := database.DB.First(&auctionInfo, ChannelID)
 	if result.Error != nil {
-		fmt.Println(result.Error.Error())
+		fmt.Println("Error checking for auction: " + result.Error.Error())
+
+		_, err := Session.ChannelDelete(ChannelID)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		return
 	}
 
 	result = database.DB.First(&guildInfo, GuildID)
@@ -694,7 +701,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	AuctionEnd(i.ChannelID, i.GuildID)
 }
 
