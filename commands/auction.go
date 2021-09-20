@@ -47,6 +47,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "alert_role",
 					Description: "Set a role to get pinged whenever an auction starts",
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "claiming",
+					Description: "Set the message that will appear when someone tries to claim an auction prize",
+				},
 			},
 		},
 		{
@@ -98,12 +103,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Place your bid here",
 					Required:    true,
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "secret_bidder",
-					Description: "Turn this on to protect your identity for the next bid.",
-					Required:    false,
-				},
 			},
 		},
 	},
@@ -143,22 +142,7 @@ func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if i.Member.Permissions&(1<<3) != 8 {
-		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title: "User must be administrator to change auction settings",
-						Color: 0x00bfff,
-					},
-				},
-				Flags: 64,
-			},
-		})
-
-		if err != nil {
-			fmt.Println(err)
-		}
+		ErrorResponse(s, i, "User must have administrator permissions to run this command")
 		return
 	}
 
@@ -168,20 +152,25 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	category := &discordgo.Channel{}
 
 	if options["category"] != nil {
+
 		info := database.GuildInfo{
 			GuildID: i.GuildID,
 		}
+
 		category := options["category"].(string)
+		info.AuctionCategory = category
+
 		ch, err := s.Channel(category)
+
 		if err != nil {
-			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
 			return
 		}
+
 		if ch.Type != 4 {
 			content = content + "• ERROR: Auction Category must be a category, not a channel.\n"
 		} else {
 
-			info.AuctionCategory = category
 			result := database.DB.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "guild_id"}},
 				DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
@@ -190,6 +179,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			if result.Error != nil {
 				fmt.Println(result.Error.Error())
 			}
+
 			content = content + "• Category has been successfully set.\n"
 		}
 	}
@@ -253,6 +243,22 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content = content + "• Alert Role has been successfully set.\n"
 	}
 
+	if options["claiming"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.Claiming = options["claiming"].(string)
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"claiming": info.AuctionRole}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Claiming Message has been successfully set.\n"
+	}
+
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
@@ -277,6 +283,9 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.LogChannel = "Not Set"
 	} else {
 		info.LogChannel = fmt.Sprintf("<#%s>", info.LogChannel)
+	}
+	if info.Claiming == "" {
+		info.Claiming = "Not Set"
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -304,6 +313,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						{
 							Name:  "**Alert Role**",
 							Value: info.AuctionRole,
+						},
+						{
+							Name:  "**Claiming Message**",
+							Value: info.Claiming,
 						},
 					},
 				},
@@ -448,7 +461,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Winner:    "No bidders",
 		GuildID:   i.GuildID,
 		Item:      item,
-		Host:      i.Member.Mention(),
+		Host:      i.Member.User.ID,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -501,10 +514,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		database.DB.Model(&info).Updates(info)
 
-		if options["secret_bidder"] != nil {
-			Winner = "🤫"
-		}
-
 		updateAuction, err := s.ChannelMessage(info.ChannelID, info.MessageID)
 		if err != nil {
 			fmt.Println(err)
@@ -528,7 +537,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "**Auction Host:**",
-				Value:  host,
+				Value:  fmt.Sprintf("<@!%s>", host),
 				Inline: false,
 			},
 		}
@@ -572,8 +581,26 @@ func AuctionEnd(ChannelID, GuildID string) {
 	database.DB.First(&auctionInfo, ChannelID)
 	database.DB.First(&guildInfo, GuildID)
 
+	if auctionInfo.Winner == "" {
+		auctionInfo.Winner = "No winner detected. Please contact support to report this bug"
+	}
+
 	messageSend := discordgo.MessageSend{
-		Content: "",
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label: "Claim prize!",
+						Style: 3,
+						Emoji: discordgo.ComponentEmoji{
+							Name: "cryopod",
+							ID:   "889307390690885692",
+						},
+						CustomID: "claim_prize",
+					},
+				},
+			},
+		},
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Auction Completed!",
 			Description: auctionInfo.Item,
@@ -591,8 +618,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 					Inline: true,
 				},
 				{
-					Name:   "**Owner**",
-					Value:  "To claim your prize, please contact: " + auctionInfo.Host,
+					Name:   "**Auction Host**",
+					Value:  "This Auction was hosted by: " + auctionInfo.Host,
 					Inline: false,
 				},
 			},
@@ -600,19 +627,22 @@ func AuctionEnd(ChannelID, GuildID string) {
 	}
 
 	if guildInfo.LogChannel == "" {
-		Session.ChannelMessageSend(ChannelID, "ERROR: Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+		fmt.Println("Log channel has not been set for guild: " + GuildID)
+		ErrorMessage(Session, ChannelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
 		return
 	}
-
-	Session.ChannelMessageSend(ChannelID, "Auction has ended, channel will automatically delete in 5 minutes")
 
 	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
+		ErrorMessage(Session, ChannelID, err.Error())
 		return
 	}
 
-	database.DB.Delete(&auctionInfo, ChannelID)
+	result := database.DB.Delete(&auctionInfo, ChannelID)
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+	}
 
 	_, err = Session.ChannelDelete(ChannelID)
 	if err != nil {
@@ -622,14 +652,15 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	content := ""
+	info := database.Auction{}
+	database.DB.First(&info, i.ChannelID)
 
-	if i.Member.Permissions&(1<<3) != 8 {
-		content = "You must have an administrator role to end the auction!"
-	} else {
-		content = "Auction Ending..."
-		defer AuctionEnd(i.ChannelID, i.GuildID)
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != info.Host {
+		ErrorResponse(s, i, "You must have an administrator role to end the auction early!")
+		return
 	}
+
+	defer AuctionEnd(i.ChannelID, i.GuildID)
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -639,7 +670,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "End Auction",
-					Description: content,
+					Description: "Auction Ending...",
 					Timestamp:   "",
 					Color:       0x00bfff,
 				},
@@ -651,4 +682,29 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var auctionInfo database.Auction
+	var guildInfo database.GuildInfo
+	database.DB.First(&auctionInfo, i.ChannelID)
+	database.DB.First(&guildInfo, i.GuildID)
+
+	if guildInfo.Claiming == "" {
+		guildInfo.Claiming = "The discord owner has not set a claiming message. Common ways to claim include: Opening a ticket or contacting the auction host. \nTo customize this message, use the command: `/auction setup claiming:`."
+	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "Claim Prize",
+					Description: guildInfo.Claiming,
+					Color:       0x00bfff,
+				},
+			},
+			Flags: 64,
+		},
+	})
 }

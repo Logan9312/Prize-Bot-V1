@@ -25,6 +25,7 @@ type GuildInfo struct {
 	AuctionRole     string
 	Currency        string
 	LogChannel      string
+	Claiming		string
 }
 
 type UserProfile struct {
