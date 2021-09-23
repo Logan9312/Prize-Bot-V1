@@ -428,6 +428,12 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						CustomID: "endauction",
 					},
+					discordgo.Button{
+Label: "Clear Auction Chat",
+Style: 4,
+CustomID: "clearchat"
+Disabled: true
+					},
 				},
 			},
 		},
