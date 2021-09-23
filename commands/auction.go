@@ -432,7 +432,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 Label: "Clear Auction Chat",
 Style: 4,
 CustomID: "clearchat1",
-Disabled: true
+Disabled: true,
 					},
 				},
 			},
