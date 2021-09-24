@@ -390,7 +390,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
 		Content: info.AuctionRole,
 		Embed: &discordgo.MessageEmbed{
-			Title:       "Item: " + item,
+			Title:       "Item: __**" + item + "**__",
 			Description: description,
 			Color:       0x00bfff,
 			Footer: &discordgo.MessageEmbedFooter{
