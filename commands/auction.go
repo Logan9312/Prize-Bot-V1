@@ -303,7 +303,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						{
 							Name:  "**Currency**",
-							Value: info.Currency,
+							Value: info.Currency + "\n*Note: The bot can only use emojis from discord servers that it is in.*",
 						},
 						{
 							Name:  "**Alert Role**",
