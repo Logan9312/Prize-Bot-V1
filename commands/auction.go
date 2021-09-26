@@ -90,6 +90,18 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "increment_max",
+					Description: "The max amount someone can bid at once",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "increment_min",
+					Description: "The minimum amount someone can bid at once",
+					Required:    false,
+				},
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "image",
 					Description: "Must be a link",
@@ -331,6 +343,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	initialBid := options["startingbid"].(float64)
 	description := ""
 	image := ""
+	var maxBid float64
+	var minBid float64
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
@@ -386,6 +400,12 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["currency"] != nil {
 		currency = options["currency"].(string)
 	}
+	if options["increment_max"] != nil {
+		maxBid = options["increment_max"].(float64)
+	}
+	if options["increment_min"] != nil {
+		minBid = options["increment_min"].(float64)
+	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
 		Content: info.AuctionRole,
@@ -429,10 +449,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						CustomID: "endauction",
 					},
 					discordgo.Button{
-Label: "Clear Auction Chat",
-Style: 2,
-CustomID: "clearauction",
-Disabled: true,
+						Label:    "Clear Auction Chat",
+						Style:    2,
+						CustomID: "clearauction",
+						Disabled: true,
 					},
 				},
 			},
@@ -455,6 +475,8 @@ Disabled: true,
 		Item:      item,
 		Host:      i.Member.User.ID,
 		Currency:  currency,
+		MaxBid:		maxBid,
+		MinBid:		minBid,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

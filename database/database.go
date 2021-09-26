@@ -18,6 +18,8 @@ type Auction struct {
 	Item      string
 	Host      string
 	Currency  string
+	MinBid	float64
+	MaxBid	float64
 }
 
 type GuildInfo struct {
