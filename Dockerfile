@@ -1,6 +1,5 @@
 FROM golang:1.17.1-alpine3.13 AS build_base
 
-RUN curl http://google.com
 RUN apk add --no-cache git
 RUN apk add build-base
 
