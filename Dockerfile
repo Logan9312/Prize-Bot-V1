@@ -17,7 +17,7 @@ COPY . .
 # Build the Go app
 RUN go build -o ./main .
 
-FROM alpine:3.14 
+FROM alpine:3.13
 RUN apk add ca-certificates
 RUN apk add jq
 
