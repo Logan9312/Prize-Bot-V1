@@ -48,6 +48,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set a role to get pinged whenever an auction starts",
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "host_role",
+					Description: "Set a role that can host auctions",
+				},
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "claiming",
 					Description: "Set the message that will appear when someone tries to claim an auction prize",
@@ -248,6 +253,22 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content = content + "• Alert Role has been successfully set.\n"
 	}
 
+	if options["host_role"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.AuctionHostRole = options["host_role"].(string)
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"auction_host_role": info.AuctionHostRole}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Host Role Message has been successfully set.\n"
+	}
+
 	if options["claiming"] != nil {
 		info := database.GuildInfo{
 			GuildID: i.GuildID,
@@ -294,6 +315,9 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if info.Claiming == "" {
 		info.Claiming = "Not Set"
 	}
+	if info.AuctionHostRole == "" {
+		info.AuctionHostRole = "Not Set"
+	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -320,6 +344,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						{
 							Name:  "**Alert Role**",
 							Value: info.AuctionRole,
+						},
+						{
+							Name:  "**Host Role**",
+							Value: info.AuctionHostRole,
 						},
 						{
 							Name:  "**Claiming Message**",
@@ -374,6 +402,15 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	database.DB.First(&info, i.GuildID)
+
+	if info.AuctionHostRole != "" {
+		for _, v := range i.Member.Roles {
+			if v != info.AuctionHostRole && i.Member.Permissions&(1<<3) != 8 {
+				ErrorResponse(s, i, "User must have the role <@&"+info.AuctionHostRole+"> to host auctions.")
+				return
+			}
+		}
+	}
 
 	currency := info.Currency
 
@@ -475,8 +512,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Item:      item,
 		Host:      i.Member.User.ID,
 		Currency:  currency,
-		MaxBid:		maxBid,
-		MinBid:		minBid,
+		MaxBid:    maxBid,
+		MinBid:    minBid,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
