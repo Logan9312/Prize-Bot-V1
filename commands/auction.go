@@ -507,7 +507,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Currency:  currency,
 		MaxBid:    maxBid,
 		MinBid:    minBid,
-		BidHistory: "**Starting Bid:** " + currency + " " + fmt.Sprint(initialBid) + "\n",
+		BidHistory: "**Starting Bid:** " + currency + " " + fmt.Sprint(initialBid),
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
