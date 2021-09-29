@@ -555,13 +555,12 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if bidAmount > info.Bid {
-
-		if bidAmount - info.Bid < info.MinBid {
+		if bidAmount - info.Bid < info.MinBid{
 			ErrorResponse(s, i, "Bid must be higher than the previous bid by: " + info.Currency + ""  + fmt.Sprint(info.MinBid))
 			return
 		}
 
-		if bidAmount - info.Bid > info.MaxBid {
+		if bidAmount - info.Bid > info.MaxBid && info.MaxBid != 0 {
 			ErrorResponse(s, i, "Bid must be no more than " + info.Currency + "" + fmt.Sprint(info.MaxBid) + "Higher than the previous bid.")
 			return
 		}
