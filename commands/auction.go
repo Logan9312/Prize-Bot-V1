@@ -347,11 +347,11 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						{
 							Name:  "**Host Role**",
-							Value: info.AuctionHostRole,
+							Value: "<@&" + info.AuctionHostRole + ">",
 						},
 						{
 							Name:  "**Claiming Message**",
-							Value: "<@&" + info.Claiming + ">",
+							Value: info.Claiming,
 						},
 					},
 				},
