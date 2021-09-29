@@ -448,6 +448,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		description += "\n**Max Bid Increment:** " + currency + " "+ fmt.Sprint(maxBid)
 	}
 
+	description += "\n\u200b"
+
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
 		Content: info.AuctionRole,
 		Embed: &discordgo.MessageEmbed{
@@ -560,7 +562,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		if bidAmount - info.Bid > info.MaxBid {
-			ErrorResponse(s, i, "Bid must be no more than " + info.Currency + "" + fmt.Sprint(info.MaxBid)) + "Higher than the previous bid."
+			ErrorResponse(s, i, "Bid must be no more than " + info.Currency + "" + fmt.Sprint(info.MaxBid) + "Higher than the previous bid.")
 			return
 		}
 
