@@ -351,7 +351,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						{
 							Name:  "**Claiming Message**",
-							Value: info.Claiming,
+							Value: "<@&" + info.Claiming + ">",
 						},
 					},
 				},
@@ -567,6 +567,17 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if bidAmount > info.Bid {
+
+		if bidAmount - info.Bid < info.MinBid {
+			ErrorResponse(s, i, "Bid must be higher than the previous bid by: " + fmt.Sprint(info.MinBid))
+			return
+		}
+
+		if bidAmount - info.Bid > info.MaxBid {
+			ErrorResponse(s, i, "Bid must be higher than the previous bid by less than: " + fmt.Sprint(info.MaxBid))
+			return
+		}
+
 		info.Bid = bidAmount
 		info.Winner = i.Member.Mention()
 		Winner := info.Winner
@@ -616,7 +627,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Content = "Bid has successfully been placed"
 	} else {
-		Content = "You must bid higher than: " + fmt.Sprint(info.Bid)
+		ErrorResponse(s, i, "You must bid higher than: " + fmt.Sprint(info.Bid))
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
