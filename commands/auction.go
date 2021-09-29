@@ -428,8 +428,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	description = fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.\n**Auction End Time:** %s", i.Member.Mention(), fmt.Sprintf("<t:%d>", endTime.Unix()))
+
 	if options["description"] != nil {
-		description = options["description"].(string)
+		description += "\n**Description:** " + options["description"].(string)
 	}
 	if options["image"] != nil {
 		image = options["image"].(string)
@@ -437,11 +439,13 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["currency"] != nil {
 		currency = options["currency"].(string)
 	}
-	if options["increment_max"] != nil {
-		maxBid = options["increment_max"].(float64)
-	}
 	if options["increment_min"] != nil {
 		minBid = options["increment_min"].(float64)
+		description += "\n**Minimum Bid Increment:** " + currency + " "+ fmt.Sprint(minBid)
+	}
+	if options["increment_max"] != nil {
+		maxBid = options["increment_max"].(float64)
+		description += "\n**Max Bid Increment:** " + currency + " "+ fmt.Sprint(maxBid)
 	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
@@ -450,26 +454,13 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Title:       "Item: __**" + item + "**__",
 			Description: description,
 			Color:       0x00bfff,
-			Footer: &discordgo.MessageEmbedFooter{
-				Text: "To bid in this auction use /auction bid in the channel below!",
-			},
 			Image: &discordgo.MessageEmbedImage{
 				URL: image,
 			},
 			Fields: []*discordgo.MessageEmbedField{
 				{
-					Name:   "**Auction End Time:**",
-					Value:  fmt.Sprintf("<t:%d>", endTime.Unix()),
-					Inline: true,
-				},
-				{
 					Name:   "**Starting Bid:**",
 					Value:  currency + " " + fmt.Sprint(initialBid),
-					Inline: true,
-				},
-				{
-					Name:   "**Auction Host:**",
-					Value:  i.Member.Mention(),
 					Inline: true,
 				},
 			},
@@ -478,7 +469,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
-						Label: "End Auction Early",
+						Label: "End Auction",
 						Style: 4,
 						Emoji: discordgo.ComponentEmoji{
 							Name: "🛑",
@@ -549,16 +540,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	info.ChannelID = i.ChannelID
 	database.DB.First(&info, i.ChannelID)
 	database.DB.First(&guildInfo, i.GuildID)
-	host := info.Host
 	currency := guildInfo.Currency
 	var Content string
 
 	if info.Currency != "" {
 		currency = info.Currency
-	}
-
-	if info.Host == "" {
-		host = "No Host Recorded"
 	}
 
 	if info.EndTime.Before(time.Now()) {
@@ -593,11 +579,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
 			{
-				Name:   "**Auction End Time:**",
-				Value:  fmt.Sprintf("<t:%d>", info.EndTime.Unix()),
-				Inline: true,
-			},
-			{
 				Name:   "**Current Highest Bid:**",
 				Value:  fmt.Sprintf("%s %s", currency, fmt.Sprint(info.Bid)),
 				Inline: true,
@@ -606,11 +587,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Name:   "**Current Winner**",
 				Value:  fmt.Sprint(Winner),
 				Inline: true,
-			},
-			{
-				Name:   "**Auction Host:**",
-				Value:  fmt.Sprintf("<@!%s>", host),
-				Inline: false,
 			},
 		}
 
