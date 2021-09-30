@@ -377,6 +377,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
+	incCurrency := "+"
 
 	currentTime := time.Now()
 	inputDuration := options["duration"].(string)
@@ -413,6 +414,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
+	if info.Currency != "" {
+		incCurrency = info.Currency
+	}
+
 	currency := info.Currency
 
 	channelInfo := discordgo.GuildChannelCreateData{
@@ -441,13 +446,14 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["currency"] != nil {
 		currency = options["currency"].(string)
 	}
+
 	if options["increment_min"] != nil {
 		minBid = options["increment_min"].(float64)
-		details += "\n**Minimum Bid Increment:**\n+ " + fmt.Sprint(minBid)
+		details += "\n**Minimum Bid Increment:**\n" + incCurrency + " " + fmt.Sprint(minBid)
 	}
 	if options["increment_max"] != nil {
 		maxBid = options["increment_max"].(float64)
-		details += "\n**Max Bid Increment:**\n+ " + fmt.Sprint(maxBid)
+		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + fmt.Sprint(maxBid)
 	}
 
 	details += "\n\u200b"
