@@ -1,6 +1,6 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/FedorLap2006/discordgo v0.22.1-0.20210730172215-d44abc7f915e h1:yjWzxU/3+HIfvA7smjvMwmZGb0FwtrY2lShkNq4SHn8=
-github.com/FedorLap2006/discordgo v0.22.1-0.20210730172215-d44abc7f915e/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
+github.com/FedorLap2006/discordgo v0.22.1-0.20210930110035-598e559e849e h1:+cWe7oCPgJaKbrTLu5Q1+nfEGEPVkucQ7H9eiAzNtlo=
+github.com/FedorLap2006/discordgo v0.22.1-0.20210930110035-598e559e849e/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/caarlos0/env v3.5.0+incompatible h1:Yy0UN8o9Wtr/jGHZDpCBLpNrzcFLLM2yixi/rBrKyJs=
