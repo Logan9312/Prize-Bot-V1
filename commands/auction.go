@@ -317,6 +317,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if info.AuctionHostRole == "" {
 		info.AuctionHostRole = "Not Set"
+	} else {
+		info.AuctionHostRole = "<@&" + info.AuctionHostRole + ">"
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -347,7 +349,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						{
 							Name:  "**Host Role**",
-							Value: "<@&" + info.AuctionHostRole + ">",
+							Value: info.AuctionHostRole,
 						},
 						{
 							Name:  "**Claiming Message**",
@@ -428,10 +430,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	description = fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.\n\n**Auction End Time:** %s", i.Member.Mention(), fmt.Sprintf("<t:%d>", endTime.Unix()))
+	description = fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.\n**Auction End Time:**\n%s", i.Member.Mention(), fmt.Sprintf("<t:%d>", endTime.Unix()))
 
 	if options["description"] != nil {
-		description += "\n**Description:** " + options["description"].(string)
+		description += "\n**Description:**\n" + options["description"].(string)
 	}
 	if options["image"] != nil {
 		image = options["image"].(string)
@@ -441,11 +443,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if options["increment_min"] != nil {
 		minBid = options["increment_min"].(float64)
-		description += "\n**Minimum Bid Increment:** " + currency + " "+ fmt.Sprint(minBid)
+		description += "\n**Minimum Bid Increment:**\n" + currency + " " + fmt.Sprint(minBid)
 	}
 	if options["increment_max"] != nil {
 		maxBid = options["increment_max"].(float64)
-		description += "\n**Max Bid Increment:** " + currency + " "+ fmt.Sprint(maxBid)
+		description += "\n**Max Bid Increment:**\n" + currency + " "+ fmt.Sprint(maxBid)
 	}
 
 	description += "\n\u200b"
