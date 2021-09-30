@@ -9,10 +9,10 @@ var ProfileCommand = discordgo.ApplicationCommand{
 	Description: "Displays a user's profile.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Type: discordgo.ApplicationCommandOptionUser,
-			Name: "user",
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Name:        "user",
 			Description: "Chose who's profile to display",
-			Required: true,
+			Required:    true,
 		},
 	},
 }
@@ -26,16 +26,16 @@ func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content:         "",
-			Components:      []discordgo.MessageComponent{},
-			Embeds:          []*discordgo.MessageEmbed{
+			Content:    "",
+			Components: []discordgo.MessageComponent{},
+			Embeds: []*discordgo.MessageEmbed{
 				{
-					Title: "**__" + username + "__**" + "#" + Discriminator,
+					Title:       "**__" + username + "__**" + "#" + Discriminator,
 					Description: "Inventory For: <@" + userID + ">",
-					Color: 0x8073ff,
-					Fields:    []*discordgo.MessageEmbedField{},
+					Color:       0x8073ff,
+					Fields:      []*discordgo.MessageEmbedField{},
 					Thumbnail: &discordgo.MessageEmbedThumbnail{
-						URL:     i.ApplicationCommandData().Options[0].UserValue(s).AvatarURL(""),
+						URL: i.ApplicationCommandData().Options[0].UserValue(s).AvatarURL(""),
 					},
 				},
 			},

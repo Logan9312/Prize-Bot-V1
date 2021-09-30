@@ -329,7 +329,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				{
 					Title:       "Auction Setup",
 					Description: content,
-					Color:       0x00bfff,
+					Color:       0x8073ff,
 					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:  "**Category**",
@@ -371,7 +371,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := ParseSubCommand(i)
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)
-	description := ""
 	image := ""
 	var maxBid float64
 	var minBid float64
@@ -430,10 +429,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	description = fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.\n**Auction End Time:**\n%s\n", i.Member.Mention(), fmt.Sprintf("<t:%d>", endTime.Unix()))
+	description := fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", i.Member.Mention())
+	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d>", endTime.Unix()))
 
 	if options["description"] != nil {
-		description += "\n**Description:**\n" + options["description"].(string)
+		details += "\n**Description:**\n" + options["description"].(string)
 	}
 	if options["image"] != nil {
 		image = options["image"].(string)
@@ -443,11 +443,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if options["increment_min"] != nil {
 		minBid = options["increment_min"].(float64)
-		description += "\n**Minimum Bid Increment:**\n" + currency + " " + fmt.Sprint(minBid)
+		details += "\n**Minimum Bid Increment:**\n" + currency + " " + fmt.Sprint(minBid)
 	}
 	if options["increment_max"] != nil {
 		maxBid = options["increment_max"].(float64)
-		description += "\n**Max Bid Increment:**\n" + currency + " "+ fmt.Sprint(maxBid)
+		details += "\n**Max Bid Increment:**\n" + currency + " " + fmt.Sprint(maxBid)
 	}
 
 	guild, err := s.Guild(i.GuildID)
@@ -461,14 +461,19 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Item: __**" + item + "**__",
 			Description: description,
-			Color:       0x00bfff,
+			Color:       0x8073ff,
 			Image: &discordgo.MessageEmbedImage{
 				URL: image,
 			},
-			Thumbnail:   &discordgo.MessageEmbedThumbnail{
-				URL:      guild.IconURL(),
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL: guild.IconURL(),
 			},
 			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   "__**Details:**__",
+					Value:  details,
+					Inline: true,
+				},
 				{
 					Name:   "__**Starting Bid:**__",
 					Value:  currency + " " + fmt.Sprint(initialBid),
@@ -526,9 +531,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "**Auction Started**",
-					Description: "Auction has successfully been started, I might have some bugs to work out so please contact me if there is a failure.",
-					Timestamp:   "",
-					Color:       0x00bfff,
+					Description: "Auction has successfully been started, check out <#" + message.ChannelID + ">.",
+					Color:       0x8073ff,
 				},
 			},
 			Flags: 64,
@@ -564,13 +568,13 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if bidAmount > info.Bid {
-		if bidAmount - info.Bid < info.MinBid{
-			ErrorResponse(s, i, "Bid must be higher than the previous bid by: " + info.Currency + ""  + fmt.Sprint(info.MinBid))
+		if bidAmount-info.Bid < info.MinBid {
+			ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+info.Currency+""+fmt.Sprint(info.MinBid))
 			return
 		}
 
-		if bidAmount - info.Bid > info.MaxBid && info.MaxBid != 0 {
-			ErrorResponse(s, i, "Bid must be no more than " + info.Currency + "" + fmt.Sprint(info.MaxBid) + "Higher than the previous bid.")
+		if bidAmount-info.Bid > info.MaxBid && info.MaxBid != 0 {
+			ErrorResponse(s, i, "Bid must be no more than "+info.Currency+""+fmt.Sprint(info.MaxBid)+"Higher than the previous bid.")
 			return
 		}
 
@@ -588,13 +592,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
+			updateAuction.Embeds[0].Fields[0],
 			{
 				Name:   "__**Current Highest Bid:**__",
 				Value:  fmt.Sprintf("%s %s", currency, fmt.Sprint(info.Bid)),
 				Inline: true,
 			},
 			{
-				Name:   "**Current Winner**",
+				Name:   "__**Current Winner**__",
 				Value:  fmt.Sprint(Winner),
 				Inline: true,
 			},
@@ -613,7 +618,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Content = "Bid has successfully been placed"
 	} else {
-		ErrorResponse(s, i, "You must bid higher than: " + fmt.Sprint(info.Bid))
+		ErrorResponse(s, i, "You must bid higher than: "+fmt.Sprint(info.Bid))
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -622,7 +627,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title: Content,
-					Color: 0x00bfff,
+					Color: 0x8073ff,
 				},
 			},
 			Flags: 64,
@@ -679,7 +684,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 			Title:       "Auction Completed!",
 			Description: auctionInfo.Item,
 			Timestamp:   "",
-			Color:       0x00bfff,
+			Color:       0x8073ff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Winner**",
@@ -753,7 +758,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Title:       "End Auction",
 					Description: "Auction Ending...",
 					Timestamp:   "",
-					Color:       0x00bfff,
+					Color:       0x8073ff,
 				},
 			},
 			Flags: 64,
@@ -784,7 +789,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				{
 					Title:       "Claim Prize",
 					Description: guildInfo.Claiming,
-					Color:       0x00bfff,
+					Color:       0x8073ff,
 				},
 			},
 			Flags: 64,
