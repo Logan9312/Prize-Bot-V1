@@ -507,7 +507,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Currency:  currency,
 		MaxBid:    maxBid,
 		MinBid:    minBid,
-		BidHistory: "**Starting Bid:** " + currency + " " + fmt.Sprint(initialBid),
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -569,8 +568,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.Bid = bidAmount
 		info.Winner = i.Member.Mention()
 		Winner := info.Winner
-
-		info.BidHistory += fmt.Sprintf("**%s:** %s%s\n", i.Member.Mention(), currency, fmt.Sprint(bidAmount))
 
 		database.DB.Model(&info).Updates(info)
 
@@ -665,14 +662,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 							ID:   "889307390690885692",
 						},
 						CustomID: "claim_prize",
-					},
-					discordgo.Button{
-						Label: "Bid Log!",
-						Style: 3,
-						Emoji: discordgo.ComponentEmoji{
-							Name: "📖",
-						},
-						CustomID: "bid_log",
 					},
 				},
 			},
@@ -792,34 +781,4 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Flags: 64,
 		},
 	})
-}
-
-func AuctionBidLogButton(s *discordgo.Session, i *discordgo.InteractionCreate){
-
-info := database.Auction{
-	ChannelID:	i.ChannelID,
-}
-
-database.DB.First(&info, i.ChannelID)
-
-if info.BidHistory == ""{
-	info.BidHistory = "No Bid History Recorded"
-}
-
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title: "**Auction Bid Log**",
-					Description: info.BidHistory,
-					Color:       0x00bfff,
-				},
-			},
-			Flags: 64,
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
 }
