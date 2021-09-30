@@ -479,6 +479,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Value:  currency + " " + fmt.Sprint(initialBid),
 					Inline: true,
 				},
+				{
+					Name:   "__**Bid History:**__",
+					Value:  "**Starting Bid: " + fmt.Sprint(initialBid),
+					Inline: false,
+				},
 			},
 		},
 		Components: []discordgo.MessageComponent{
@@ -591,6 +596,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
+		bidHistory := ""
+
+		if updateAuction.Embeds[0].Fields[2] != nil {
+			bidHistory = updateAuction.Embeds[0].Fields[2].Value + "\n->" + i.Member.Nick + ": " + fmt.Sprint(bidAmount)
+		} else {
+			bidHistory = "-> Previous Bids Unknown"
+		}
+
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
 			updateAuction.Embeds[0].Fields[0],
 			{
@@ -602,6 +615,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Name:   "__**Current Winner**__",
 				Value:  fmt.Sprint(Winner),
 				Inline: true,
+			},
+			{
+				Name:   "__**Bid History**__",
+				Value:  bidHistory,
+				Inline: false,
 			},
 		}
 
