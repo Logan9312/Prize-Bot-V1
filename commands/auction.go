@@ -597,7 +597,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			username = i.Member.User.Username
 		}
 
-		if updateAuction.Embeds[0].Fields[3] != nil {
+		if len(updateAuction.Embeds[0].Fields) != 4 {
 			bidHistory = updateAuction.Embeds[0].Fields[2].Value + "\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		} else {
 			bidHistory = "-> " + username + ": " + fmt.Sprint(bidAmount)
