@@ -592,11 +592,15 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		bidHistory := ""
+		username := i.Member.Nick
+		if username == "" {
+			username = i.Member.User.Username
+		}
 
 		if updateAuction.Embeds[0].Fields[3] != nil {
-			bidHistory = updateAuction.Embeds[0].Fields[2].Value + "\n->" + i.Member.Nick + ": " + fmt.Sprint(bidAmount)
+			bidHistory = updateAuction.Embeds[0].Fields[2].Value + "\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		} else {
-			bidHistory = "->" + i.Member.Nick + ": " + fmt.Sprint(bidAmount)
+			bidHistory = "-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
