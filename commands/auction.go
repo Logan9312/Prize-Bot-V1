@@ -450,6 +450,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		details += "\n**Max Bid Increment:**\n" + currency + " " + fmt.Sprint(maxBid)
 	}
 
+	details += "\n\u200b"
+
 	guild, err := s.Guild(i.GuildID)
 
 	if err != nil {
@@ -476,7 +478,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "__**Starting Bid:**__",
-					Value:  currency + " " + fmt.Sprint(initialBid),
+					Value:  currency + " " + fmt.Sprint(initialBid) + "\n\u200b",
 					Inline: true,
 				},
 			},
