@@ -443,8 +443,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		currency = options["currency"].(string)
 	}
 
-	if info.Currency != "" {
-		incCurrency = info.Currency
+	if currency != "" {
+		incCurrency = currency
 	}
 
 	if options["increment_min"] != nil {
