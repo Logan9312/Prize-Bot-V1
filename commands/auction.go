@@ -531,7 +531,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "**Auction Started**",
-					Description: "Auction has successfully been started, check out <#" + message.ChannelID + ">.",
+					Description: "Auction has successfully been started in <#" + message.ChannelID + ">.",
 					Color:       0x8073ff,
 				},
 			},
@@ -597,8 +597,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			username = i.Member.User.Username
 		}
 
-		if len(updateAuction.Embeds[0].Fields) != 4 {
-			bidHistory = updateAuction.Embeds[0].Fields[2].Value + "\n-> " + username + ": " + fmt.Sprint(bidAmount)
+		if len(updateAuction.Embeds[0].Fields) == 4 {
+			bidHistory = updateAuction.Embeds[0].Fields[3].Value + "\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		} else {
 			bidHistory = "-> " + username + ": " + fmt.Sprint(bidAmount)
 		}

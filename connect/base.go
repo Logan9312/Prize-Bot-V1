@@ -49,7 +49,7 @@ func BotConnect(token, environment, botName string) {
 		return
 	}
 
-	status = "Nothing"
+	status = "Aftermath Ark"
 
 	//Builds local commands
 	if environment == "local" {
