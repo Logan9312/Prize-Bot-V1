@@ -414,10 +414,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	if info.Currency != "" {
-		incCurrency = info.Currency
-	}
-
 	currency := info.Currency
 
 	channelInfo := discordgo.GuildChannelCreateData{
@@ -445,6 +441,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if options["currency"] != nil {
 		currency = options["currency"].(string)
+	}
+
+	if info.Currency != "" {
+		incCurrency = info.Currency
 	}
 
 	if options["increment_min"] != nil {
