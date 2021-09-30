@@ -443,11 +443,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if options["increment_min"] != nil {
 		minBid = options["increment_min"].(float64)
-		details += "\n**Minimum Bid Increment:**\n" + currency + " " + fmt.Sprint(minBid)
+		details += "\n**Minimum Bid Increment:**\n+ " + fmt.Sprint(minBid)
 	}
 	if options["increment_max"] != nil {
 		maxBid = options["increment_max"].(float64)
-		details += "\n**Max Bid Increment:**\n" + currency + " " + fmt.Sprint(maxBid)
+		details += "\n**Max Bid Increment:**\n+ " + fmt.Sprint(maxBid)
 	}
 
 	details += "\n\u200b"
