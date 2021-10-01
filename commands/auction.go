@@ -612,7 +612,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 1024 {
-			bidHistory = "BidHistory was too long and has been reset to prevent a crash."
+			bidHistory = "BidHistory was too long and has been reset to prevent a crash.\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
