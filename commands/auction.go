@@ -607,11 +607,13 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if len(updateAuction.Embeds[0].Fields) == 4 {
 			bidHistory = updateAuction.Embeds[0].Fields[3].Value + "\n-> " + username + ": " + fmt.Sprint(bidAmount)
+		} else if len(updateAuction.Embeds) == 2 {
+			bidHistory = updateAuction.Embeds[1].Description + "\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		} else {
 			bidHistory = "-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
-		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 1024 {
+		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 4096 {
 			bidHistory = "BidHistory was too long and has been reset to prevent a crash.\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
@@ -627,11 +629,16 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Value:  fmt.Sprint(Winner) + "\n\u200b",
 				Inline: true,
 			},
-			{
-				Name:   "__**Bid History**__",
-				Value:  bidHistory,
-				Inline: false,
-			},
+		}
+
+		if len(updateAuction.Embeds) != 2 {
+			updateAuction.Embeds = append(updateAuction.Embeds, &discordgo.MessageEmbed{
+				Title:       "**Bid History**",
+				Description: bidHistory,
+				Color:       0x8073ff,
+			})
+		} else {
+			updateAuction.Embeds[1].Description = bidHistory
 		}
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
