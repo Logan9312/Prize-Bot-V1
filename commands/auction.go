@@ -611,6 +611,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			bidHistory = "-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
+		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 30 {
+			bidHistory = "BidHistory was too long and has been reset to prevent a crash."
+		}
+
 		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
 			updateAuction.Embeds[0].Fields[0],
 			{
@@ -630,14 +634,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		if len(bidHistory) >= 1024 {
-			ErrorResponse(s, i, "Bid History can't contain more than 1024 characters. Please contact me if you his this problem")
-			return
-		}
-
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components: updateAuction.Components,
-			Embed:      updateAuction.Embeds[0],
+			Embeds:     updateAuction.Embeds,
 			ID:         info.MessageID,
 			Channel:    info.ChannelID,
 		})
@@ -681,7 +680,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 		if err != nil {
 			fmt.Println(err)
 		}
-
 		return
 	}
 
