@@ -636,6 +636,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Title:       "**Bid History**",
 				Description: bidHistory,
 				Color:       0x8073ff,
+				Image: &discordgo.MessageEmbedImage{
+					URL:      "https://i.imgur.com/9wo7diC.png",
+				},
 			})
 		} else {
 			updateAuction.Embeds[1].Description = bidHistory
