@@ -630,6 +630,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
+		if len(bidHistory) >= 1024 {
+			ErrorResponse(s, i, "Bid History can't contain more than 1024 characters. Please contact me if you his this problem")
+			return
+		}
+
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components: updateAuction.Components,
 			Embed:      updateAuction.Embeds[0],
