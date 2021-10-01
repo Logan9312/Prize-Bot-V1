@@ -611,7 +611,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			bidHistory = "-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
-		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 30 {
+		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 1024 {
 			bidHistory = "BidHistory was too long and has been reset to prevent a crash."
 		}
 
