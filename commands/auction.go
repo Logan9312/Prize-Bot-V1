@@ -130,6 +130,18 @@ var AuctionCommand = discordgo.ApplicationCommand{
 		},
 	},
 }
+var BidCommand = discordgo.ApplicationCommand{
+		Name:        "bid",
+		Description: "Bid on an Auction",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        10,
+				Name:        "amount",
+				Description: "Place your bid here",
+				Required:    true,
+			},
+		},
+}
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {

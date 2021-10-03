@@ -13,6 +13,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.Help(s, i)
 		case "auction":
 			c.Auction(s, i)
+		case "bid":
+			c.AuctionBid(s, i)
 		case "profile":
 			c.Profile(s, i)
 		case "queue":
