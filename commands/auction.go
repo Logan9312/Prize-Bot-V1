@@ -405,13 +405,23 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	database.DB.First(&info, i.GuildID)
 
+	canHost := false
+
+	if i.Member.Permissions&(1<<3) == 8 {
+		canHost = true
+	}
+
 	if info.AuctionHostRole != "" {
 		for _, v := range i.Member.Roles {
-			if v != info.AuctionHostRole && i.Member.Permissions&(1<<3) != 8 {
-				ErrorResponse(s, i, "User must have the role <@&"+info.AuctionHostRole+"> to host auctions.")
-				return
+			if v == info.AuctionHostRole {
+				canHost = true
 			}
 		}
+	}
+
+	if !canHost {
+		ErrorResponse(s, i, "User must be administrator or have the role <@&"+info.AuctionHostRole+"> to host auctions.")
+		return
 	}
 
 	currency := info.Currency
@@ -637,7 +647,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Description: bidHistory,
 				Color:       0x8073ff,
 				Image: &discordgo.MessageEmbedImage{
-					URL:      "https://i.imgur.com/9wo7diC.png",
+					URL: "https://i.imgur.com/9wo7diC.png",
 				},
 			})
 		} else {
