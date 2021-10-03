@@ -50,7 +50,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "host_role",
-					Description: "Set a role that can host auctions",
+					Description: "Set a role that can host auctions. Choosing @everyone will reset it to default.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
