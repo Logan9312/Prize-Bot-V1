@@ -708,6 +708,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionEnd(ChannelID, GuildID string) {
 	var auctionInfo database.Auction
 	var guildInfo database.GuildInfo
+	username := ""
 	auctionInfo.ChannelID = ChannelID
 
 	result := database.DB.First(&auctionInfo, ChannelID)
@@ -734,13 +735,13 @@ func AuctionEnd(ChannelID, GuildID string) {
 	if auctionInfo.Description != "" {
 		description += fmt.Sprintf("\n**Description:** %s", auctionInfo.Description)
 	}
-
+if auctionInfo.Winner != "No bidders"{
 	user, err := Session.User(auctionInfo.Winner)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	username := fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
+	username = fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
+}
 
 	messageSend := discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{
@@ -788,7 +789,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	_, err = Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
 		ErrorMessage(Session, ChannelID, err.Error())
