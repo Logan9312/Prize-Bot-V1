@@ -257,7 +257,24 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info := database.GuildInfo{
 			GuildID: i.GuildID,
 		}
+
+		roles, err := s.GuildRoles(i.GuildID)
+		if err != nil {
+			fmt.Println("Error fetching guild roles: ", err)
+			ErrorResponse(s, i, err.Error())
+			return
+		}
+
 		info.AuctionHostRole = options["host_role"].(string)
+
+		for _, v := range roles {
+			if v.Name == "@everyone" {
+				if v.ID == options["host_role"].(string) {
+					info.AuctionHostRole = ""
+				}
+			}
+		}
+
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"auction_host_role": info.AuctionHostRole}),
