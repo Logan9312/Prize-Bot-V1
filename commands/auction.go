@@ -545,17 +545,17 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	database.DB.Create(&database.Auction{
-		ChannelID: message.ChannelID,
-		Bid:       initialBid,
-		MessageID: message.ID,
-		EndTime:   endTime,
-		Winner:    "No bidders",
-		GuildID:   i.GuildID,
-		Item:      item,
-		Host:      i.Member.User.ID,
-		Currency:  currency,
-		MaxBid:    maxBid,
-		MinBid:    minBid,
+		ChannelID:   message.ChannelID,
+		Bid:         initialBid,
+		MessageID:   message.ID,
+		EndTime:     endTime,
+		Winner:      "No bidders",
+		GuildID:     i.GuildID,
+		Item:        item,
+		Host:        i.Member.User.ID,
+		Currency:    currency,
+		MaxBid:      maxBid,
+		MinBid:      minBid,
 		Description: savedDescription,
 	})
 
@@ -735,13 +735,14 @@ func AuctionEnd(ChannelID, GuildID string) {
 	if auctionInfo.Description != "" {
 		description += fmt.Sprintf("\n**Description:** %s", auctionInfo.Description)
 	}
-if auctionInfo.Winner != "No bidders"{
-	user, err := Session.User(auctionInfo.Winner)
-	if err != nil {
-		fmt.Println(err)
+	if auctionInfo.Winner != "No bidders" {
+		user, err := Session.User(auctionInfo.Winner)
+		if err != nil {
+			fmt.Println(err)
+		}
+		username = fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
+		auctionInfo.Winner = "<@" + auctionInfo.Winner + ">"
 	}
-	username = fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
-}
 
 	messageSend := discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{
@@ -766,7 +767,7 @@ if auctionInfo.Winner != "No bidders"{
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Winner**",
-					Value:  "<@" + auctionInfo.Winner + "> " + username,
+					Value:  auctionInfo.Winner + " " + username,
 					Inline: true,
 				},
 				{
