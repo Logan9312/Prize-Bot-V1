@@ -29,8 +29,6 @@ func BotConnect(token, environment, botName string) {
 		},
 	}
 
-	var status string
-
 	fmt.Println(botName + " Starting Up...")
 
 	s, err := discordgo.New("Bot " + token)
@@ -48,8 +46,6 @@ func BotConnect(token, environment, botName string) {
 		fmt.Println(err)
 		return
 	}
-
-	status = "Aftermath Ark"
 
 	//Builds local commands
 	if environment == "local" {
@@ -76,7 +72,7 @@ func BotConnect(token, environment, botName string) {
 
 	go Timers(s)
 
-	err = s.UpdateGameStatus(0, status)
+	err = s.UpdateGameStatus(0, "Bot Version v0.21")
 	if err != nil {
 		fmt.Println(err)
 		return

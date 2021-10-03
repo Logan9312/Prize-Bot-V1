@@ -407,21 +407,19 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	canHost := false
 
-	if i.Member.Permissions&(1<<3) == 8 {
-		canHost = true
-	}
-
 	if info.AuctionHostRole != "" {
 		for _, v := range i.Member.Roles {
 			if v == info.AuctionHostRole {
 				canHost = true
 			}
 		}
-	}
-
-	if !canHost {
-		ErrorResponse(s, i, "User must be administrator or have the role <@&"+info.AuctionHostRole+"> to host auctions.")
-		return
+		if i.Member.Permissions&(1<<3) == 8 {
+			canHost = true
+		}
+		if !canHost {
+			ErrorResponse(s, i, "User must be administrator or have the role <@&"+info.AuctionHostRole+"> to host auctions.")
+			return
+		}
 	}
 
 	currency := info.Currency
