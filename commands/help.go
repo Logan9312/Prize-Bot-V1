@@ -41,9 +41,6 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Title:       "Discord Bot Help",
 					Description: "Developed by Logan. Thank you for using my bot!",
 					Color:       0x8073ff,
-					Footer: &discordgo.MessageEmbedFooter{
-						Text: "Powered by Aftermath Gaming",
-					},
 					Fields: fields,
 				},
 			},
