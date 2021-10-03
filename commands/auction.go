@@ -457,9 +457,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	description := fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", i.Member.Mention())
 	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d>", endTime.Unix()))
+	savedDescription := ""
 
 	if options["description"] != nil {
 		details += "\n**Description:**\n" + options["description"].(string)
+		savedDescription = options["description"].(string)
 	}
 	if options["image"] != nil {
 		image = options["image"].(string)
@@ -554,6 +556,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Currency:  currency,
 		MaxBid:    maxBid,
 		MinBid:    minBid,
+		Description: savedDescription,
 	})
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -612,7 +615,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		info.Bid = bidAmount
-		info.Winner = i.Member.Mention()
+		info.Winner = i.Member.User.ID
 		Winner := info.Winner
 
 		database.DB.Model(&info).Updates(info)
@@ -651,7 +654,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "__**Current Winner**__",
-				Value:  fmt.Sprint(Winner) + "\n\u200b",
+				Value:  fmt.Sprintf("<@&%s>", Winner) + "\n\u200b",
 				Inline: true,
 			},
 		}
@@ -727,6 +730,18 @@ func AuctionEnd(ChannelID, GuildID string) {
 		auctionInfo.Winner = "No winner detected. Please contact support to report this bug"
 	}
 
+	description := fmt.Sprintf("**Item:** %s", auctionInfo.Item)
+	if auctionInfo.Description != "" {
+		description += fmt.Sprintf("\n**Description:** %s", auctionInfo.Description)
+	}
+
+	user, err := Session.User(auctionInfo.Winner)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	username := fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
+
 	messageSend := discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -745,13 +760,12 @@ func AuctionEnd(ChannelID, GuildID string) {
 		},
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Auction Completed!",
-			Description: auctionInfo.Item,
-			Timestamp:   "",
+			Description: description,
 			Color:       0x8073ff,
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Winner**",
-					Value:  auctionInfo.Winner,
+					Value:  auctionInfo.Winner + " " + username,
 					Inline: true,
 				},
 				{
@@ -774,7 +788,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+	_, err = Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
 		ErrorMessage(Session, ChannelID, err.Error())
