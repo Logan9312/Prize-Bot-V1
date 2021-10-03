@@ -766,7 +766,7 @@ if auctionInfo.Winner != "No bidders"{
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Winner**",
-					Value:  auctionInfo.Winner + " " + username,
+					Value:  "<@" + auctionInfo.Winner + "> " + username,
 					Inline: true,
 				},
 				{
