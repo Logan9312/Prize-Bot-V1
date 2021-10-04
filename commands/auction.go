@@ -131,16 +131,16 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	},
 }
 var BidCommand = discordgo.ApplicationCommand{
-		Name:        "bid",
-		Description: "Bid on an Auction",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        10,
-				Name:        "amount",
-				Description: "Place your bid here",
-				Required:    true,
-			},
+	Name:        "bid",
+	Description: "Bid on an Auction",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        10,
+			Name:        "amount",
+			Description: "Place your bid here",
+			Required:    true,
 		},
+	},
 }
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -270,21 +270,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			GuildID: i.GuildID,
 		}
 
-		roles, err := s.GuildRoles(i.GuildID)
-		if err != nil {
-			fmt.Println("Error fetching guild roles: ", err)
-			ErrorResponse(s, i, err.Error())
-			return
-		}
-
 		info.AuctionHostRole = options["host_role"].(string)
 
-		for _, v := range roles {
-			if v.Name == "@everyone" {
-				if v.ID == options["host_role"].(string) {
-					info.AuctionHostRole = ""
-				}
-			}
+		if i.GuildID == options["host_role"].(string) {
+			info.AuctionHostRole = ""
 		}
 
 		result := database.DB.Clauses(clause.OnConflict{
