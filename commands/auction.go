@@ -512,7 +512,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "__**Starting Bid:**__",
-					Value:  currency + " " + fmt.Sprint(initialBid) + "\n\u200b",
+					Value:  fmt.Sprintf("%s %f\n\u200b", currency, initialBid),
 					Inline: true,
 				},
 			},
@@ -650,7 +650,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			updateAuction.Embeds[0].Fields[0],
 			{
 				Name:   "__**Current Highest Bid:**__",
-				Value:  fmt.Sprintf("%s %s", currency, fmt.Sprint(info.Bid)) + "\n\u200b",
+				Value:  fmt.Sprintf("%s %f\n\u200b", currency, info.Bid),
 				Inline: true,
 			},
 			{
