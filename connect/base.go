@@ -22,11 +22,11 @@ func BotConnect(token, environment, botName string) {
 			&commands.AuctionCommand,
 			&commands.SpawnExactDinoCommand,
 			&commands.QueueCommand,
+			&commands.BidCommand,
 		},
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,
 			&commands.AuctionCommand,
-			&commands.BidCommand,
 		},
 	}
 
