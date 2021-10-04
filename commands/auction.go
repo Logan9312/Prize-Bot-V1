@@ -655,7 +655,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "__**Current Winner**__",
-				Value:  fmt.Sprintf("<@&%s>", Winner) + "\n\u200b",
+				Value:  fmt.Sprintf("<@%s>", Winner) + "\n\u200b",
 				Inline: true,
 			},
 		}
