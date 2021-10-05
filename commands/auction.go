@@ -741,7 +741,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		description += fmt.Sprintf("\n**Description:** %s", auctionInfo.Description)
 	}
 	if auctionInfo.Winner != "No bidders" {
-		user, err := Session.User(auctionInfo.Winner)
+		user, err := Session.User(strings.Trim(auctionInfo.Winner, "<@!>"))
 		if err != nil {
 			fmt.Println(err)
 		}
