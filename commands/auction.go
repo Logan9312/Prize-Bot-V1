@@ -530,7 +530,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					},
 					discordgo.Button{
 						Label:    "Clear Chat",
-						Style:    1,
+						Style:    discordgo.SecondaryButton,
 						CustomID: "clearauction",
 						Emoji: discordgo.ComponentEmoji{
 							Name:     "restart",
