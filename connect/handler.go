@@ -31,6 +31,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.AuctionEndButton(s, i)
 		case "claim_prize":
 			c.ClaimPrizeButton(s, i)
+		case "clearauction":
+			c.ClearAuctionButton(s, i)
 		default:
 			CommandResponse(s, i)
 		}

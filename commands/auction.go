@@ -529,10 +529,14 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						CustomID: "endauction",
 					},
 					discordgo.Button{
-						Label:    "Clear Auction Chat",
-						Style:    2,
+						Label:    "Clear Chat",
+						Style:    1,
 						CustomID: "clearauction",
-						Disabled: true,
+						Emoji: discordgo.ComponentEmoji{
+							Name:     "restart",
+							ID:       "835685528917114891",
+						},
+						Disabled: false,
 					},
 				},
 			},
@@ -869,6 +873,53 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				{
 					Title:       "Claim Prize",
 					Description: guildInfo.Claiming,
+					Color:       0x8073ff,
+				},
+			},
+			Flags: 64,
+		},
+	})
+}
+
+func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	if i.Member.Permissions&(1<<3) != 8 {
+		ErrorResponse(s, i, "User must have administrator permissions to run this command")
+		return
+	}
+
+	for {
+		messageIDs := make([]string, 0)
+		messages, err := s.ChannelMessages(i.ChannelID, 100, "", i.Message.ID, "")
+		if err != nil {
+			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
+		}
+
+		if len(messages) == 0 {
+			break
+		}
+
+		for _, v := range messages {
+			messageIDs = append(messageIDs, v.ID)
+		}
+
+		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
+		if err != nil {
+			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
+		}
+	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "Success!",
+					Description: "Chat has been cleared",
 					Color:       0x8073ff,
 				},
 			},
