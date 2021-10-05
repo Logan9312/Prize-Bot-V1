@@ -477,11 +477,11 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if options["increment_min"] != nil {
 		minBid = options["increment_min"].(float64)
-		details += "\n**Minimum Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(fmt.Sprintf("%f", minBid), "0")
+		details += "\n**Minimum Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", minBid), "0"), ".")
 	}
 	if options["increment_max"] != nil {
 		maxBid = options["increment_max"].(float64)
-		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(fmt.Sprintf("%f", maxBid), "0")
+		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", maxBid), "0"), ".")
 	}
 
 	details += "\n\u200b"
@@ -512,7 +512,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "__**Starting Bid:**__",
-					Value:  fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(fmt.Sprintf("%f", initialBid), "0")),
+					Value:  fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", initialBid), "0"), ".")),
 					Inline: true,
 				},
 			},
@@ -606,12 +606,12 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if bidAmount > info.Bid {
 		if bidAmount-info.Bid < info.MinBid {
-			ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+info.Currency+" "+strings.TrimRight(fmt.Sprintf("%f", info.MinBid), "0"))
+			ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+info.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.MinBid), "0"), "."))
 			return
 		}
 
 		if bidAmount-info.Bid > info.MaxBid && info.MaxBid != 0 {
-			ErrorResponse(s, i, "Bid must be no more than "+info.Currency+" "+strings.TrimRight(fmt.Sprintf("%f", info.MaxBid), "0")+" Higher than the previous bid.")
+			ErrorResponse(s, i, "Bid must be no more than "+info.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.MaxBid), "0"), ".")+" Higher than the previous bid.")
 			return
 		}
 
@@ -635,11 +635,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		if len(updateAuction.Embeds[0].Fields) == 4 {
-			bidHistory = updateAuction.Embeds[0].Fields[3].Value + "\n-> " + username + ": " + strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0")
+			bidHistory = updateAuction.Embeds[0].Fields[3].Value + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
 		} else if len(updateAuction.Embeds) == 2 {
-			bidHistory = updateAuction.Embeds[1].Description + "\n-> " + username + ": " + strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0")
+			bidHistory = updateAuction.Embeds[1].Description + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
 		} else {
-			bidHistory = "-> " + username + ": " + strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0")
+			bidHistory = "-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
 		}
 
 		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 4096 {
@@ -650,7 +650,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			updateAuction.Embeds[0].Fields[0],
 			{
 				Name:   "__**Current Highest Bid:**__",
-				Value:  fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0")),
+				Value:  fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")),
 				Inline: true,
 			},
 			{
@@ -686,7 +686,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Content = "Bid has successfully been placed"
 	} else {
-		ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(fmt.Sprintf("%f", info.Bid), "0"))
+		ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.Bid), "0"), "."))
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -773,7 +773,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 				},
 				{
 					Name:   "**Payment Due**",
-					Value:  fmt.Sprintf("%s %s\n\u200b", guildInfo.Currency, strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0")),
+					Value:  fmt.Sprintf("%s %s\n\u200b", guildInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
 					Inline: true,
 				},
 				{
