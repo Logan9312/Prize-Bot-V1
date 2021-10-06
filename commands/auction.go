@@ -743,7 +743,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		Description: "Thank you for participating!",
 		Color:       0x32CD32,
 		Image: &discordgo.MessageEmbedImage{
-			URL: "https://media.tenor.co/videos/892af778a0625a81e4efdce53a0290a8/mp4",
+			URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
 		},
 	})
 	message.Components = 		[]discordgo.MessageComponent{
