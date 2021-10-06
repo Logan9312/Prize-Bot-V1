@@ -533,8 +533,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						Style:    3,
 						CustomID: "clearauction",
 						Emoji: discordgo.ComponentEmoji{
-							Name:     "restart",
-							ID:       "835685528917114891",
+							Name: "restart",
+							ID:   "835685528917114891",
 						},
 						Disabled: false,
 					},
@@ -732,15 +732,45 @@ func AuctionEnd(ChannelID, GuildID string) {
 		fmt.Println(result.Error.Error())
 	}
 
-	if auctionInfo.Winner == "" {
-		auctionInfo.Winner = "No winner detected. Please contact support to report this bug"
+	message := discordgo.NewMessageEdit(auctionInfo.ChannelID, auctionInfo.MessageID)
+	messageEmbeds, err := Session.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
+	if err != nil {
+		fmt.Println(err)
 	}
+
+	message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
+		Title:       "Auction has ended!",
+		Description: "Thank you for participating!",
+		Color:       0x32CD32,
+		Image: &discordgo.MessageEmbedImage{
+			URL: "https://media.tenor.co/videos/892af778a0625a81e4efdce53a0290a8/mp4",
+		},
+	})
+	message.Components = 		[]discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label: "Support Server",
+					Style: discordgo.LinkButton,
+					Emoji: discordgo.ComponentEmoji{
+						Name:     "logo",
+						ID:       "889025400120950804",
+						Animated: false,
+					},
+					URL: "https://discord.gg/RxP2z5NGtj",
+				},
+			},
+		},
+	}
+	Session.ChannelMessageEditComplex(message)
 
 	description := fmt.Sprintf("**Item:** %s", auctionInfo.Item)
 	if auctionInfo.Description != "" {
 		description += fmt.Sprintf("\n**Description:** %s", auctionInfo.Description)
 	}
-	if auctionInfo.Winner != "No bidders" {
+	if auctionInfo.Winner == "" {
+		auctionInfo.Winner = "No winner detected. Please contact support to report this bug"
+	} else if auctionInfo.Winner != "No bidders" {
 		user, err := Session.User(strings.Trim(auctionInfo.Winner, "<@!>"))
 		if err != nil {
 			fmt.Println(err)
@@ -795,11 +825,18 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-	_, err := Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+	_, err = Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
 		ErrorMessage(Session, ChannelID, err.Error())
 		return
+	}
+
+	time.Sleep(30 * time.Second)
+
+	_, err = Session.ChannelDelete(ChannelID)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	result = database.DB.Delete(&auctionInfo, ChannelID)
@@ -807,10 +844,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 		fmt.Println(result.Error.Error())
 	}
 
-	_, err = Session.ChannelDelete(ChannelID)
-	if err != nil {
-		fmt.Println(err)
-	}
 }
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -883,8 +916,16 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Member.Permissions&(1<<3) != 8 {
-		ErrorResponse(s, i, "User must have administrator permissions to run this command")
+	var auctionInfo database.Auction
+
+	result := database.DB.First(&auctionInfo, i.ChannelID)
+	if result.Error != nil {
+		fmt.Println("Error checking for auction. Auction has likely ended")
+		auctionInfo.Host = ""
+	}
+
+	if i.Member.Permissions&(1<<3) != 8 && i.User.ID != auctionInfo.Host {
+		ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
 		return
 	}
 
