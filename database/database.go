@@ -9,18 +9,30 @@ import (
 )
 
 type Auction struct {
-	ChannelID string `gorm:"primaryKey"`
-	Bid       float64
-	MessageID string
-	EndTime   time.Time
-	Winner    string
-	GuildID   string
-	Item      string
-	Host      string
-	Currency  string
-	MinBid    float64
-	MaxBid    float64
-	Description	string
+	ChannelID   string `gorm:"primaryKey"`
+	Bid         float64
+	MessageID   string
+	EndTime     time.Time
+	Winner      string
+	GuildID     string
+	Item        string
+	Host        string
+	Currency    string
+	MinBid      float64
+	MaxBid      float64
+	Description string
+}
+
+type AuctionQueue struct {
+	Bid         float64
+	EndTime     time.Time
+	Winner      string
+	Item        string
+	Host        string
+	Currency    string
+	MinBid      float64
+	MaxBid      float64
+	Description string
 }
 
 type GuildInfo struct {
@@ -31,6 +43,7 @@ type GuildInfo struct {
 	LogChannel      string
 	Claiming        string
 	AuctionHostRole string
+	AuctionQueueChannel string
 }
 
 type UserProfile struct {
@@ -49,7 +62,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(GuildInfo{}, Auction{})
+	err := DB.AutoMigrate(GuildInfo{}, Auction{}, AuctionQueue{})
 	if err != nil {
 		fmt.Println(err)
 	}

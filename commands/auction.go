@@ -112,6 +112,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Must be a link",
 					Required:    false,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "schedule",
+					Description: "Delay the start of the auction. Please enter the duration from now when the auction will start.",
+					Required:    false,
+				},
 			},
 		},
 		{
@@ -130,6 +136,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 		},
 	},
 }
+
 var BidCommand = discordgo.ApplicationCommand{
 	Name:        "bid",
 	Description: "Bid on an Auction",
@@ -387,6 +394,11 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSubCommand(i)
+
+	if options["delayed_start"] != nil {
+		AuctionSchedule(s, i, options)
+	}
+
 	item := options["item"].(string)
 	initialBid := options["startingbid"].(float64)
 	image := ""
@@ -588,8 +600,18 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	AuctionEnd(channel.ID, i.GuildID)
 }
 
+func AuctionSchedule(s *discordgo.Session, i *discordgo.InteractionCreate, options map[string]interface{}) {
+
+}
+
 func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	options := ParseSubCommand(i)
+	var options map[string]interface{}
+
+	if i.ApplicationCommandData().Options[0].Type == discordgo.ApplicationCommandOptionSubCommand {
+		options = ParseSubCommand(i)
+	} else {
+		options = ParseSlashCommand(i)
+	}
 	bidAmount := options["amount"].(float64)
 	var info database.Auction
 	var guildInfo database.GuildInfo
@@ -746,7 +768,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 			URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
 		},
 	})
-	message.Components = 		[]discordgo.MessageComponent{
+	message.Components = []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
