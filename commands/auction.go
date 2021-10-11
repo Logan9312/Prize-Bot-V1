@@ -612,6 +612,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		options = ParseSlashCommand(i)
 	}
+
 	bidAmount := options["amount"].(float64)
 	var info database.Auction
 	var guildInfo database.GuildInfo
