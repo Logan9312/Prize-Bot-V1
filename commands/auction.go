@@ -30,7 +30,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "category",
-					Description: "Sets the category to create auctions in. Name must be an exact match",
+					Description: "Sets the category to create auctions in.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -113,9 +113,15 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "category",
+					Description: "Sets the category to create auctions in.",
+					Required:    false,
+				},
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "schedule",
-					Description: "Delay the start of the auction. Please enter the duration from now when the auction will start.",
+					Description: "NOT FINISHED YET. PLEASE IGNORE.",
 					Required:    false,
 				},
 			},
@@ -430,6 +436,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	endTime := currentTime.Add(duration)
 
 	if len(item) > 100 {
+		ErrorResponse(s, i, "Title cannot be over 100 characters long")
 		return
 	}
 
@@ -453,6 +460,21 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	currency := info.Currency
+
+	if options["category"] != nil {
+		info.AuctionCategory = options["category"].(string)
+		ch, err := s.Channel(options["category"].(string))
+
+		if err != nil {
+			ErrorResponse(s, i, err.Error())
+			return
+		}
+
+		if ch.Type != 4 {
+			ErrorResponse(s, i, "Auction Category must be a category, not a channel.")
+			return
+		}
+	}
 
 	channelInfo := discordgo.GuildChannelCreateData{
 		Name:     "💸│" + item,
