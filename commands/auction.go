@@ -31,6 +31,9 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "category",
 					Description: "Sets the category to create auctions in.",
+					ChannelTypes: []discordgo.ChannelType{
+						4,
+					},
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -41,6 +44,10 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "log_channel",
 					Description: "Sets the channel where auctions will send outputs when they end",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+					},
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
@@ -117,6 +124,9 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "category",
 					Description: "Sets the category to create auctions in.",
 					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						4,
+					},
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -194,28 +204,16 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		category := options["category"].(string)
 		info.AuctionCategory = category
 
-		ch, err := s.Channel(category)
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
+		}).Create(&info)
 
-		if err != nil {
-			ErrorResponse(s, i, err.Error())
-			return
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
 		}
 
-		if ch.Type != 4 {
-			content = content + "• ERROR: Auction Category must be a category, not a channel.\n"
-		} else {
-
-			result := database.DB.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "guild_id"}},
-				DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
-			}).Create(&info)
-
-			if result.Error != nil {
-				fmt.Println(result.Error.Error())
-			}
-
-			content = content + "• Category has been successfully set.\n"
-		}
+		content = content + "• Category has been successfully set.\n"
 	}
 
 	if options["currency"] != nil {
@@ -240,26 +238,15 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		info.LogChannel = options["log_channel"].(string)
 
-		ch, err := s.Channel(info.LogChannel)
-		if err != nil {
-			fmt.Println(err)
-			ErrorResponse(s, i, err.Error())
-			return
-		}
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
+		}).Create(&info)
 
-		if ch.Type != 0 {
-			content = content + "• ERROR: Auction Log must be a text channel\n"
-		} else {
-			result := database.DB.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "guild_id"}},
-				DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
-			}).Create(&info)
-
-			if result.Error != nil {
-				fmt.Println(result.Error.Error())
-			}
-			content = content + "• Log Channel has been successfully set.\n"
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
 		}
+		content = content + "• Log Channel has been successfully set.\n"
 	}
 
 	if options["alert_role"] != nil {
