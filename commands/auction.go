@@ -450,17 +450,6 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if options["category"] != nil {
 		info.AuctionCategory = options["category"].(string)
-		ch, err := s.Channel(options["category"].(string))
-
-		if err != nil {
-			ErrorResponse(s, i, err.Error())
-			return
-		}
-
-		if ch.Type != 4 {
-			ErrorResponse(s, i, "Auction Category must be a category, not a channel.")
-			return
-		}
 	}
 
 	channelInfo := discordgo.GuildChannelCreateData{
