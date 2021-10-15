@@ -757,8 +757,10 @@ func AuctionEnd(ChannelID, GuildID string) {
 	messageEmbeds, err := Session.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
+if message.Embeds != nil {
 	message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
 		Title:       "Auction has ended!",
 		Description: "Thank you for participating!",
@@ -767,6 +769,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 			URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
 		},
 	})
+}
+if message.Components != nil {
 	message.Components = []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
@@ -783,7 +787,10 @@ func AuctionEnd(ChannelID, GuildID string) {
 			},
 		},
 	}
+}
+if message != nil {
 	Session.ChannelMessageEditComplex(message)
+}
 
 	description := fmt.Sprintf("**Item:** %s", auctionInfo.Item)
 	if auctionInfo.Description != "" {
