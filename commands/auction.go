@@ -918,9 +918,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var auctionInfo database.Auction
 	var guildInfo database.GuildInfo
-	database.DB.First(&auctionInfo, i.ChannelID)
 	database.DB.First(&guildInfo, i.GuildID)
 
 	if guildInfo.Claiming == "" {
