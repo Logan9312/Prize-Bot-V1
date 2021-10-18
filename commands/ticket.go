@@ -1,3 +1,5 @@
 package commands
 
-func ClaimTicket()
+func ClaimTicket() {
+	
+}
