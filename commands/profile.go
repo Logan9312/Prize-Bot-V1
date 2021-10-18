@@ -26,11 +26,11 @@ func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	Discriminator := i.ApplicationCommandData().Options[0].UserValue(s).Discriminator
 
 	err := SuccessResponse(s, i, PresetResponse{
-					Title:       "**__" + username + "__**" + "#" + Discriminator,
-					Description: "Inventory For: <@" + userID + ">",
-					Thumbnail: discordgo.MessageEmbedThumbnail{
-						URL: i.ApplicationCommandData().Options[0].UserValue(s).AvatarURL(""),
-					},
+		Title:       "**__" + username + "__**" + "#" + Discriminator,
+		Description: "Inventory For: <@" + userID + ">",
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: i.ApplicationCommandData().Options[0].UserValue(s).AvatarURL(""),
+		},
 	})
 	if err != nil {
 		fmt.Println(err)
