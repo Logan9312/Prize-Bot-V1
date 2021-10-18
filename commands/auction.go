@@ -192,7 +192,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSubCommand(i)
 	content := ""
-	componentValue := []discordgo.MessageComponent{}
 	category := &discordgo.Channel{}
 
 	if options["category"] != nil {
@@ -339,44 +338,34 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		info.AuctionHostRole = "<@&" + info.AuctionHostRole + ">"
 	}
 
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Components: componentValue,
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Auction Setup",
-					Description: content,
-					Color:       0x8073ff,
-					Fields: []*discordgo.MessageEmbedField{
-						{
-							Name:  "**Category**",
-							Value: category.Name,
-						},
-						{
-							Name:  "**Log Channel**",
-							Value: info.LogChannel,
-						},
-						{
-							Name:  "**Currency**",
-							Value: info.Currency + "\n*Note: The bot can only use emojis from discord servers that it is in.*",
-						},
-						{
-							Name:  "**Alert Role**",
-							Value: info.AuctionRole,
-						},
-						{
-							Name:  "**Host Role**",
-							Value: info.AuctionHostRole,
-						},
-						{
-							Name:  "**Claiming Message**",
-							Value: info.Claiming,
-						},
-					},
-				},
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "Auction Setup",
+		Description: content,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "**Category**",
+				Value: category.Name,
 			},
-			Flags: 64,
+			{
+				Name:  "**Log Channel**",
+				Value: info.LogChannel,
+			},
+			{
+				Name:  "**Currency**",
+				Value: info.Currency + "\n*Note: The bot can only use emojis from discord servers that it is in.*",
+			},
+			{
+				Name:  "**Alert Role**",
+				Value: info.AuctionRole,
+			},
+			{
+				Name:  "**Host Role**",
+				Value: info.AuctionHostRole,
+			},
+			{
+				Name:  "**Claiming Message**",
+				Value: info.Claiming,
+			},
 		},
 	})
 	if err != nil {
@@ -574,20 +563,9 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Description: savedDescription,
 	})
 
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content:    "",
-			Components: []discordgo.MessageComponent{},
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "**Auction Started**",
-					Description: "Auction has successfully been started in <#" + message.ChannelID + ">.",
-					Color:       0x8073ff,
-				},
-			},
-			Flags: 64,
-		},
+	err = SuccessResponse(s, i, PresetResponse{
+		Title:       "**Auction Started**",
+		Description: "Auction has successfully been started in <#" + message.ChannelID + ">.",
 	})
 
 	if err != nil {
@@ -714,17 +692,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.Bid), "0"), "."))
 	}
 
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title: Content,
-					Color: 0x8073ff,
-				},
-			},
-			Flags: 64,
-		},
+	err := SuccessResponse(s, i, PresetResponse{
+		Title: Content,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -760,37 +729,37 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
-if message.Embeds != nil {
-	message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
-		Title:       "Auction has ended!",
-		Description: "Thank you for participating!",
-		Color:       0x32CD32,
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
-		},
-	})
-}
-if message.Components != nil {
-	message.Components = []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{
-					Label: "Support Server",
-					Style: discordgo.LinkButton,
-					Emoji: discordgo.ComponentEmoji{
-						Name:     "logo",
-						ID:       "889025400120950804",
-						Animated: false,
+	if message.Embeds != nil {
+		message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
+			Title:       "Auction has ended!",
+			Description: "Thank you for participating!",
+			Color:       0x32CD32,
+			Image: &discordgo.MessageEmbedImage{
+				URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
+			},
+		})
+	}
+	if message.Components != nil {
+		message.Components = []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label: "Support Server",
+						Style: discordgo.LinkButton,
+						Emoji: discordgo.ComponentEmoji{
+							Name:     "logo",
+							ID:       "889025400120950804",
+							Animated: false,
+						},
+						URL: "https://discord.gg/RxP2z5NGtj",
 					},
-					URL: "https://discord.gg/RxP2z5NGtj",
 				},
 			},
-		},
+		}
 	}
-}
-if message != nil {
-	Session.ChannelMessageEditComplex(message)
-}
+	if message != nil {
+		Session.ChannelMessageEditComplex(message)
+	}
 
 	description := fmt.Sprintf("**Item:** %s", auctionInfo.Item)
 	if auctionInfo.Description != "" {
@@ -893,21 +862,9 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content:    "",
-			Components: []discordgo.MessageComponent{},
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "End Auction",
-					Description: "Auction Ending...",
-					Timestamp:   "",
-					Color:       0x8073ff,
-				},
-			},
-			Flags: 64,
-		},
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "End Auction",
+		Description: "Auction Ending...",
 	})
 
 	if err != nil {
@@ -925,19 +882,13 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		guildInfo.Claiming = "The discord owner has not set a claiming message. Common ways to claim include: Opening a ticket or contacting the auction host. \nTo customize this message, use the command: `/auction setup claiming:`."
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "Claim Prize",
-					Description: guildInfo.Claiming,
-					Color:       0x8073ff,
-				},
-			},
-			Flags: 64,
-		},
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "Claim Prize",
+		Description: guildInfo.Claiming,
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -980,17 +931,11 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{
-				{
+	err := SuccessResponse(s, i, PresetResponse{
 					Title:       "Success!",
 					Description: "Chat has been cleared",
-					Color:       0x8073ff,
-				},
-			},
-			Flags: 64,
-		},
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }

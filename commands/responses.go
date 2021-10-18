@@ -17,6 +17,7 @@ type PresetResponse struct {
 	Title       string
 	Description string
 	Fields      []*discordgo.MessageEmbedField
+	Thumbnail	discordgo.MessageEmbedThumbnail
 	//Components      []discordgo.MessageComponent      `json:"components"`
 	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
 
@@ -104,7 +105,7 @@ func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Messa
 	})
 }
 
-func SuccessResponseMessage(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
+func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -112,16 +113,13 @@ func SuccessResponseMessage(s *discordgo.Session, i *discordgo.InteractionCreate
 			Components: []discordgo.MessageComponent{},
 			Embeds: []*discordgo.MessageEmbed{
 				{
-
 					Title:       r.Title,
 					Description: r.Description,
-					Timestamp:   "",
 					Color:       0x8073ff,
 					Footer:      &discordgo.MessageEmbedFooter{},
 					Image:       &discordgo.MessageEmbedImage{},
 					Thumbnail:   &discordgo.MessageEmbedThumbnail{},
 					Video:       &discordgo.MessageEmbedVideo{},
-					Provider:    &discordgo.MessageEmbedProvider{},
 					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields:      r.Fields,
 				},

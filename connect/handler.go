@@ -5,7 +5,6 @@ import (
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 )
 
-
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type == 2 {
 		switch i.ApplicationCommandData().Name {
@@ -19,10 +18,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.Profile(s, i)
 		case "queue":
 			c.Queue(s, i)
-		case "spawn-exact-dino":
-			c.SpawnExactDino(s, i)
 		default:
-			CommandResponse(s, i)
+			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	}
 	if i.Type == 3 {
@@ -34,22 +31,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "clearauction":
 			c.ClearAuctionButton(s, i)
 		default:
-			CommandResponse(s, i)
+			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	}
-}
-
-func CommandResponse (s *discordgo.Session, i *discordgo.InteractionCreate) {
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds:          []*discordgo.MessageEmbed{
-				{
-					Title:       "Command Selection Error",
-					Description: "Command response has not been set properly, please contact Logan to fix",
-				},
-			},
-			Flags:           64,
-		},
-	})
 }

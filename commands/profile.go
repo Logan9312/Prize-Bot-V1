@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -23,22 +25,14 @@ func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	username := i.ApplicationCommandData().Options[0].UserValue(s).Username
 	Discriminator := i.ApplicationCommandData().Options[0].UserValue(s).Discriminator
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content:    "",
-			Components: []discordgo.MessageComponent{},
-			Embeds: []*discordgo.MessageEmbed{
-				{
+	err := SuccessResponse(s, i, PresetResponse{
 					Title:       "**__" + username + "__**" + "#" + Discriminator,
 					Description: "Inventory For: <@" + userID + ">",
-					Color:       0x8073ff,
-					Fields:      []*discordgo.MessageEmbedField{},
-					Thumbnail: &discordgo.MessageEmbedThumbnail{
+					Thumbnail: discordgo.MessageEmbedThumbnail{
 						URL: i.ApplicationCommandData().Options[0].UserValue(s).AvatarURL(""),
 					},
-				},
-			},
-		},
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }

@@ -32,19 +32,13 @@ func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Flags: 64,
-			Embeds: []*discordgo.MessageEmbed{
-				{
+	err := SuccessResponse(s, i, PresetResponse{
 					Title:       "Discord Bot Help",
 					Description: "Developed by Logan. Thank you for using my bot!",
-					Color:       0x8073ff,
-					Fields: fields,
-				},
-			},
-		},
+					Fields:      fields,
 	})
 
+	if err != nil {
+		fmt.Println(err)
+	}
 }
