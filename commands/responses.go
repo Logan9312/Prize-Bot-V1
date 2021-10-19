@@ -81,10 +81,10 @@ func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Messa
 					Value: err,
 				},
 			},
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Aftermath Auction Bot",
-				IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
-			},
+			//Footer: &discordgo.MessageEmbedFooter{
+			//	Text:    "Aftermath Auction Bot",
+			//	IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
+			//},
 		},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
