@@ -17,7 +17,7 @@ type PresetResponse struct {
 	Title       string
 	Description string
 	Fields      []*discordgo.MessageEmbedField
-	Thumbnail	*discordgo.MessageEmbedThumbnail
+	Thumbnail   *discordgo.MessageEmbedThumbnail
 	//Components      []discordgo.MessageComponent      `json:"components"`
 	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
 
@@ -57,10 +57,10 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 							Value: errorText,
 						},
 					},
-					Footer: &discordgo.MessageEmbedFooter{
-						Text:    "Aftermath Auction Bot",
-						IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
-					},
+					//Footer: &discordgo.MessageEmbedFooter{
+					//	Text:    "Aftermath Auction Bot",
+					//	IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
+					//},
 				},
 			},
 			Flags: 64,
