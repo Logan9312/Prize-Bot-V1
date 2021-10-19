@@ -52,7 +52,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "alert_role",
-					Description: "Set a role to get pinged whenever an auction starts",
+					Description: "Set a role to get pinged whenever an auction starts. Choosing @everyone will reset it to default.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
@@ -253,6 +253,11 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			GuildID: i.GuildID,
 		}
 		info.AuctionRole = fmt.Sprintf("<@&%s>", options["alert_role"].(string))
+
+		if i.GuildID == options["alert_role"] {
+			info.AuctionRole = ""
+		}
+
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{"auction_role": info.AuctionRole}),
@@ -932,8 +937,8 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	err := SuccessResponse(s, i, PresetResponse{
-					Title:       "Success!",
-					Description: "Chat has been cleared",
+		Title:       "Success!",
+		Description: "Chat has been cleared",
 	})
 	if err != nil {
 		fmt.Println(err)
