@@ -934,7 +934,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var AuctionQueueInfo []database.AuctionQueue
 	type AuctionQueueStruct struct {
 		Item      string
-		StartTime int
+		StartTime time.Time
 		ID        uint
 	}
 	var AuctionQueue []AuctionQueueStruct
@@ -947,24 +947,25 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if v.GuildID == i.GuildID {
 			AuctionQueue = append(AuctionQueue, AuctionQueueStruct{
 				Item:      v.Item,
-				StartTime: int(v.StartTime.Unix()),
+				StartTime: v.StartTime,
 				ID:        v.ID,
 			})
 
 		}
 	}
 
-	sort.Slice(AuctionQueue, func(i, j int) bool { return AuctionQueue[i].StartTime < AuctionQueue[j].StartTime })
+	sort.Slice(AuctionQueue, func(i, j int) bool { return AuctionQueue[i].StartTime.Unix() < AuctionQueue[j].StartTime.Unix() })
 
 	for _, v := range AuctionQueue {
+
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s**", v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime),
+			Value: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime.Unix()),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
 			Value:       fmt.Sprint(v.ID),
-			Description: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime),
+			Description: fmt.Sprintf("Start time: %s", v.StartTime.String()),
 		})
 	}
 
@@ -973,7 +974,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Components: []discordgo.MessageComponent{
 				discordgo.SelectMenu{
 					CustomID:    "delete_auction_queue",
-					Placeholder: "Remove auction from queue",
+					Placeholder: "💣 Remove auction from queue",
 					MinValues:   0,
 					MaxValues:   len(AuctionQueue),
 					Options:     selectOptions,
