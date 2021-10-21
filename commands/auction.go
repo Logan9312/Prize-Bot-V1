@@ -131,7 +131,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "schedule",
-					Description: "NOT FINISHED YET. PLEASE IGNORE.",
+					Description: "Set how long until the auction starts. (Example: 24h, or 1d)",
 					Required:    false,
 				},
 			},
@@ -173,7 +173,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "setup":
 		AuctionSetup(s, i)
 	case "create":
-		AuctionCreate(s, i)
+		AuctionPlanner(s, i)
 	case "bid":
 		AuctionBid(s, i)
 	}
@@ -378,132 +378,67 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 
-	options := ParseSubCommand(i)
-
-	if options["delayed_start"] != nil {
-		AuctionSchedule(s, i, options)
+	guildInfo := database.GuildInfo{
+		GuildID: auctionInfo.GuildID,
 	}
+	database.DB.First(&guildInfo, auctionInfo.GuildID)
 
-	item := options["item"].(string)
-	initialBid := options["startingbid"].(float64)
-	image := ""
-	var maxBid float64
-	var minBid float64
-	info := database.GuildInfo{
-		GuildID: i.GuildID,
-	}
+	currency := auctionInfo.Currency
 	incCurrency := "+"
-
-	currentTime := time.Now()
-	inputDuration := options["duration"].(string)
-	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
-		inputDuration = strings.TrimSuffix(inputDuration, "d")
-		float, err := strconv.ParseFloat(inputDuration, 64)
-		if err != nil {
-			fmt.Println(err)
-			ErrorResponse(s, i, err.Error())
-			return
-		}
-		inputDuration = fmt.Sprint(float*24) + "h"
-	}
-	duration, err := time.ParseDuration(inputDuration)
-	if err != nil {
-		fmt.Println(err)
-		ErrorResponse(s, i, err.Error())
-		return
-	}
-	endTime := currentTime.Add(duration)
-
-	if len(item) > 100 {
-		ErrorResponse(s, i, "Title cannot be over 100 characters long")
-		return
-	}
-
-	database.DB.First(&info, i.GuildID)
-
-	canHost := false
-
-	if info.AuctionHostRole != "" {
-		for _, v := range i.Member.Roles {
-			if v == info.AuctionHostRole {
-				canHost = true
-			}
-		}
-		if i.Member.Permissions&(1<<3) == 8 {
-			canHost = true
-		}
-		if !canHost {
-			ErrorResponse(s, i, "User must be administrator or have the role <@&"+info.AuctionHostRole+"> to host auctions.")
-			return
-		}
-	}
-
-	currency := info.Currency
-
-	if options["category"] != nil {
-		info.AuctionCategory = options["category"].(string)
-	}
-
-	channelInfo := discordgo.GuildChannelCreateData{
-		Name:     "💸│" + item,
-		Type:     0,
-		ParentID: info.AuctionCategory,
-	}
-
-	channel, err := s.GuildChannelCreateComplex(i.Interaction.GuildID, channelInfo)
-
-	if err != nil {
-		fmt.Println(err)
-		ErrorResponse(s, i, err.Error())
-		return
-	}
-
-	description := fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", i.Member.Mention())
-	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d>", endTime.Unix()))
-	savedDescription := ""
-
-	if options["description"] != nil {
-		details += "\n**Description:**\n" + options["description"].(string)
-		savedDescription = options["description"].(string)
-	}
-	if options["image"] != nil {
-		image = options["image"].(string)
-	}
-	if options["currency"] != nil {
-		currency = options["currency"].(string)
-	}
-
 	if currency != "" {
 		incCurrency = currency
 	}
 
-	if options["increment_min"] != nil {
-		minBid = options["increment_min"].(float64)
-		details += "\n**Minimum Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", minBid), "0"), ".")
+	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d>", auctionInfo.EndTime.Unix()))
+
+	if auctionInfo.Description != "" {
+		details += "\n**Description:**\n" + auctionInfo.Description
 	}
-	if options["increment_max"] != nil {
-		maxBid = options["increment_max"].(float64)
-		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", maxBid), "0"), ".")
+
+	if auctionInfo.MinBid != 0 {
+		details += "\n**Minimum Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MinBid), "0"), ".")
+	}
+
+	if auctionInfo.MaxBid != 0 {
+		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MaxBid), "0"), ".")
 	}
 
 	details += "\n\u200b"
 
-	guild, err := s.Guild(i.GuildID)
+	guild, err := s.Guild(auctionInfo.GuildID)
 
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	channelInfo := discordgo.GuildChannelCreateData{
+		Name:     "💸│" + auctionInfo.Item,
+		Type:     0,
+		ParentID: guildInfo.AuctionCategory,
+	}
+
+	channel, err := s.GuildChannelCreateComplex(auctionInfo.GuildID, channelInfo)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	host, err := s.GuildMember(auctionInfo.GuildID, auctionInfo.Host)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
-		Content: info.AuctionRole,
+		Content: guildInfo.AuctionRole,
 		Embed: &discordgo.MessageEmbed{
-			Title:       "Item: __**" + item + "**__",
-			Description: description,
+			Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
+			Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
 			Color:       0x8073ff,
 			Image: &discordgo.MessageEmbedImage{
-				URL: image,
+				URL: auctionInfo.ImageURL,
 			},
 			Thumbnail: &discordgo.MessageEmbedThumbnail{
 				URL: guild.IconURL(),
@@ -516,7 +451,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 				{
 					Name:   "__**Starting Bid:**__",
-					Value:  fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", initialBid), "0"), ".")),
+					Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
 					Inline: true,
 				},
 			},
@@ -549,40 +484,154 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		fmt.Println(err)
-		ErrorResponse(s, i, err.Error())
 		return
 	}
 
 	database.DB.Create(&database.Auction{
 		ChannelID:   message.ChannelID,
-		Bid:         initialBid,
+		Bid:         auctionInfo.Bid,
 		MessageID:   message.ID,
-		EndTime:     endTime,
+		EndTime:     auctionInfo.EndTime,
 		Winner:      "No bidders",
+		GuildID:     auctionInfo.GuildID,
+		Item:        auctionInfo.Item,
+		Host:        auctionInfo.Host,
+		Currency:    auctionInfo.Currency,
+		MinBid:      auctionInfo.MinBid,
+		MaxBid:      auctionInfo.MaxBid,
+		Description: auctionInfo.Description,
+		ImageURL:    auctionInfo.ImageURL,
+	})
+
+	time.Sleep(time.Until(auctionInfo.EndTime))
+	AuctionEnd(channel.ID, auctionInfo.GuildID)
+}
+
+func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	var startTime time.Time
+
+	options := ParseSubCommand(i)
+
+	endTime, err := ParseTime(options["duration"].(string))
+	if err != nil {
+		fmt.Println(err)
+		ErrorResponse(s, i, err.Error())
+		return
+	}
+
+	item := options["item"].(string)
+	var image string
+	var maxBid float64
+	var minBid float64
+	var description string
+	info := database.GuildInfo{
+		GuildID: i.GuildID,
+	}
+
+	if len(item) > 100 {
+		ErrorResponse(s, i, "Title cannot be over 100 characters long")
+		return
+	}
+
+	database.DB.First(&info, i.GuildID)
+
+	canHost := false
+
+	if info.AuctionHostRole != "" {
+		for _, v := range i.Member.Roles {
+			if v == info.AuctionHostRole {
+				canHost = true
+			}
+		}
+		if i.Member.Permissions&(1<<3) == 8 {
+			canHost = true
+		}
+		if !canHost {
+			ErrorResponse(s, i, "User must be administrator or have the role <@&"+info.AuctionHostRole+"> to host auctions.")
+			return
+		}
+	}
+
+	currency := info.Currency
+
+	if options["category"] != nil {
+		info.AuctionCategory = options["category"].(string)
+	}
+
+	if options["description"] != nil {
+		description = options["description"].(string)
+	}
+	if options["image"] != nil {
+		image = options["image"].(string)
+	}
+	if options["currency"] != nil {
+		currency = options["currency"].(string)
+	}
+	if options["increment_min"] != nil {
+		minBid = options["increment_min"].(float64)
+	}
+	if options["increment_max"] != nil {
+		maxBid = options["increment_max"].(float64)
+	}
+
+	if options["schedule"] != nil {
+
+		startTime, err = ParseTime(options["schedule"].(string))
+		if err != nil {
+			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
+		}
+
+	}
+
+	auctionData := database.AuctionQueue{
+		Bid:         options["startingbid"].(float64),
+		StartTime:   startTime,
+		EndTime:     endTime,
 		GuildID:     i.GuildID,
 		Item:        item,
 		Host:        i.Member.User.ID,
 		Currency:    currency,
-		MaxBid:      maxBid,
 		MinBid:      minBid,
-		Description: savedDescription,
-	})
-
-	err = SuccessResponse(s, i, PresetResponse{
-		Title:       "**Auction Started**",
-		Description: "Auction has successfully been started in <#" + message.ChannelID + ">.",
-	})
-
-	if err != nil {
-		fmt.Println(err)
+		MaxBid:      maxBid,
+		Description: description,
+		ImageURL:    image,
 	}
 
-	time.Sleep(duration)
-	AuctionEnd(channel.ID, i.GuildID)
-}
+	database.DB.Create(&auctionData)
 
-func AuctionSchedule(s *discordgo.Session, i *discordgo.InteractionCreate, options map[string]interface{}) {
+	if options["schedule"] != nil {
 
+		err = PremiumResponse(s, i, PresetResponse{
+			Title: "Auction has been Scheduled!",
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:   "**Auction Start Time:**",
+					Value:  fmt.Sprintf("<t:%d>", startTime.Unix()),
+					Inline: false,
+				},
+			},
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		time.Sleep(time.Until(startTime))
+
+	} else {
+		err = SuccessResponse(s, i, PresetResponse{
+			Title:       "**Auction Starting**",
+			Description: "Auction has successfully been started!",
+		})
+
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	AuctionCreate(s, auctionData)
 }
 
 func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -731,10 +780,14 @@ func AuctionEnd(ChannelID, GuildID string) {
 	messageEmbeds, err := Session.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
 	if err != nil {
 		fmt.Println(err)
+		result = database.DB.Delete(&auctionInfo, ChannelID)
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
 		return
 	}
 
-	if message.Embeds != nil {
+	if message != nil {
 		message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
 			Title:       "Auction has ended!",
 			Description: "Thank you for participating!",
@@ -743,8 +796,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 				URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
 			},
 		})
-	}
-	if message.Components != nil {
 		message.Components = []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
@@ -761,8 +812,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 				},
 			},
 		}
-	}
-	if message != nil {
 		Session.ChannelMessageEditComplex(message)
 	}
 
@@ -845,7 +894,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 	}
-
 }
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -943,4 +991,22 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func ParseTime(inputDuration string) (time.Time, error) {
+	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
+		inputDuration = strings.TrimSuffix(inputDuration, "d")
+		float, err := strconv.ParseFloat(inputDuration, 64)
+		if err != nil {
+			fmt.Println(err)
+			return time.Time{}, err
+		}
+		inputDuration = fmt.Sprint(float*24) + "h"
+	}
+	duration, err := time.ParseDuration(inputDuration)
+	if err != nil {
+		fmt.Println(err)
+		return time.Time{}, err
+	}
+	return time.Now().Add(duration), err
 }

@@ -18,6 +18,7 @@ type PresetResponse struct {
 	Description string
 	Fields      []*discordgo.MessageEmbedField
 	Thumbnail   *discordgo.MessageEmbedThumbnail
+	Image       *discordgo.MessageEmbedImage
 	//Components      []discordgo.MessageComponent      `json:"components"`
 	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
 
@@ -117,16 +118,61 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 					Description: r.Description,
 					Color:       0x8073ff,
 					Footer:      &discordgo.MessageEmbedFooter{},
-					Image:       &discordgo.MessageEmbedImage{},
-					Thumbnail:   &discordgo.MessageEmbedThumbnail{},
+					Image:       r.Image,
+					Thumbnail:   r.Thumbnail,
 					Video:       &discordgo.MessageEmbedVideo{},
 					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields:      r.Fields,
 				},
 			},
-			AllowedMentions: &discordgo.MessageAllowedMentions{},
-			Flags:           64,
-			Files:           []*discordgo.File{},
+			Flags: 64,
+		},
+	})
+}
+
+func PremiumResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
+
+	r.Fields = append(r.Fields, &discordgo.MessageEmbedField{
+		Name:   "**Free Premium Feature!**",
+		Value:  "Eventually this is gonna be a premium feature, since it's just for convenience and it took more effort to create. For now though, its free for all users!",
+		Inline: false,
+	})
+
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: r.Content,
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label: "Coming Soon",
+							Style: discordgo.LinkButton,
+							Emoji: discordgo.ComponentEmoji{
+								Name:     "logo",
+								ID:       "889025400120950804",
+								Animated: false,
+							},
+							URL:      "https://discord.gg/RxP2z5NGtj",
+							Disabled: true,
+						},
+					},
+				},
+			},
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       r.Title,
+					Description: r.Description,
+					Color:       0xffd700,
+					Footer:      &discordgo.MessageEmbedFooter{},
+					Image:       r.Image,
+					Thumbnail:   r.Thumbnail,
+					Video:       &discordgo.MessageEmbedVideo{},
+					Author:      &discordgo.MessageEmbedAuthor{},
+					Fields:      r.Fields,
+				},
+			},
+			Flags: 64,
 		},
 	})
 }

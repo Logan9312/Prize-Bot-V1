@@ -21,18 +21,21 @@ type Auction struct {
 	MinBid      float64
 	MaxBid      float64
 	Description string
+	ImageURL    string
 }
 
 type AuctionQueue struct {
 	Bid         float64
+	StartTime   time.Time
 	EndTime     time.Time
-	Winner      string
+	GuildID     string
 	Item        string
 	Host        string
 	Currency    string
 	MinBid      float64
 	MaxBid      float64
 	Description string
+	ImageURL    string
 }
 
 type GuildInfo struct {
@@ -43,7 +46,6 @@ type GuildInfo struct {
 	LogChannel      string
 	Claiming        string
 	AuctionHostRole string
-	AuctionQueueChannel string
 }
 
 type UserProfile struct {
