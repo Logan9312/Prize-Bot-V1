@@ -960,17 +960,23 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	type AuctionQueueStruct struct {
 		Item      string
 		StartTime int
+		ID        uint
 	}
 	var AuctionQueue []AuctionQueueStruct
 	var fields []*discordgo.MessageEmbedField
+	var selectOptions []discordgo.SelectMenuOption
 
 	database.DB.Find(&AuctionQueueInfo)
 
 	for _, v := range AuctionQueueInfo {
-		AuctionQueue = append(AuctionQueue, AuctionQueueStruct{
-			Item:      v.Item,
-			StartTime: int(v.StartTime.Unix()),
-		})
+		if v.GuildID == i.GuildID {
+			AuctionQueue = append(AuctionQueue, AuctionQueueStruct{
+				Item:      v.Item,
+				StartTime: int(v.StartTime.Unix()),
+				ID:        v.ID,
+			})
+
+		}
 	}
 
 	sort.Slice(AuctionQueue, func(i, j int) bool { return AuctionQueue[i].StartTime < AuctionQueue[j].StartTime })
@@ -980,12 +986,30 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Name:  fmt.Sprintf("**%s**", v.Item),
 			Value: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime),
 		})
+		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
+			Label:       v.Item,
+			Value:       fmt.Sprint(v.ID),
+			Description: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime),
+		})
 	}
 
 	err := SuccessResponse(s, i, PresetResponse{
 		Title:       "**Auction Queue**",
 		Description: "Displays upcoming auctions!",
 		Fields:      fields,
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.SelectMenu{
+						CustomID:    "delete_auction_queue",
+						Placeholder: "Remove auction from queue",
+						MinValues:   0,
+						MaxValues:   25,
+						Options:     selectOptions,
+					},
+				},
+			},
+		},
 	})
 
 	if err != nil {
@@ -1059,6 +1083,22 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	if i.Member.Permissions&(1<<3) != 8 {
+		ErrorResponse(s, i, "User have administrator permissions to run this command")
+		return
+	}
+
+	IDs := i.MessageComponentData().Values
+
+	for _, v := range IDs {
+		database.DB.Delete(database.AuctionQueue{}, v)
+	}
+
+	AuctionQueue(s, i)
 }
 
 func ParseTime(inputDuration string) (time.Time, error) {

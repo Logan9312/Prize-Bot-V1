@@ -30,6 +30,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.ClaimPrizeButton(s, i)
 		case "clearauction":
 			c.ClearAuctionButton(s, i)
+		case "delete_auction_queue":
+			c.DeleteAuctionQueue(s, i)
 		default:
 			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}

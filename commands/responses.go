@@ -19,7 +19,7 @@ type PresetResponse struct {
 	Fields      []*discordgo.MessageEmbedField
 	Thumbnail   *discordgo.MessageEmbedThumbnail
 	Image       *discordgo.MessageEmbedImage
-	//Components      []discordgo.MessageComponent      `json:"components"`
+	Components      []discordgo.MessageComponent      `json:"components"`
 	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
 
 	//Flags uint64 `json:"flags,omitempty"`
