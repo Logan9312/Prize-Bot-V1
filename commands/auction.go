@@ -602,20 +602,6 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		database.DB.Create(&database.AuctionQueue{
-			Bid:         maxBid,
-			StartTime:   startTime,
-			EndTime:     endTime,
-			GuildID:     "",
-			Item:        item,
-			Host:        "",
-			Currency:    currency,
-			MinBid:      minBid,
-			MaxBid:      maxBid,
-			Description: description,
-			ImageURL:    image,
-		})
-
 		startTime, err = ParseTime(options["schedule"].(string))
 		if err != nil {
 			fmt.Println(err)
@@ -658,6 +644,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		time.Sleep(time.Until(startTime))
+
 	} else {
 		err = SuccessResponse(s, i, PresetResponse{
 			Title:       "**Auction Starting**",
@@ -668,6 +655,8 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(err)
 		}
 	}
+
+	database.DB.Delete(auctionData, auctionData.ID)
 
 	AuctionCreate(s, auctionData)
 }

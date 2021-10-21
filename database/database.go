@@ -25,6 +25,7 @@ type Auction struct {
 }
 
 type AuctionQueue struct {
+	ID          uint `gorm:"primaryKey"`
 	Bid         float64
 	StartTime   time.Time
 	EndTime     time.Time

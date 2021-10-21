@@ -114,4 +114,5 @@ func AuctionStartTimer(v database.AuctionQueue, s *discordgo.Session) {
 		time.Sleep(time.Until(v.EndTime))
 		commands.AuctionCreate(s, v)
 	}
+	database.DB.Delete(v, v.ID)
 }
