@@ -928,37 +928,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 	}
 }
 
-func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	guildInfo := database.GuildInfo{}
-	info := database.Auction{}
-
-	database.DB.First(&info, i.ChannelID)
-	database.DB.First(&guildInfo, i.GuildID)
-
-	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != info.Host {
-		ErrorResponse(s, i, "You must have an administrator role to end the auction early!")
-		return
-	}
-
-	if guildInfo.LogChannel == "" {
-		fmt.Println("Log channel has not been set for guild: " + i.GuildID)
-		ErrorResponse(s, i, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
-		return
-	}
-
-	err := SuccessResponse(s, i, PresetResponse{
-		Title:       "End Auction",
-		Description: "Auction Ending...",
-	})
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	AuctionEnd(i.ChannelID, i.GuildID)
-}
-
 func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var AuctionQueueInfo []database.AuctionQueue
@@ -998,6 +967,14 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
+	if len(AuctionQueue) == 0 {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:   "**No Scheduled Auctions**",
+			Value:  "Use the `schedule` parameter when creating auctions to plan them in advance!",
+			Inline: false,
+		})
+	}
+
 	err := SuccessResponse(s, i, PresetResponse{
 		Title:       "**Auction Queue**",
 		Description: "Displays upcoming auctions!",
@@ -1008,7 +985,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					discordgo.SelectMenu{
 						CustomID:    "delete_auction_queue",
 						Placeholder: "Remove auction from queue",
-						MinValues:   0,
+						MinValues:   1,
 						MaxValues:   25,
 						Options:     selectOptions,
 					},
@@ -1020,6 +997,37 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	guildInfo := database.GuildInfo{}
+	info := database.Auction{}
+
+	database.DB.First(&info, i.ChannelID)
+	database.DB.First(&guildInfo, i.GuildID)
+
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != info.Host {
+		ErrorResponse(s, i, "You must have an administrator role to end the auction early!")
+		return
+	}
+
+	if guildInfo.LogChannel == "" {
+		fmt.Println("Log channel has not been set for guild: " + i.GuildID)
+		ErrorResponse(s, i, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+		return
+	}
+
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "End Auction",
+		Description: "Auction Ending...",
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	AuctionEnd(i.ChannelID, i.GuildID)
 }
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
