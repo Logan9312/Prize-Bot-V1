@@ -10,7 +10,7 @@ type PresetMessageComplex struct {
 	Files           []*discordgo.File                 `json:"-"`
 	AllowedMentions *discordgo.MessageAllowedMentions `json:"allowed_mentions,omitempty"`
 	Reference       *discordgo.MessageReference       `json:"message_reference,omitempty"`
-}
+}	
 
 type PresetResponse struct {
 	Content     string `json:"content"`
@@ -19,7 +19,7 @@ type PresetResponse struct {
 	Fields      []*discordgo.MessageEmbedField
 	Thumbnail   *discordgo.MessageEmbedThumbnail
 	Image       *discordgo.MessageEmbedImage
-	Components      []discordgo.MessageComponent      `json:"components"`
+	Components  []discordgo.MessageComponent     
 	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
 
 	//Flags uint64 `json:"flags,omitempty"`
@@ -117,11 +117,8 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 					Title:       r.Title,
 					Description: r.Description,
 					Color:       0x8073ff,
-					Footer:      &discordgo.MessageEmbedFooter{},
 					Image:       r.Image,
 					Thumbnail:   r.Thumbnail,
-					Video:       &discordgo.MessageEmbedVideo{},
-					Author:      &discordgo.MessageEmbedAuthor{},
 					Fields:      r.Fields,
 				},
 			},

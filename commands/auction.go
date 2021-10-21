@@ -967,31 +967,34 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.SelectMenu{
+					CustomID:    "delete_auction_queue",
+					Placeholder: "Remove auction from queue",
+					MinValues:   0,
+					MaxValues:   len(AuctionQueue),
+					Options:     selectOptions,
+				},
+			},
+		},
+	}
+
 	if len(AuctionQueue) == 0 {
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   "**No Scheduled Auctions**",
 			Value:  "Use the `schedule` parameter when creating auctions to plan them in advance!",
 			Inline: false,
 		})
+		components = []discordgo.MessageComponent{}
 	}
 
 	err := SuccessResponse(s, i, PresetResponse{
 		Title:       "**Auction Queue**",
 		Description: "Displays upcoming auctions!",
 		Fields:      fields,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						CustomID:    "delete_auction_queue",
-						Placeholder: "Remove auction from queue",
-						MinValues:   1,
-						MaxValues:   25,
-						Options:     selectOptions,
-					},
-				},
-			},
-		},
+		Components: components,
 	})
 
 	if err != nil {
