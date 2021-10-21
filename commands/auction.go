@@ -964,6 +964,8 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var AuctionQueue []AuctionQueueStruct
 	var fields []*discordgo.MessageEmbedField
 
+	database.DB.Find(&AuctionQueueInfo)
+
 	for _, v := range AuctionQueueInfo {
 		AuctionQueue = append(AuctionQueue, AuctionQueueStruct{
 			Item:      v.Item,
@@ -971,13 +973,11 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	database.DB.Find(&AuctionQueue)
-
 	sort.Slice(AuctionQueue, func(i, j int) bool { return AuctionQueue[i].StartTime < AuctionQueue[j].StartTime })
 
 	for _, v := range AuctionQueue {
 		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:  v.Item,
+			Name:  fmt.Sprintf("**%s**", v.Item),
 			Value: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime),
 		})
 	}
