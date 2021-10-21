@@ -85,19 +85,33 @@ func BotConnect(token, environment, botName string) {
 func Timers(s *discordgo.Session) {
 
 	var Auctions []database.Auction
+	var AuctionQueue []database.AuctionQueue
 
 	database.DB.Find(&Auctions)
-
 	for _, v := range Auctions {
-		go SetTimer(v, s)
+		go AuctionEndTimer(v, s)
+	}
+
+	database.DB.Find(&AuctionQueue)
+	for _, v := range AuctionQueue {
+		go AuctionStartTimer(v, s)
 	}
 }
 
-func SetTimer(v database.Auction, s *discordgo.Session) {
+func AuctionEndTimer(v database.Auction, s *discordgo.Session) {
 	if v.EndTime.Before(time.Now()) {
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
 	} else {
 		time.Sleep(time.Until(v.EndTime))
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
+	}
+}
+
+func AuctionStartTimer(v database.AuctionQueue, s *discordgo.Session) {
+	if v.StartTime.Before(time.Now()) {
+		commands.AuctionCreate(s, v)
+	} else {
+		time.Sleep(time.Until(v.EndTime))
+		commands.AuctionCreate(s, v)
 	}
 }
