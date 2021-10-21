@@ -150,6 +150,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "queue",
+			Description: "Display the current auction Queue",
+			Required:    false,
+		},
 	},
 }
 
@@ -176,6 +182,8 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		AuctionPlanner(s, i)
 	case "bid":
 		AuctionBid(s, i)
+	case "queue":
+		AuctionQueue(s, i)
 	}
 }
 
@@ -577,6 +585,22 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if options["schedule"] != nil {
 
+		var AuctionQueue []database.AuctionQueue
+		var num int
+
+		database.DB.Find(&AuctionQueue)
+
+		for _, v := range AuctionQueue {
+			if v.GuildID == i.GuildID {
+				num += 1
+			}
+		}
+
+		if num >= 25 {
+			ErrorResponse(s, i, "You can only schedule 25 auctions in advance.")
+			return
+		}
+
 		startTime, err = ParseTime(options["schedule"].(string))
 		if err != nil {
 			fmt.Println(err)
@@ -925,6 +949,33 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	AuctionEnd(i.ChannelID, i.GuildID)
+}
+
+func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	var AuctionQueue []database.AuctionQueue
+	var fields []*discordgo.MessageEmbedField
+
+	database.DB.Find(&AuctionQueue)
+
+	for _, v := range AuctionQueue {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:   v.Item,
+			Value:  fmt.Sprintf("**Start time:** <t:%d>", v.StartTime.Unix()),
+			Inline: false,
+		})
+	}
+
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "**Auction Queue**",
+		Description: "Displays upcoming auctions!",
+		Fields:      fields,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 }
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {

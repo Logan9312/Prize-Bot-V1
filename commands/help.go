@@ -33,9 +33,9 @@ func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := SuccessResponse(s, i, PresetResponse{
-					Title:       "Discord Bot Help",
-					Description: "Developed by Logan. Thank you for using my bot!",
-					Fields:      fields,
+		Title:       "Discord Bot Help",
+		Description: "Developed by Logan. Thank you for using my bot!",
+		Fields:      fields,
 	})
 
 	if err != nil {
