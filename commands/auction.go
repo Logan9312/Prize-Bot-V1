@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -601,6 +602,20 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
+		database.DB.Create(&database.AuctionQueue{
+			Bid:         maxBid,
+			StartTime:   startTime,
+			EndTime:     endTime,
+			GuildID:     "",
+			Item:        item,
+			Host:        "",
+			Currency:    currency,
+			MinBid:      minBid,
+			MaxBid:      maxBid,
+			Description: description,
+			ImageURL:    image,
+		})
+
 		startTime, err = ParseTime(options["schedule"].(string))
 		if err != nil {
 			fmt.Println(err)
@@ -643,7 +658,6 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		time.Sleep(time.Until(startTime))
-
 	} else {
 		err = SuccessResponse(s, i, PresetResponse{
 			Title:       "**Auction Starting**",
@@ -953,16 +967,29 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	var AuctionQueue []database.AuctionQueue
+	var AuctionQueueInfo []database.AuctionQueue
+	type AuctionQueueStruct struct {
+		Item      string
+		StartTime int
+	}
+	var AuctionQueue []AuctionQueueStruct
 	var fields []*discordgo.MessageEmbedField
+
+	for _, v := range AuctionQueueInfo {
+		AuctionQueue = append(AuctionQueue, AuctionQueueStruct{
+			Item:      v.Item,
+			StartTime: int(v.StartTime.Unix()),
+		})
+	}
 
 	database.DB.Find(&AuctionQueue)
 
+	sort.Slice(AuctionQueue, func(i, j int) bool { return AuctionQueue[i].StartTime < AuctionQueue[j].StartTime })
+
 	for _, v := range AuctionQueue {
 		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:   v.Item,
-			Value:  fmt.Sprintf("**Start time:** <t:%d>", v.StartTime.Unix()),
-			Inline: false,
+			Name:  v.Item,
+			Value: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime),
 		})
 	}
 
@@ -975,7 +1002,6 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
