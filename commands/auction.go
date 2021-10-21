@@ -628,6 +628,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		MaxBid:      maxBid,
 		Description: description,
 		ImageURL:    image,
+		Category: info.AuctionCategory,
 	}
 
 	database.DB.Create(&auctionData)

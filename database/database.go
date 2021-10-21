@@ -37,6 +37,7 @@ type AuctionQueue struct {
 	MaxBid      float64
 	Description string
 	ImageURL    string
+	Category string
 }
 
 type GuildInfo struct {
