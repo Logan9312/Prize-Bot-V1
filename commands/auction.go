@@ -973,7 +973,9 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		for _, v := range messages {
-			messageIDs = append(messageIDs, v.ID)
+			if !v.Pinned {
+				messageIDs = append(messageIDs, v.ID)
+			}
 		}
 
 		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
