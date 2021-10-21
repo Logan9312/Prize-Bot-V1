@@ -586,6 +586,11 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if options["schedule"] != nil {
 
+		if i.Member.Permissions&(1<<3) != 8 {
+			ErrorResponse(s, i, "User have administrator permissions to schedule auctions in advance. If you are not an admin you can still run auctions normally without the `schedule` parameter.")
+			return
+		}
+
 		var AuctionQueue []database.AuctionQueue
 		var num int
 

@@ -111,7 +111,7 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content:    r.Content,
-			Components: []discordgo.MessageComponent{},
+			Components: r.Components,
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       r.Title,
