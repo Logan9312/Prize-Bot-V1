@@ -932,12 +932,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var AuctionQueueInfo []database.AuctionQueue
-	type AuctionQueueStruct struct {
-		Item      string
-		StartTime time.Time
-		ID        uint
-	}
-	var AuctionQueue []AuctionQueueStruct
+	var AuctionQueue []database.AuctionQueue
 	var fields []*discordgo.MessageEmbedField
 	var selectOptions []discordgo.SelectMenuOption
 
@@ -945,12 +940,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	for _, v := range AuctionQueueInfo {
 		if v.GuildID == i.GuildID {
-			AuctionQueue = append(AuctionQueue, AuctionQueueStruct{
-				Item:      v.Item,
-				StartTime: v.StartTime,
-				ID:        v.ID,
-			})
-
+			AuctionQueue = append(AuctionQueue, v)
 		}
 	}
 
@@ -960,7 +950,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s**", v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d>", v.StartTime.Unix()),
+			Value: fmt.Sprintf("**Start time:** <t:%d>\n**End Time:** <t:%d>", v.StartTime.Unix(), v.EndTime.Unix()),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
