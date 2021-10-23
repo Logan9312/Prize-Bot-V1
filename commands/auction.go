@@ -519,10 +519,11 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var startTime time.Time
+	var endTime time.Time
 
 	options := ParseSubCommand(i)
 
-	endTime, err := ParseTime(options["duration"].(string))
+	endTimeDuration, err := ParseTime(options["duration"].(string))
 	if err != nil {
 		fmt.Println(err)
 		ErrorResponse(s, i, err.Error())
@@ -607,13 +608,17 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		startTime, err = ParseTime(options["schedule"].(string))
+		startTimeDuration, err := ParseTime(options["schedule"].(string))
 		if err != nil {
 			fmt.Println(err)
 			ErrorResponse(s, i, err.Error())
 			return
 		}
 
+		endTime = time.Now().Add(endTimeDuration).Add(startTimeDuration)
+		startTime = time.Now().Add(startTimeDuration)
+	} else {
+		endTime = time.Now().Add(endTimeDuration)
 	}
 
 	auctionData := database.AuctionQueue{
@@ -631,10 +636,11 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Category: info.AuctionCategory,
 	}
 
-	database.DB.Create(&auctionData)
+	
 
 	if options["schedule"] != nil {
 
+	database.DB.Create(&auctionData)
 		err = PremiumResponse(s, i, PresetResponse{
 			Title: "Auction has been Scheduled!",
 			Fields: []*discordgo.MessageEmbedField{
@@ -650,7 +656,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		time.Sleep(time.Until(startTime))
-
+		database.DB.Delete(auctionData, auctionData.ID)
 	} else {
 		err = SuccessResponse(s, i, PresetResponse{
 			Title:       "**Auction Starting**",
@@ -662,7 +668,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	database.DB.Delete(auctionData, auctionData.ID)
+	
 
 	AuctionCreate(s, auctionData)
 }
@@ -1109,20 +1115,17 @@ func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	AuctionQueue(s, i)
 }
 
-func ParseTime(inputDuration string) (time.Time, error) {
+func ParseTime(inputDuration string) (time.Duration, error) {
 	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
 		inputDuration = strings.TrimSuffix(inputDuration, "d")
 		float, err := strconv.ParseFloat(inputDuration, 64)
 		if err != nil {
 			fmt.Println(err)
-			return time.Time{}, err
+			return 0, err
 		}
 		inputDuration = fmt.Sprint(float*24) + "h"
 	}
-	duration, err := time.ParseDuration(inputDuration)
-	if err != nil {
-		fmt.Println(err)
-		return time.Time{}, err
-	}
-	return time.Now().Add(duration), err
+	
+	return time.ParseDuration(inputDuration)
+	
 }
