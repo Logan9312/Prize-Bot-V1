@@ -950,7 +950,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s**", v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d>\n**End Time:** <t:%d>", v.StartTime.Unix(), v.EndTime.Unix()),
+			Value: fmt.Sprintf("**Start time:** <t:%d>\n**End Time:** <t:%d>\n\u200b", v.StartTime.Unix(), v.EndTime.Unix()),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
