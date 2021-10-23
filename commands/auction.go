@@ -961,7 +961,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s%s**",marker, v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d>\n**End Time:** <t:%d>\n**Starting Price:** %s", v.StartTime.Unix(), v.EndTime.Unix(), strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
+			Value: fmt.Sprintf("**Start time:** <t:%d>\n**End Time:** <t:%d>\n**Starting Price:** %s %s", v.StartTime.Unix(), v.EndTime.Unix(), v.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
