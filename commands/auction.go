@@ -897,7 +897,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 				},
 				{
 					Name:   "**Payment Due**",
-					Value:  fmt.Sprintf("%s %s\n\u200b", guildInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+					Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
 					Inline: true,
 				},
 				{
