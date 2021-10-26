@@ -400,7 +400,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		incCurrency = currency
 	}
 
-	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d>", auctionInfo.EndTime.Unix()))
+	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d:r>", auctionInfo.EndTime.Unix()))
 
 	if auctionInfo.Description != "" {
 		details += "\n**Description:**\n" + auctionInfo.Description
@@ -961,7 +961,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s%s**",marker, v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d>\n**End Time:** <t:%d>\n**Starting Price:** %s %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), v.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
+			Value: fmt.Sprintf("**Start time:** <t:%d:r>\n**End Time:** <t:%d>\n**Starting Price:** %s %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), v.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
@@ -1122,7 +1122,7 @@ func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func ParseTime(inputDuration string) (time.Duration, error) {
 	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
-		inputDuration = strings.TrimSuffix(inputDuration, "d")
+		inputDuration = strings.TrimSuffix(strings.ToLower(inputDuration), "d")
 		float, err := strconv.ParseFloat(inputDuration, 64)
 		if err != nil {
 			fmt.Println(err)
