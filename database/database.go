@@ -22,6 +22,8 @@ type Auction struct {
 	MaxBid      float64
 	Description string
 	ImageURL    string
+	TargetPrice float64
+	Buyout      float64
 }
 
 type AuctionQueue struct {
@@ -37,7 +39,9 @@ type AuctionQueue struct {
 	MaxBid      float64
 	Description string
 	ImageURL    string
-	Category string
+	Category    string
+	TargetPrice float64
+	Buyout      float64
 }
 
 type GuildInfo struct {
@@ -48,6 +52,7 @@ type GuildInfo struct {
 	LogChannel      string
 	Claiming        string
 	AuctionHostRole string
+	AntiSnipe       bool
 }
 
 type UserProfile struct {

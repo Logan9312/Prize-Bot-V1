@@ -22,6 +22,7 @@ func BotConnect(token, environment, botName string) {
 			&commands.AuctionCommand,
 			&commands.QueueCommand,
 			&commands.BidCommand,
+			&commands.GiveawayCommand,
 		},
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,
