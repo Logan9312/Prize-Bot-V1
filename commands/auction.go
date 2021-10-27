@@ -212,7 +212,6 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
 		options := ParseSubCommand(i)
-		fmt.Println(options)
 
 		if options["duration"] != nil {
 			choices = TimeSuggestions(options["duration"].(string))
@@ -248,19 +247,19 @@ func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 
 	choices := []*discordgo.ApplicationCommandOptionChoice{
 		{
-			Name:  input + "d",
+			Name:  input + " Days",
 			Value: input + "d",
 		},
 		{
-			Name:  input + "h",
+			Name:  input + " Hours",
 			Value: input + "h",
 		},
 		{
-			Name:  input + "m",
+			Name:  input + " Minutes",
 			Value: input + "m",
 		},
 		{
-			Name:  input + "s",
+			Name:  input + " Seconds",
 			Value: input + "s",
 		},
 	}
