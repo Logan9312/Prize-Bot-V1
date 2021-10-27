@@ -10,7 +10,6 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "create",
 			Description: "Start a giveaway!",
-			Required:    true,
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
@@ -20,12 +19,6 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					ChannelTypes: []discordgo.ChannelType{
 						discordgo.ChannelTypeGuildText,
 					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "channel",
-					Description: "The channel where the giveaway will take place",
-					Required:    true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionInteger,
