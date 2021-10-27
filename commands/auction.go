@@ -90,10 +90,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "duration",
-					Description: "Time that auction will run for. (Example: 24h, or 1d)",
-					Required:    true,
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "duration",
+					Description:  "Time that auction will run for. (Example: 24h, or 1d)",
+					Required:     true,
+					Autocomplete: true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -147,10 +148,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					},
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "schedule",
-					Description: "Set how long until the auction starts. (Example: 24h, or 1d)",
-					Required:    false,
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "schedule",
+					Description:  "Set how long until the auction starts. (Example: 24h, or 1d)",
+					Required:     false,
+					Autocomplete: true,
 				},
 			},
 		},
@@ -203,6 +205,66 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case "queue":
 		AuctionQueue(s, i)
 	}
+}
+
+func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var choices []*discordgo.ApplicationCommandOptionChoice
+	switch i.ApplicationCommandData().Options[0].Name {
+	case "create":
+		options := ParseSubCommand(i)
+		fmt.Println(options)
+
+		if options["duration"] != nil {
+			choices = TimeSuggestions(options["duration"].(string))
+		} else if options["schedule"] != nil {
+			choices = TimeSuggestions(options["schedule"].(string))
+		} else {
+			choices = []*discordgo.ApplicationCommandOptionChoice{
+				{
+					Name:  "",
+					Value: "",
+				},
+			}
+		}
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionApplicationCommandAutocompleteResult,
+			Data: &discordgo.InteractionResponseData{
+				Choices: choices,
+			},
+		})
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+}
+
+func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
+	_, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	choices := []*discordgo.ApplicationCommandOptionChoice{
+		{
+			Name:  input + "d",
+			Value: input + "d",
+		},
+		{
+			Name:  input + "h",
+			Value: input + "h",
+		},
+		{
+			Name:  input + "m",
+			Value: input + "m",
+		},
+		{
+			Name:  input + "s",
+			Value: input + "s",
+		},
+	}
+	return choices
 }
 
 func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
