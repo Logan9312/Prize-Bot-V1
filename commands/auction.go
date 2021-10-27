@@ -65,6 +65,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "claiming",
 					Description: "Set the message that will appear when someone tries to claim an auction prize",
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "anti_snipe",
+					Description: "Will extend the auction by 1 minute if there is a bid within the last minute.",
+				},
 			},
 		},
 		{
@@ -103,15 +108,27 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionInteger,
+					Type:        10,
 					Name:        "increment_max",
 					Description: "The max amount someone can bid at once",
 					Required:    false,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionInteger,
+					Type:        10,
 					Name:        "increment_min",
 					Description: "The minimum amount someone can bid at once",
+					Required:    false,
+				},
+				{
+					Type:        10,
+					Name:        "buyout",
+					Description: "Set a price that someone can immediately win the auction for if they bid it or higher.",
+					Required:    false,
+				},
+				{
+					Type:        10,
+					Name:        "target_price",
+					Description: "If this hidden price is not reached, no winner will be chosen",
 					Required:    false,
 				},
 				{
@@ -316,6 +333,22 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content = content + "• Claiming Message has been successfully set.\n"
 	}
 
+	if options["anti_snipe"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.AntiSnipe = options["anti_snipe"].(bool)
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"anti_snipe": info.AntiSnipe}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Claiming Message has been successfully set.\n"
+	}
+
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
@@ -380,6 +413,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Name:  "**Claiming Message**",
 				Value: info.Claiming,
 			},
+			{
+				Name:  "**Anti Snipe**",
+				Value: fmt.Sprint(info.AntiSnipe),
+			},
 		},
 	})
 	if err != nil {
@@ -400,7 +437,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		incCurrency = currency
 	}
 
-	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d:r>", auctionInfo.EndTime.Unix()))
+	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d:R>", auctionInfo.EndTime.Unix()))
 
 	if auctionInfo.Description != "" {
 		details += "\n**Description:**\n" + auctionInfo.Description
@@ -534,6 +571,8 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var image string
 	var maxBid float64
 	var minBid float64
+	var buyout float64
+	var targetPrice float64
 	var description string
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
@@ -584,6 +623,12 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["increment_max"] != nil {
 		maxBid = options["increment_max"].(float64)
 	}
+	if options["buyout"] != nil {
+		buyout = options["buyout"].(float64)
+	}
+	if options["target_price"] != nil {
+		targetPrice = options["target_price"].(float64)
+	}
 
 	if options["schedule"] != nil {
 
@@ -633,20 +678,20 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		MaxBid:      maxBid,
 		Description: description,
 		ImageURL:    image,
-		Category: info.AuctionCategory,
+		Category:    info.AuctionCategory,
+		Buyout:      buyout,
+		TargetPrice: targetPrice,
 	}
-
-	
 
 	if options["schedule"] != nil {
 
-	database.DB.Create(&auctionData)
+		database.DB.Create(&auctionData)
 		err = PremiumResponse(s, i, PresetResponse{
 			Title: "Auction has been Scheduled!",
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Auction Start Time:**",
-					Value:  fmt.Sprintf("<t:%d>", startTime.Unix()),
+					Value:  fmt.Sprintf("<t:%d:R>", startTime.Unix()),
 					Inline: false,
 				},
 			},
@@ -667,8 +712,6 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(err)
 		}
 	}
-
-	
 
 	AuctionCreate(s, auctionData)
 }
@@ -960,8 +1003,8 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			marker = ""
 		}
 		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:  fmt.Sprintf("**%s%s**",marker, v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d:r>\n**End Time:** <t:%d>\n**Starting Price:** %s %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), v.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
+			Name:  fmt.Sprintf("**%s%s**", marker, v.Item),
+			Value: fmt.Sprintf("**Start time:** <t:%d:R>\n**End Time:** <t:%d>\n**Starting Price:** %s %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), v.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
@@ -997,7 +1040,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Title:       "**Auction Queue**",
 		Description: "Displays upcoming auctions!",
 		Fields:      fields,
-		Components: components,
+		Components:  components,
 	})
 
 	if err != nil {
@@ -1130,7 +1173,7 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 		}
 		inputDuration = fmt.Sprint(float*24) + "h"
 	}
-	
+
 	return time.ParseDuration(inputDuration)
-	
+
 }
