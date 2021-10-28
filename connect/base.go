@@ -93,6 +93,9 @@ func Timers(s *discordgo.Session) {
 	}
 
 	database.DB.Find(&AuctionQueue)
+	fmt.Println("Auction Queue:")
+	fmt.Println(AuctionQueue)
+
 	for _, v := range AuctionQueue {
 		go AuctionStartTimer(v, s)
 	}
@@ -111,7 +114,7 @@ func AuctionStartTimer(v database.AuctionQueue, s *discordgo.Session) {
 	if v.StartTime.Before(time.Now()) {
 		commands.AuctionCreate(s, v)
 	} else {
-		time.Sleep(time.Until(v.EndTime))
+		time.Sleep(time.Until(v.StartTime))
 		commands.AuctionCreate(s, v)
 	}
 	database.DB.Delete(v, v.ID)
