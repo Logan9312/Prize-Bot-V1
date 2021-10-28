@@ -606,7 +606,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		Bid:         auctionInfo.Bid,
 		MessageID:   message.ID,
 		EndTime:     auctionInfo.EndTime,
-		Winner:      "No bidders",
+		Winner:      auctionInfo.Host,
 		GuildID:     auctionInfo.GuildID,
 		Item:        auctionInfo.Item,
 		Host:        auctionInfo.Host,
