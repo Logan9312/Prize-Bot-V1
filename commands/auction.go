@@ -630,7 +630,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := ParseSubCommand(i)
 
-	endTimeDuration, err := ParseTime(options["duration"].(string))
+	endTimeDuration, err := ParseTime(strings.ToLower(options["duration"].(string)))
 	if err != nil {
 		fmt.Println(err)
 		ErrorResponse(s, i, err.Error())
@@ -723,7 +723,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		startTimeDuration, err := ParseTime(options["schedule"].(string))
+		startTimeDuration, err := ParseTime(strings.ToLower(options["schedule"].(string)))
 		if err != nil {
 			fmt.Println(err)
 			ErrorResponse(s, i, err.Error())
@@ -994,13 +994,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 		auctionWinner = fmt.Sprintf("%s %s", auctionInfo.Winner, username)
 	}
 
-finalBid := fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
-	
+	finalBid := fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
 
-	if auctionInfo.Bid >= auctionInfo.Buyout && auctionInfo.Buyout != 0{
+	if auctionInfo.Bid >= auctionInfo.Buyout && auctionInfo.Buyout != 0 {
 		finalBid = fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")) + " BUYOUT!"
 	}
-
 
 	messageSend := discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{
