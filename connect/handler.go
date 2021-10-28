@@ -17,8 +17,6 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.AuctionBid(s, i)
 		case "profile":
 			c.Profile(s, i)
-		case "queue":
-			c.Queue(s, i)
 		default:
 			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
