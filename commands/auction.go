@@ -247,19 +247,19 @@ func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 
 	choices := []*discordgo.ApplicationCommandOptionChoice{
 		{
-			Name:  input + " d",
+			Name:  input + "d",
 			Value: input + "d",
 		},
 		{
-			Name:  input + " h",
+			Name:  input + "h",
 			Value: input + "h",
 		},
 		{
-			Name:  input + " m",
+			Name:  input + "m",
 			Value: input + "m",
 		},
 		{
-			Name:  input + " s",
+			Name:  input + "s",
 			Value: input + "s",
 		},
 	}
