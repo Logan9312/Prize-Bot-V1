@@ -615,6 +615,8 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		MaxBid:      auctionInfo.MaxBid,
 		Description: auctionInfo.Description,
 		ImageURL:    auctionInfo.ImageURL,
+		TargetPrice: auctionInfo.TargetPrice,
+		Buyout:      auctionInfo.Buyout,
 	})
 
 	database.DB.Delete(auctionInfo, auctionInfo.ID)
@@ -989,6 +991,8 @@ func AuctionEnd(ChannelID, GuildID string) {
 		auctionInfo.Winner = "<@" + auctionInfo.Winner + ">"
 	}
 
+	fmt.Println("Target Price: ", auctionInfo.TargetPrice)
+
 	auctionWinner := fmt.Sprintf("The host had set a target price of %s that has not been reached.", fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.TargetPrice), "0"), ".")))
 	if auctionInfo.TargetPrice <= auctionInfo.Bid {
 		auctionWinner = fmt.Sprintf("%s %s", auctionInfo.Winner, username)
@@ -1036,6 +1040,9 @@ func AuctionEnd(ChannelID, GuildID string) {
 					Value:  fmt.Sprintf("This Auction was hosted by: <@!%s>", auctionInfo.Host),
 					Inline: false,
 				},
+			},
+			Image: &discordgo.MessageEmbedImage{
+				URL:      "https://i.imgur.com/9wo7diC.png",
 			},
 		},
 	}
