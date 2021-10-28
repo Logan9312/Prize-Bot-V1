@@ -997,7 +997,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 finalBid := fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
 	
 
-	if auctionInfo.Bid >= auctionInfo.Buyout {
+	if auctionInfo.Bid >= auctionInfo.Buyout && auctionInfo.Buyout != 0{
 		finalBid = fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")) + " BUYOUT!"
 	}
 
