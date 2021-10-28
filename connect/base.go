@@ -20,7 +20,6 @@ func BotConnect(token, environment, botName string) {
 			&commands.HelpCommand,
 			&commands.ProfileCommand,
 			&commands.AuctionCommand,
-			&commands.QueueCommand,
 			&commands.BidCommand,
 			&commands.GiveawayCommand,
 		},

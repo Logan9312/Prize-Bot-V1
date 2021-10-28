@@ -32,6 +32,11 @@ func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	fields := append(fields,  &discordgo.MessageEmbedField{
+		Name:  "**Ping**",
+		Value: s.HeartbeatLatency().String(),
+	})
+
 	err := SuccessResponse(s, i, PresetResponse{
 		Title:       "Discord Bot Help",
 		Description: "Developed by Logan. Thank you for using my bot!",
