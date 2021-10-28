@@ -491,7 +491,6 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		GuildID: auctionInfo.GuildID,
 	}
 	database.DB.First(&guildInfo, auctionInfo.GuildID)
-
 	currency := auctionInfo.Currency
 	incCurrency := "+"
 	if currency != "" {
@@ -609,6 +608,8 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		Description: auctionInfo.Description,
 		ImageURL:    auctionInfo.ImageURL,
 	})
+
+	database.DB.Delete(auctionInfo, auctionInfo.ID)
 
 	time.Sleep(time.Until(auctionInfo.EndTime))
 	AuctionEnd(channel.ID, auctionInfo.GuildID)
@@ -762,7 +763,6 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 		time.Sleep(time.Until(startTime))
-		database.DB.Delete(auctionData, auctionData.ID)
 	} else {
 		err = SuccessResponse(s, i, PresetResponse{
 			Title:       "**Auction Starting**",
