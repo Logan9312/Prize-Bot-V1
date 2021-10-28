@@ -511,6 +511,14 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MaxBid), "0"), ".")
 	}
 
+	if auctionInfo.TargetPrice != 0 {
+		details += "\n**Target Price:**\nThe owner has set a hidden target price for this auction."
+	}
+
+	if auctionInfo.Buyout != 0 {
+		details += "\n**Buyout Price:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")
+	}
+
 	details += "\n\u200b"
 
 	guild, err := s.Guild(auctionInfo.GuildID)
@@ -804,6 +812,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	if bidAmount >= info.Buyout && info.Buyout != 0 {
+		AuctionEnd(i.ChannelID, i.GuildID)
+		SuccessResponse(s, i, PresetResponse{
+			Title:       "Success!",
+			Description: "Auction has successfully been bought out!",
+		})
+	}
+
 	if bidAmount > info.Bid {
 		if bidAmount-info.Bid < info.MinBid {
 			ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+info.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.MinBid), "0"), "."))
@@ -973,6 +989,19 @@ func AuctionEnd(ChannelID, GuildID string) {
 		auctionInfo.Winner = "<@" + auctionInfo.Winner + ">"
 	}
 
+	auctionWinner := fmt.Sprintf("The host had set a target price of %s that has not been reached.", fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.TargetPrice), "0"), ".")))
+	if auctionInfo.TargetPrice <= auctionInfo.Bid {
+		auctionWinner = fmt.Sprintf("%s %s", auctionInfo.Winner, username)
+	}
+
+finalBid := fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
+	
+
+	if auctionInfo.Bid >= auctionInfo.Buyout {
+		finalBid = fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")) + " BUYOUT!"
+	}
+
+
 	messageSend := discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -996,12 +1025,12 @@ func AuctionEnd(ChannelID, GuildID string) {
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Winner**",
-					Value:  auctionInfo.Winner + " " + username,
+					Value:  auctionWinner,
 					Inline: true,
 				},
 				{
-					Name:   "**Payment Due**",
-					Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+					Name:   "**Final Bid**",
+					Value:  finalBid,
 					Inline: true,
 				},
 				{
