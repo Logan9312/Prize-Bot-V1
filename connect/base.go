@@ -99,7 +99,7 @@ func Timers(s *discordgo.Session) {
 }
 
 func AuctionEndTimer(v database.Auction, s *discordgo.Session) {
-	fmt.Println("Auction Started: ", v.Item, "GuildID: ", v.GuildID)
+	fmt.Println("Auction Timer Re-Started: ", v.Item, "GuildID: ", v.GuildID)
 	if v.EndTime.Before(time.Now()) {
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
 	} else {
