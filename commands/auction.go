@@ -1225,7 +1225,6 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			break
 		}
 
-
 		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
 		if err != nil {
 			fmt.Println(err)
