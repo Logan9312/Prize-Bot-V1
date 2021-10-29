@@ -820,7 +820,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe{
+	/*if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe{
 		auctionInfo.EndTime = auctionInfo.EndTime.Add(time.Minute)
 		responseFields = []*discordgo.MessageEmbedField{
 			{
@@ -830,7 +830,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 		antiSnipeFlag = true
-	}
+	}*/
 
 	if bidAmount >= auctionInfo.Buyout && auctionInfo.Buyout != 0 {
 
