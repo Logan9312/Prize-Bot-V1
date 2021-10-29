@@ -820,7 +820,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	/*if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe{
+	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe{
 		auctionInfo.EndTime = auctionInfo.EndTime.Add(time.Minute)
 		responseFields = []*discordgo.MessageEmbedField{
 			{
@@ -830,7 +830,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 		antiSnipeFlag = true
-	}*/
+	}
 
 	if bidAmount >= auctionInfo.Buyout && auctionInfo.Buyout != 0 {
 
@@ -970,11 +970,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 		fmt.Println(result.Error.Error())
 	} 
 
-	/*if auctionInfo.EndTime.After(time.Now()) {
+	if auctionInfo.EndTime.After(time.Now()) {
 		time.Sleep(time.Until(auctionInfo.EndTime))
 		AuctionEnd(ChannelID, GuildID)
 		return
-	}*/
+	}
 
 	message := discordgo.NewMessageEdit(auctionInfo.ChannelID, auctionInfo.MessageID)
 	messageEmbeds, err := Session.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
@@ -1185,12 +1185,12 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	guildInfo := database.GuildInfo{}
-	info := database.Auction{}
+	auctionInfo := database.Auction{}
 
-	database.DB.First(&info, i.ChannelID)
+	database.DB.First(&auctionInfo, i.ChannelID)
 	database.DB.First(&guildInfo, i.GuildID)
 
-	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != info.Host {
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionInfo.Host {
 		ErrorResponse(s, i, "You must have an administrator role to end the auction early!")
 		return
 	}
@@ -1209,6 +1209,10 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	auctionInfo.EndTime = time.Now()
+
+	database.DB.Model(&auctionInfo).Updates(auctionInfo)
 
 	AuctionEnd(i.ChannelID, i.GuildID)
 }
