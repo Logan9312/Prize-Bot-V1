@@ -31,15 +31,19 @@ func BotConnect(token, environment, botName string) {
 	}
 
 	fmt.Println(botName + " Starting Up...")
-
-	s, err := discordgo.New("Bot " + token)
+	var s *discordgo.Session
+	var err error
+	for {
+		s, err = discordgo.New("Bot " + token)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			break
+		}
+		time.Sleep(time.Minute)
+	}
 
 	commands.Session = s
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 
 	err = s.Open()
 
