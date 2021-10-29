@@ -972,11 +972,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 		fmt.Println(result.Error.Error())
 	} 
 
-	if auctionInfo.EndTime.After(time.Now()) {
+	/*if auctionInfo.EndTime.After(time.Now()) {
 		time.Sleep(time.Until(auctionInfo.EndTime))
 		AuctionEnd(ChannelID, GuildID)
 		return
-	}
+	}*/
 
 	message := discordgo.NewMessageEdit(auctionInfo.ChannelID, auctionInfo.MessageID)
 	messageEmbeds, err := Session.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
