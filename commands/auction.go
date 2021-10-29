@@ -981,7 +981,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		description += fmt.Sprintf("\n**Description:** %s", auctionInfo.Description)
 	}
 	if auctionInfo.Winner == "" {
-		auctionInfo.Winner = "No winner detected. Please contact support to report this bug"
+		auctionInfo.Winner = "No Bidders"
 	} else if auctionInfo.Winner != "No bidders" {
 		user, err := Session.User(strings.Trim(auctionInfo.Winner, "<@!>"))
 		if err != nil {
@@ -1042,7 +1042,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 				},
 			},
 			Image: &discordgo.MessageEmbedImage{
-				URL:      "https://i.imgur.com/9wo7diC.png",
+				URL: "https://i.imgur.com/9wo7diC.png",
 			},
 		},
 	}
@@ -1215,15 +1215,16 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		if len(messages) == 0 {
-			break
-		}
-
 		for _, v := range messages {
 			if !v.Pinned {
 				messageIDs = append(messageIDs, v.ID)
 			}
 		}
+
+		if len(messageIDs) == 0 {
+			break
+		}
+
 
 		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
 		if err != nil {
