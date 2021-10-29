@@ -904,7 +904,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		if antiSnipeFlag == true {
+		if antiSnipeFlag{
 			updateAuction.Embeds[0].Fields = append(updateAuction.Embeds[0].Fields, &discordgo.MessageEmbedField{
 				Name:   "**Anti-Snipe Activated!**",
 				Value:  fmt.Sprintf("New End Time: <t:%d>", auctionInfo.EndTime.Unix()),
