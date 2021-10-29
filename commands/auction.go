@@ -512,7 +512,11 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	}
 
 	if auctionInfo.TargetPrice != 0 {
-		details += "\n**Target Price:**\nThe owner has set a hidden target price for this auction."
+		details += "\n**Target Price:**\nThe host has set a hidden target price for this auction."
+	}
+
+	if guildInfo.AntiSnipe {
+		details += "\n**Anti-Snipe:**\nAnti-Snipe has been enabled for this auction. It can be disabled at any time with `/Auction Setup`."
 	}
 
 	if auctionInfo.Buyout != 0 {
@@ -797,49 +801,61 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	bidAmount := options["amount"].(float64)
-	var info database.Auction
+	var auctionInfo database.Auction
 	var guildInfo database.GuildInfo
-	info.ChannelID = i.ChannelID
-	database.DB.First(&info, i.ChannelID)
+	auctionInfo.ChannelID = i.ChannelID
+	database.DB.First(&auctionInfo, i.ChannelID)
 	database.DB.First(&guildInfo, i.GuildID)
 	currency := guildInfo.Currency
 	var Content string
 
-	if info.Currency != "" {
-		currency = info.Currency
+	if auctionInfo.Currency != "" {
+		currency = auctionInfo.Currency
 	}
 
-	if info.EndTime.Before(time.Now()) {
+	if auctionInfo.EndTime.Before(time.Now()) {
 		ErrorResponse(s, i, "Cannot Bid, Auction has ended")
 		return
 	}
 
-	if bidAmount >= info.Buyout && info.Buyout != 0 {
+	
+
+	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe == true{
+		auctionInfo.EndTime = auctionInfo.EndTime.Add(time.Minute)
+	}
+
+	if bidAmount >= auctionInfo.Buyout && auctionInfo.Buyout != 0 {
+
+		auctionInfo.Bid = bidAmount
+		auctionInfo.Winner = i.Member.User.ID
+
+		database.DB.Model(&auctionInfo).Updates(auctionInfo)
+
 		AuctionEnd(i.ChannelID, i.GuildID)
+		
 		SuccessResponse(s, i, PresetResponse{
 			Title:       "Success!",
 			Description: "Auction has successfully been bought out!",
 		})
-	}
-
-	if bidAmount > info.Bid {
-		if bidAmount-info.Bid < info.MinBid {
-			ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+info.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.MinBid), "0"), "."))
+		return
+	} else if bidAmount > auctionInfo.Bid {
+		if bidAmount-auctionInfo.Bid < auctionInfo.MinBid {
+			ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+auctionInfo.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MinBid), "0"), "."))
 			return
 		}
 
-		if bidAmount-info.Bid > info.MaxBid && info.MaxBid != 0 {
-			ErrorResponse(s, i, "Bid must be no more than "+info.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.MaxBid), "0"), ".")+" Higher than the previous bid.")
+		if bidAmount-auctionInfo.Bid > auctionInfo.MaxBid && auctionInfo.MaxBid != 0 {
+			ErrorResponse(s, i, "Bid must be no more than "+auctionInfo.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MaxBid), "0"), ".")+" Higher than the previous bid.")
 			return
 		}
 
-		info.Bid = bidAmount
-		info.Winner = i.Member.User.ID
-		Winner := info.Winner
+		auctionInfo.Bid = bidAmount
+		auctionInfo.Winner = i.Member.User.ID
+		Winner := auctionInfo.Winner
 
-		database.DB.Model(&info).Updates(info)
+		database.DB.Model(&auctionInfo).Updates(auctionInfo)
 
-		updateAuction, err := s.ChannelMessage(info.ChannelID, info.MessageID)
+		updateAuction, err := s.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
 		if err != nil {
 			fmt.Println(err)
 			ErrorResponse(s, i, err.Error())
@@ -894,8 +910,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Components: updateAuction.Components,
 			Embeds:     updateAuction.Embeds,
-			ID:         info.MessageID,
-			Channel:    info.ChannelID,
+			ID:         auctionInfo.MessageID,
+			Channel:    auctionInfo.ChannelID,
 		})
 		if err != nil {
 			fmt.Println(err)
@@ -904,7 +920,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Content = "Bid has successfully been placed"
 	} else {
-		ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", info.Bid), "0"), "."))
+		ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
 	}
 
 	err := SuccessResponse(s, i, PresetResponse{
@@ -935,6 +951,12 @@ func AuctionEnd(ChannelID, GuildID string) {
 	result = database.DB.First(&guildInfo, GuildID)
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
+	} 
+
+	if auctionInfo.EndTime.After(time.Now()) {
+		time.Sleep(time.Until(auctionInfo.EndTime))
+		AuctionEnd(ChannelID, GuildID)
+		return
 	}
 
 	message := discordgo.NewMessageEdit(auctionInfo.ChannelID, auctionInfo.MessageID)
