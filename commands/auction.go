@@ -793,6 +793,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var options map[string]interface{}
+	var responseFields []*discordgo.MessageEmbedField
 
 	if i.ApplicationCommandData().Options[0].Type == discordgo.ApplicationCommandOptionSubCommand {
 		options = ParseSubCommand(i)
@@ -808,6 +809,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database.DB.First(&guildInfo, i.GuildID)
 	currency := guildInfo.Currency
 	var Content string
+	var antiSnipeFlag bool
 
 	if auctionInfo.Currency != "" {
 		currency = auctionInfo.Currency
@@ -820,8 +822,16 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	
 
-	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe == true{
+	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe{
 		auctionInfo.EndTime = auctionInfo.EndTime.Add(time.Minute)
+		responseFields = []*discordgo.MessageEmbedField{
+			{
+				Name:   "**Anti-Snipe Activated!**",
+				Value:  fmt.Sprintf("New End Time: <t:%d>", auctionInfo.EndTime.Unix()),
+				Inline: false,
+			},
+		}
+		antiSnipeFlag = true
 	}
 
 	if bidAmount >= auctionInfo.Buyout && auctionInfo.Buyout != 0 {
@@ -894,6 +904,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
+		if antiSnipeFlag == true {
+			updateAuction.Embeds[0].Fields = append(updateAuction.Embeds[0].Fields, &discordgo.MessageEmbedField{
+				Name:   "**Anti-Snipe Activated!**",
+				Value:  fmt.Sprintf("New End Time: <t:%d>", auctionInfo.EndTime.Unix()),
+				Inline: false,
+			})
+		}
+
 		if len(updateAuction.Embeds) != 2 {
 			updateAuction.Embeds = append(updateAuction.Embeds, &discordgo.MessageEmbed{
 				Title:       "**Bid History**",
@@ -925,6 +943,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err := SuccessResponse(s, i, PresetResponse{
 		Title: Content,
+		Fields: responseFields,
 	})
 	if err != nil {
 		fmt.Println(err)
