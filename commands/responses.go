@@ -2,15 +2,19 @@ package commands
 
 import "github.com/bwmarrin/discordgo"
 
-type PresetMessageComplex struct {
-	Content         string                            `json:"content,omitempty"`
-	Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
-	TTS             bool                              `json:"tts"`
-	Components      []discordgo.MessageComponent      `json:"components"`
-	Files           []*discordgo.File                 `json:"-"`
-	AllowedMentions *discordgo.MessageAllowedMentions `json:"allowed_mentions,omitempty"`
-	Reference       *discordgo.MessageReference       `json:"message_reference,omitempty"`
-}	
+/*type PresetMessageComplex struct {
+	Content     string `json:"content,omitempty"`
+	Title       string
+	Description string
+	Fields      []*discordgo.MessageEmbedField
+	Thumbnail   *discordgo.MessageEmbedThumbnail
+	Image       *discordgo.MessageEmbedImage
+	Components  []discordgo.MessageComponent `json:"components"`
+
+	//Files           []*discordgo.File                 `json:"-"`
+	//AllowedMentions *discordgo.MessageAllowedMentions `json:"allowed_mentions,omitempty"`
+	//Reference       *discordgo.MessageReference       `json:"message_reference,omitempty"`
+}*/
 
 type PresetResponse struct {
 	Content     string `json:"content"`
@@ -19,7 +23,7 @@ type PresetResponse struct {
 	Fields      []*discordgo.MessageEmbedField
 	Thumbnail   *discordgo.MessageEmbedThumbnail
 	Image       *discordgo.MessageEmbedImage
-	Components  []discordgo.MessageComponent     
+	Components  []discordgo.MessageComponent
 	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
 
 	//Flags uint64 `json:"flags,omitempty"`
@@ -124,6 +128,20 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 			},
 			Flags: 64,
 		},
+	})
+}
+
+func PresetMessageSend(s *discordgo.Session, channelID string, m PresetResponse) (*discordgo.Message, error) {
+	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Embed: &discordgo.MessageEmbed{
+			Title:       m.Title,
+			Description: m.Description,
+			Color:       0x8073ff,
+			Fields:      m.Fields,
+			Thumbnail:   m.Thumbnail,
+			Image:       m.Image,
+		},
+		Components: m.Components,
 	})
 }
 

@@ -549,30 +549,27 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		fmt.Println(err)
 	}
 
-	message, err := s.ChannelMessageSendComplex(channel.ID, &discordgo.MessageSend{
-		Content: guildInfo.AuctionRole,
-		Embed: &discordgo.MessageEmbed{
-			Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
-			Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
-			Color:       0x8073ff,
-			Image: &discordgo.MessageEmbedImage{
-				URL: auctionInfo.ImageURL,
+	message, err := PresetMessageSend(s, channel.ID, PresetResponse{
+		Content:     guildInfo.AuctionRole,
+		Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
+		Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "__**Details:**__",
+				Value:  details,
+				Inline: true,
 			},
-			Thumbnail: &discordgo.MessageEmbedThumbnail{
-				URL: guild.IconURL(),
+			{
+				Name:   "__**Starting Bid:**__",
+				Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+				Inline: true,
 			},
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:   "__**Details:**__",
-					Value:  details,
-					Inline: true,
-				},
-				{
-					Name:   "__**Starting Bid:**__",
-					Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
-					Inline: true,
-				},
-			},
+		},
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: guild.IconURL(),
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: auctionInfo.ImageURL,
 		},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -820,7 +817,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe{
+	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe {
 		auctionInfo.EndTime = auctionInfo.EndTime.Add(time.Minute)
 		responseFields = []*discordgo.MessageEmbedField{
 			{
@@ -840,7 +837,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		database.DB.Model(&auctionInfo).Updates(auctionInfo)
 
 		AuctionEnd(i.ChannelID, i.GuildID)
-		
+
 		SuccessResponse(s, i, PresetResponse{
 			Title:       "Success!",
 			Description: "Auction has successfully been bought out!",
@@ -902,7 +899,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		}
 
-		if antiSnipeFlag{
+		if antiSnipeFlag {
 			updateAuction.Embeds[0].Fields = append(updateAuction.Embeds[0].Fields, &discordgo.MessageEmbedField{
 				Name:   "**Anti-Snipe Activated!**",
 				Value:  fmt.Sprintf("New End Time: <t:%d>", auctionInfo.EndTime.Unix()),
@@ -940,7 +937,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	err := SuccessResponse(s, i, PresetResponse{
-		Title: Content,
+		Title:  Content,
 		Fields: responseFields,
 	})
 	if err != nil {
@@ -953,6 +950,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 	var guildInfo database.GuildInfo
 	username := ""
 	auctionInfo.ChannelID = ChannelID
+	imageURL := "https://i.imgur.com/9wo7diC.png"
 
 	result := database.DB.First(&auctionInfo, ChannelID)
 	if result.Error != nil {
@@ -968,7 +966,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 	result = database.DB.First(&guildInfo, GuildID)
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
-	} 
+	}
 
 	if auctionInfo.EndTime.After(time.Now()) {
 		time.Sleep(time.Until(auctionInfo.EndTime))
@@ -1013,6 +1011,10 @@ func AuctionEnd(ChannelID, GuildID string) {
 			},
 		}
 		Session.ChannelMessageEditComplex(message)
+	}
+
+	if auctionInfo.ImageURL != "" {
+		imageURL = auctionInfo.ImageURL
 	}
 
 	description := fmt.Sprintf("**Item:** %s", auctionInfo.Item)
@@ -1081,7 +1083,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 				},
 			},
 			Image: &discordgo.MessageEmbedImage{
-				URL: "https://i.imgur.com/9wo7diC.png",
+				URL: imageURL,
 			},
 		},
 	}
