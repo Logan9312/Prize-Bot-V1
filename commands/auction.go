@@ -133,9 +133,9 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "image",
-					Description: "Must be a link",
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "target_price",
+					Description: "If this hidden price is not reached, no winner will be chosen",
 					Required:    false,
 				},
 				{
@@ -146,6 +146,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					ChannelTypes: []discordgo.ChannelType{
 						4,
 					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "image",
+					Description: "Must be a link",
+					Required:    false,
 				},
 				{
 					Type:         discordgo.ApplicationCommandOptionString,
@@ -814,6 +820,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if auctionInfo.EndTime.Before(time.Now()) {
 		ErrorResponse(s, i, "Cannot Bid, Auction has ended")
+		return
+	}
+
+	if i.Member.User.ID == auctionInfo.Winner {
+		ErrorResponse(s, i, "Cannot out bid yourself")
 		return
 	}
 
