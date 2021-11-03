@@ -26,6 +26,19 @@ type Auction struct {
 	Buyout      float64
 }
 
+type Giveaway struct {
+	MessageID   string `gorm:"primaryKey"`
+	ChannelID   string
+	GuildID     string
+	Item        string
+	EndTime     time.Time
+	Description string
+	Host        string
+	Winners     float64
+	ImageURL    string
+	Entries     string
+}
+
 type AuctionQueue struct {
 	ID          uint `gorm:"primaryKey"`
 	Bid         float64
@@ -53,6 +66,7 @@ type GuildInfo struct {
 	Claiming        string
 	AuctionHostRole string
 	AntiSnipe       bool
+	GiveawayRole    string
 }
 
 type UserProfile struct {
@@ -71,7 +85,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(GuildInfo{}, Auction{}, AuctionQueue{})
+	err := DB.AutoMigrate(GuildInfo{}, Auction{}, AuctionQueue{}, Giveaway{})
 	if err != nil {
 		fmt.Println(err)
 	}

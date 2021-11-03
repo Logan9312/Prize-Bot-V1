@@ -17,6 +17,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.AuctionBid(s, i)
 		case "profile":
 			c.Profile(s, i)
+		case "giveaway":
+			c.Giveaway(s, i)
 		default:
 			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
@@ -30,12 +32,14 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.ClearAuctionButton(s, i)
 		case "delete_auction_queue":
 			c.DeleteAuctionQueue(s, i)
+		case "enter_giveaway":
+			c.GiveawayEnter(s, i)
 		default:
 			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case 4:
 		switch i.ApplicationCommandData().Name {
-		case "auction":
+		case "auction", "giveaway":
 			c.AuctionAutoComplete(s, i)
 		}
 	}
