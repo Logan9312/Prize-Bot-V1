@@ -133,13 +133,16 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 
 func PresetMessageSend(s *discordgo.Session, channelID string, m PresetResponse) (*discordgo.Message, error) {
 	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
-		Embed: &discordgo.MessageEmbed{
-			Title:       m.Title,
-			Description: m.Description,
-			Color:       0x8073ff,
-			Fields:      m.Fields,
-			Thumbnail:   m.Thumbnail,
-			Image:       m.Image,
+		Content: m.Content,
+		Embeds: []*discordgo.MessageEmbed{
+			{
+				Title:       m.Title,
+				Description: m.Description,
+				Color:       0x8073ff,
+				Fields:      m.Fields,
+				Thumbnail:   m.Thumbnail,
+				Image:       m.Image,
+			},
 		},
 		Components: m.Components,
 	})
