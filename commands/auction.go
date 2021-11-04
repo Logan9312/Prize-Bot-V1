@@ -133,12 +133,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "target_price",
-					Description: "If this hidden price is not reached, no winner will be chosen",
-					Required:    false,
-				},
-				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "category",
 					Description: "Sets the category to create auctions in.",
