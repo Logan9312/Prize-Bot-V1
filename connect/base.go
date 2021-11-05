@@ -36,7 +36,7 @@ func BotConnect(token, environment, botName string) {
 	for {
 		s, err = discordgo.New("Bot " + token)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("discordgo.New error:" + err.Error())
 		} else {
 			break
 		}
@@ -48,7 +48,7 @@ func BotConnect(token, environment, botName string) {
 	err = s.Open()
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("s.Open error: " + err.Error())
 		return
 	}
 
@@ -77,7 +77,7 @@ func BotConnect(token, environment, botName string) {
 
 	go Timers(s)
 
-	err = s.UpdateGameStatus(0, "Bot Version v0.6")
+	err = s.UpdateGameStatus(0, "Bot Version v0.7")
 	if err != nil {
 		fmt.Println(err)
 		return
