@@ -66,6 +66,8 @@ type GuildInfo struct {
 	Claiming        string
 	AuctionHostRole string
 	AntiSnipe       bool
+	SnipeExtension  time.Duration
+	SnipeRange      time.Duration
 	GiveawayRole    string
 }
 

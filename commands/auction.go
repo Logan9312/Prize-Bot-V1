@@ -66,9 +66,14 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set the message that will appear when someone tries to claim an auction prize",
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "anti_snipe",
-					Description: "Will extend the auction by 1 minute if there is a bid within the last minute.",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "snipe_extension",
+					Description: "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "snipe_range",
+					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
 				},
 			},
 		},
@@ -277,6 +282,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	var err error
+
 	options := ParseSubCommand(i)
 	content := ""
 	category := &discordgo.Channel{}
@@ -394,26 +401,54 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content = content + "• Claiming Message has been successfully set.\n"
 	}
 
-	if options["anti_snipe"] != nil {
+	if options["snipe_extension"] != nil {
 		info := database.GuildInfo{
 			GuildID: i.GuildID,
 		}
-		info.AntiSnipe = options["anti_snipe"].(bool)
+		info.SnipeExtension, err = ParseTime(options["snipe_extension"].(string))
+		if err != nil {
+			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
+		}
 		result := database.DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"anti_snipe": info.AntiSnipe}),
+			DoUpdates: clause.Assignments(map[string]interface{}{"snipe_extension": info.SnipeExtension}),
 		}).Create(&info)
 
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
 		}
-		content = content + "• Claiming Message has been successfully set.\n"
+		content = content + "• Snipe Extension has been successfully set.\n"
+	}
+
+	if options["snipe_range"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.SnipeRange, err = ParseTime(options["snipe_range"].(string))
+		if err != nil {
+			fmt.Println(err)
+			ErrorResponse(s, i, err.Error())
+			return
+		}
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"snipe_range": info.SnipeRange}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Snipe Range has been successfully set.\n"
 	}
 
 	info := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
 	database.DB.First(&info, i.GuildID)
+
+	antiSnipeDescription := fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", info.SnipeRange.String(), info.SnipeExtension.String())
 
 	if info.AuctionCategory == "" {
 		category.Name = "Not Set"
@@ -445,8 +480,11 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		info.AuctionHostRole = "<@&" + info.AuctionHostRole + ">"
 	}
+	if info.SnipeExtension == 0 || info.SnipeRange == 0 {
+		antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
+	}
 
-	err := SuccessResponse(s, i, PresetResponse{
+	err = SuccessResponse(s, i, PresetResponse{
 		Title:       "Auction Setup",
 		Description: content,
 		Fields: []*discordgo.MessageEmbedField{
@@ -476,7 +514,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:  "**Anti Snipe**",
-				Value: fmt.Sprint(info.AntiSnipe),
+				Value: antiSnipeDescription,
 			},
 		},
 	})
@@ -822,8 +860,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if time.Until(auctionInfo.EndTime) < time.Minute && guildInfo.AntiSnipe {
-		auctionInfo.EndTime = auctionInfo.EndTime.Add(time.Minute)
+	if time.Until(auctionInfo.EndTime) < guildInfo.SnipeRange && guildInfo.SnipeExtension != 0 {
+		auctionInfo.EndTime = auctionInfo.EndTime.Add(guildInfo.SnipeExtension)
 		responseFields = []*discordgo.MessageEmbedField{
 			{
 				Name:   "**Anti-Snipe Activated!**",
