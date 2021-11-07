@@ -92,14 +92,15 @@ func Timers(s *discordgo.Session) {
 	var AuctionQueue []database.AuctionQueue
 
 	database.DB.Find(&Auctions)
-	fmt.Println(Auctions)
 	for _, v := range Auctions {
 		go AuctionEndTimer(v, s)
+		fmt.Println(v)
 	}
 
 	database.DB.Find(&AuctionQueue)
 	for _, v := range AuctionQueue {
 		go AuctionStartTimer(v, s)
+		fmt.Println(v)
 	}
 }
 
