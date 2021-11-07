@@ -535,34 +535,6 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		incCurrency = currency
 	}
 
-	details := fmt.Sprintf("**Auction End Time:\n%s**", fmt.Sprintf("<t:%d:R>", auctionInfo.EndTime.Unix()))
-
-	if auctionInfo.Description != "" {
-		details += "\n**Description:**\n" + auctionInfo.Description
-	}
-
-	if auctionInfo.MinBid != 0 {
-		details += "\n**Minimum Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MinBid), "0"), ".")
-	}
-
-	if auctionInfo.MaxBid != 0 {
-		details += "\n**Max Bid Increment:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MaxBid), "0"), ".")
-	}
-
-	if auctionInfo.TargetPrice != 0 {
-		details += "\n**Target Price:**\nThe host has set a hidden target price for this auction."
-	}
-
-	if guildInfo.AntiSnipe {
-		details += "\n**Anti-Snipe:**\nAnti-Snipe has been enabled for this auction. It can be disabled at any time with `/Auction Setup`."
-	}
-
-	if auctionInfo.Buyout != 0 {
-		details += "\n**Buyout Price:**\n" + incCurrency + " " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")
-	}
-
-	details += "\n\u200b"
-
 	guild, err := s.Guild(auctionInfo.GuildID)
 
 	if err != nil {
@@ -582,30 +554,85 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		return
 	}
 
-	host, err := s.GuildMember(auctionInfo.GuildID, auctionInfo.Host)
-	if err != nil {
-		fmt.Println(err)
+	var message *discordgo.Message
+	auctionfields := []*discordgo.MessageEmbedField{
+		{
+			Name:   "__**Hosted By**__",
+			Value:  fmt.Sprintf("<@%s>", auctionInfo.Host),
+			Inline: false,
+		},
+		{
+			Name:   "__**End Time**__",
+			Value:  fmt.Sprintf("<t:%d:R>", auctionInfo.EndTime.Unix()),
+			Inline: false,
+		},
 	}
 
-	var message *discordgo.Message
+	if auctionInfo.Description != "" {
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+			Name:   "__**Item Description**__",
+			Value:  auctionInfo.Description,
+			Inline: false,
+		})
+	}
 
+	if auctionInfo.MinBid != 0 || auctionInfo.MaxBid != 0 {
+		bidRanges := ""
+		if auctionInfo.MinBid != 0 {
+			bidRanges += fmt.Sprintf("• Minimum %s %s above previous bid", incCurrency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MinBid), "0"), "."))
+		}
+		if auctionInfo.MaxBid != 0 {
+			bidRanges += fmt.Sprintf("• Maximum %s %s above previous bid", incCurrency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MaxBid), "0"), "."))
+		}
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+			Name:   "__**Bid Range**__",
+			Value:  bidRanges,
+			Inline: false,
+		})
+	}
+
+	if auctionInfo.TargetPrice != 0 {
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+			Name:   "__**Target Price**__",
+			Value:  "The host has set a hidden target price for this auction.",
+			Inline: false,
+		})
+	}
+
+	if guildInfo.SnipeExtension != 0 && guildInfo.SnipeRange != 0 {
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+			Name:   "__**Anti-Snipe**__",
+			Value:  fmt.Sprintf("Anti-Snipe has been enabled for this auction. If a bid is placed within the last %s, the auction will be extended by %s.", guildInfo.SnipeRange.String(), guildInfo.SnipeExtension.String()),
+			Inline: false,
+		})
+	}
+
+	if auctionInfo.Buyout != 0 {
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+			Name:   "__**Buyout Price**__",
+			Value:  fmt.Sprintf("%s %s", incCurrency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")),
+			Inline: false,
+		})
+	}
+
+	auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+		Name:   "__**Starting Bid:**__",
+		Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+		Inline: true,
+	}, &discordgo.MessageEmbedField{
+		Name:   "__**Current Highest Bid:**__",
+		Value:  fmt.Sprintf("<@%s>", auctionInfo.Host),
+		Inline: true,
+	}, &discordgo.MessageEmbedField{
+		Name:   "__**How to Bid**__",
+		Value:  "Use the command `/auction bid` below.\n• Ex: `/auction bid 550`",
+		Inline: false,
+	})
 
 	message, err = PresetMessageSend(s, channel.ID, PresetResponse{
-		Content:     guildInfo.AuctionRole,
-		Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
-		Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "__**Details:**__",
-				Value:  details,
-				Inline: true,
-			},
-			{
-				Name:   "__**Starting Bid:**__",
-				Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
-				Inline: true,
-			},
-		},
+		Content: guildInfo.AuctionRole,
+		Title:   fmt.Sprintf("Auction Item: __**%s**__", auctionInfo.Item),
+		Fields:  auctionfields,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: guild.IconURL(),
 		},
@@ -639,23 +666,11 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	})
 
 	if err != nil {
-		if strings.Contains(err.Error(), "http"){
+		if strings.Contains(err.Error(), "http") {
 			message, err = PresetMessageSend(s, channel.ID, PresetResponse{
-				Content:     guildInfo.AuctionRole,
-				Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
-				Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:   "__**Details:**__",
-						Value:  details,
-						Inline: true,
-					},
-					{
-						Name:   "__**Starting Bid:**__",
-						Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
-						Inline: true,
-					},
-				},
+				Content: guildInfo.AuctionRole,
+				Title:   "Auction Item: __**" + auctionInfo.Item + "**__",
+				Fields:  auctionfields,
 				Thumbnail: &discordgo.MessageEmbedThumbnail{
 					URL: guild.IconURL(),
 				},
@@ -686,7 +701,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 			})
 		}
 		fmt.Println(err)
-		ErrorMessage(s, channel.ID, "Error starting auction: " + err.Error())
+		ErrorMessage(s, channel.ID, "Error starting auction: "+err.Error())
 	}
 
 	database.DB.Create(&database.Auction{
@@ -965,9 +980,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			username = i.Member.User.Username
 		}
 
-		if len(updateAuction.Embeds[0].Fields) == 4 {
-			bidHistory = updateAuction.Embeds[0].Fields[3].Value + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
-		} else if len(updateAuction.Embeds) == 2 {
+		if len(updateAuction.Embeds) == 2 {
 			bidHistory = updateAuction.Embeds[1].Description + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
 		} else {
 			bidHistory = "-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
@@ -977,26 +990,20 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			bidHistory = "BidHistory was too long and has been reset to prevent a crash.\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
-		updateAuction.Embeds[0].Fields = []*discordgo.MessageEmbedField{
-			updateAuction.Embeds[0].Fields[0],
-			{
-				Name:   "__**Current Highest Bid:**__",
-				Value:  fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")),
-				Inline: true,
-			},
-			{
-				Name:   "__**Current Winner**__",
-				Value:  fmt.Sprintf("<@%s>", Winner) + "\n\u200b",
-				Inline: true,
-			},
-		}
-
-		if antiSnipeFlag {
-			updateAuction.Embeds[0].Fields = append(updateAuction.Embeds[0].Fields, &discordgo.MessageEmbedField{
-				Name:   "**Anti-Snipe Activated!**",
-				Value:  fmt.Sprintf("New End Time: <t:%d>", auctionInfo.EndTime.Unix()),
-				Inline: false,
-			})
+		for n, v := range updateAuction.Embeds[0].Fields {
+			switch v.Name {
+			case "__**Current Highest Bid:**__":
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
+			case "__**Starting Bid:**__":
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
+				updateAuction.Embeds[0].Fields[n].Name = "__**Current Highest Bid:**__"
+			case "__**Current Winner**__":
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("<@%s>", Winner)
+			case "__**End Time**__":
+				if antiSnipeFlag {
+					updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("New End Time: <t:%d:R>", auctionInfo.EndTime.Unix())
+				}
+			}
 		}
 
 		if len(updateAuction.Embeds) != 2 {
