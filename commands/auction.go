@@ -1289,7 +1289,7 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		auctionInfo.Host = ""
 	}
 
-	if i.Member.Permissions&(1<<3) != 8 && i.User.ID != auctionInfo.Host {
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionInfo.Host {
 		ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
 		return
 	}
