@@ -587,7 +587,10 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		fmt.Println(err)
 	}
 
-	message, err := PresetMessageSend(s, channel.ID, PresetResponse{
+	var message *discordgo.Message
+	var err error
+
+	message, err = PresetMessageSend(s, channel.ID, PresetResponse{
 		Content:     guildInfo.AuctionRole,
 		Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
 		Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
@@ -636,7 +639,53 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		if strings.Contains(err.Error(), "http"){
+			message, err = PresetMessageSend(s, channel.ID, PresetResponse{
+				Content:     guildInfo.AuctionRole,
+				Title:       "Auction Item: __**" + auctionInfo.Item + "**__",
+				Description: fmt.Sprintf("%s has hosted an auction! To bid, use the command `/auction bid` in the channel below.", host.Mention()),
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:   "__**Details:**__",
+						Value:  details,
+						Inline: true,
+					},
+					{
+						Name:   "__**Starting Bid:**__",
+						Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+						Inline: true,
+					},
+				},
+				Thumbnail: &discordgo.MessageEmbedThumbnail{
+					URL: guild.IconURL(),
+				},
+				Components: []discordgo.MessageComponent{
+					discordgo.ActionsRow{
+						Components: []discordgo.MessageComponent{
+							discordgo.Button{
+								Label: "End Auction",
+								Style: 4,
+								Emoji: discordgo.ComponentEmoji{
+									Name: "🛑",
+								},
+								CustomID: "endauction",
+							},
+							discordgo.Button{
+								Label:    "Clear Chat",
+								Style:    3,
+								CustomID: "clearauction",
+								Emoji: discordgo.ComponentEmoji{
+									Name: "restart",
+									ID:   "835685528917114891",
+								},
+								Disabled: false,
+							},
+						},
+					},
+				},
+			})
+		}
+		fmt.Println(err.Error())
 		ErrorMessage(s, channel.ID, "Error starting auction: " + err.Error())
 		return
 	}
