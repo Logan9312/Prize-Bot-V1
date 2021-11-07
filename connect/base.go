@@ -91,21 +91,21 @@ func Timers(s *discordgo.Session) {
 	var Auctions []database.Auction
 	var AuctionQueue []database.AuctionQueue
 
+	fmt.Println("Beginning Startup Timers")
+
 	database.DB.Find(&Auctions)
 	for _, v := range Auctions {
 		go AuctionEndTimer(v, s)
-		fmt.Println(v)
 	}
 
 	database.DB.Find(&AuctionQueue)
 	for _, v := range AuctionQueue {
 		go AuctionStartTimer(v, s)
-		fmt.Println(v)
 	}
 }
 
 func AuctionEndTimer(v database.Auction, s *discordgo.Session) {
-	fmt.Println("Auction Timer Re-Started: ", v.Item, "GuildID: ", v.GuildID)
+	fmt.Println("Auction Timer Re-Started: ", v.Item, "GuildID: ", v.GuildID, "ImageURL", v.ImageURL, "Host", v.Host)
 	if v.EndTime.Before(time.Now()) {
 		commands.AuctionEnd(v.ChannelID, v.GuildID)
 	} else {
@@ -115,7 +115,7 @@ func AuctionEndTimer(v database.Auction, s *discordgo.Session) {
 }
 
 func AuctionStartTimer(v database.AuctionQueue, s *discordgo.Session) {
-	fmt.Println("Auction Re-Queued: ", v.Item, "GuildID: ", v.GuildID)
+	fmt.Println("Auction Re-Queued: ", v.Item, "GuildID: ", v.GuildID, "ImageURL", v.ImageURL, "Host", v.Host)
 	if v.StartTime.Before(time.Now()) {
 		commands.AuctionCreate(s, v)
 	} else {
