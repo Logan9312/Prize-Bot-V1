@@ -272,7 +272,6 @@ if giveawayInfo.Entries == "" {
 			Flags:  0,
 		},
 	})
-
 }
 
 func GiveawayEnd(s *discordgo.Session, messageID string) {
