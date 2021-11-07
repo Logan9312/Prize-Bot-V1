@@ -579,7 +579,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	if auctionInfo.MinBid != 0 || auctionInfo.MaxBid != 0 {
 		bidRanges := ""
 		if auctionInfo.MinBid != 0 {
-			bidRanges += fmt.Sprintf("• Minimum %s %s above previous bid", incCurrency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MinBid), "0"), "."))
+			bidRanges += fmt.Sprintf("• Minimum %s %s above previous bid\n", incCurrency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MinBid), "0"), "."))
 		}
 		if auctionInfo.MaxBid != 0 {
 			bidRanges += fmt.Sprintf("• Maximum %s %s above previous bid", incCurrency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.MaxBid), "0"), "."))
