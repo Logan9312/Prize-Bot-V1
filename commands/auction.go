@@ -637,6 +637,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 
 	if err != nil {
 		fmt.Println(err)
+		ErrorMessage(s, channel.ID, "Error starting auction: " + err.Error())
 		return
 	}
 
