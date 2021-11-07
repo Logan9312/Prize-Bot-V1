@@ -222,6 +222,10 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			choices = TimeSuggestions(options["duration"].(string))
 		} else if options["schedule"] != nil {
 			choices = TimeSuggestions(options["schedule"].(string))
+		} else if options["schedule"] != nil {
+			choices = TimeSuggestions(options["snipe_range"].(string))
+		} else if options["schedule"] != nil {
+			choices = TimeSuggestions(options["snipe_extension"].(string))
 		} else {
 			choices = []*discordgo.ApplicationCommandOptionChoice{
 				{
