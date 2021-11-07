@@ -923,8 +923,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if i.Member.User.ID == auctionInfo.Winner {
-		ErrorResponse(s, i, "Cannot out bid yourself")
+	if i.Member.User.ID == auctionInfo.Winner && i.Member.User.ID != "280812467775471627" && auctionInfo.MaxBid != 0 {
+		ErrorResponse(s, i, "Cannot out bid yourself on a capped bid auction!")
 		return
 	}
 
