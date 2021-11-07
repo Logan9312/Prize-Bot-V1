@@ -75,7 +75,7 @@ func BotConnect(token, environment, botName string) {
 
 	s.AddHandler(CommandHandler)
 
-	go Timers(s)
+	Timers(s)
 
 	err = s.UpdateGameStatus(0, "Bot Version v0.73")
 	if err != nil {
