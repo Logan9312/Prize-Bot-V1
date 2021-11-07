@@ -588,7 +588,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	}
 
 	var message *discordgo.Message
-	var err error
+
 
 	message, err = PresetMessageSend(s, channel.ID, PresetResponse{
 		Content:     guildInfo.AuctionRole,
