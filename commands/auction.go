@@ -616,11 +616,11 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	}
 
 	auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-		Name:   "__**Starting Bid:**__",
+		Name:   "__**Current Highest Bid:**__",
 		Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
 		Inline: true,
 	}, &discordgo.MessageEmbedField{
-		Name:   "__**Current Highest Bid:**__",
+		Name:   "__**Current Winner**__",
 		Value:  fmt.Sprintf("<@%s>", auctionInfo.Host),
 		Inline: true,
 	}, &discordgo.MessageEmbedField{
