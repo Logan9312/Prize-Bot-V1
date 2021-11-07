@@ -1131,8 +1131,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 		auctionInfo.Winner = "<@" + auctionInfo.Winner + ">"
 	}
 
-	fmt.Println("Target Price: ", auctionInfo.TargetPrice)
-
 	auctionWinner := fmt.Sprintf("The host had set a target price of %s that has not been reached.", fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.TargetPrice), "0"), ".")))
 	if auctionInfo.TargetPrice <= auctionInfo.Bid {
 		auctionWinner = fmt.Sprintf("%s %s", auctionInfo.Winner, username)
