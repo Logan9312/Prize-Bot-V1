@@ -935,10 +935,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
-
 	if time.Until(auctionInfo.EndTime) < guildInfo.SnipeRange && guildInfo.SnipeExtension != 0 {
 		auctionInfo.EndTime = auctionInfo.EndTime.Add(guildInfo.SnipeExtension)
 		responseFields = []*discordgo.MessageEmbedField{
@@ -1369,10 +1365,6 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
 		return
 	}
-
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
 
 	for {
 		messageIDs := make([]string, 0)
