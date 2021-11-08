@@ -95,6 +95,7 @@ func Timers(s *discordgo.Session) {
 		channel, err := s.Channel(v.AuctionCategory)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		if channel.Type != discordgo.ChannelTypeGuildCategory {
 			v.AuctionCategory = ""
