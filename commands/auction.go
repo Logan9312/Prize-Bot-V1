@@ -1366,6 +1366,14 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "Success!",
+		Description: "Clearing Chat",
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	for {
 		messageIDs := make([]string, 0)
 		messages, err := s.ChannelMessages(i.ChannelID, 100, "", i.Message.ID, "")
@@ -1393,13 +1401,6 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
-	err := SuccessResponse(s, i, PresetResponse{
-		Title:       "Success!",
-		Description: "Chat has been cleared",
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
 }
 
 func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
