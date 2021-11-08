@@ -86,7 +86,6 @@ func Timers(s *discordgo.Session) {
 
 	var Auctions []database.Auction
 	var AuctionQueue []database.AuctionQueue
-	var guilds []database.GuildInfo
 
 	fmt.Println("Beginning Startup Timers")
 
