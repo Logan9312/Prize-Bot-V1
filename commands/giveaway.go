@@ -322,7 +322,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 		winnerList += fmt.Sprintf("• %s\n", winner)
 
-		if len(strings.Split(giveawayInfo.Entries, " ")) == 1 {
+		if len(entryString) == 1 {
 			giveawayInfo.Entries = ""
 		} else {
 			strings.ReplaceAll(giveawayInfo.Entries, " "+winnerID, "")

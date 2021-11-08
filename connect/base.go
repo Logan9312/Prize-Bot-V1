@@ -90,19 +90,6 @@ func Timers(s *discordgo.Session) {
 
 	fmt.Println("Beginning Startup Timers")
 
-	database.DB.Find(&guilds)
-	for _, v := range guilds{
-		channel, err := s.Channel(v.AuctionCategory)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if channel.Type != discordgo.ChannelTypeGuildCategory {
-			v.AuctionCategory = ""
-			database.DB.Model(&v).Updates(v)
-		}
-	}
-
 	database.DB.Find(&Auctions)
 	for _, v := range Auctions {
 		go AuctionEndTimer(v, s)
