@@ -69,13 +69,7 @@ func BotConnect(token, environment, botName string) {
 		commands.HelpBuilder(c.prod)
 	}
 
-	time.Sleep(10 * time.Second)
-	fmt.Println("Before Handlers")
-
 	s.AddHandler(CommandHandler)
-
-	time.Sleep(10 * time.Second)
-	fmt.Println("After Handlers")
 
 	Timers(s)
 
