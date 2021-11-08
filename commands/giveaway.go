@@ -34,25 +34,26 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "channel",
-					Description: "The channel where the giveaway will take place",
-					Required:    true,
-					ChannelTypes: []discordgo.ChannelType{
-						discordgo.ChannelTypeGuildText,
-					},
-				},
-				{
 					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "winners",
 					Description: "The number of winners.",
 					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "duration",
-					Description: "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
-					Required:    true,
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "duration",
+					Description:  "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
+					Required:     true,
+					Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "channel",
+					Description: "The channel where the giveaway will take place",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						discordgo.ChannelTypeGuildText,
+					},
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -111,8 +112,12 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	item := options["item"].(string)
 	winners := options["winners"].(float64)
-	channel := options["channel"].(string)
+	channel := i.ChannelID
 	duration := options["duration"].(string)
+
+	if options["channel"] != nil {
+		channel = options["channel"].(string)
+	}
 
 	var imageURL string
 	if options["image"] != nil {
@@ -137,8 +142,13 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	endTime := time.Now().Add(endTimeDuration)
 
+	content := ""
+	if guildInfo.GiveawayRole != "" {
+		content = fmt.Sprintf("<@&%s>", guildInfo.GiveawayRole)
+	}
+
 	message, err := PresetMessageSend(s, channel, PresetResponse{
-		Content:     fmt.Sprintf("<@&%s>", guildInfo.GiveawayRole),
+		Content:     content,
 		Title:       "Giveaway Item: __**" + item + "**__",
 		Description: fmt.Sprintf("<@%s> has hosted a giveaway! To enter, press the button below!", i.Member.User.ID),
 		Fields: []*discordgo.MessageEmbedField{
@@ -245,11 +255,11 @@ func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 	}
-if giveawayInfo.Entries == "" {
-	giveawayInfo.Entries = i.Member.User.ID
-} else {
-	giveawayInfo.Entries += fmt.Sprintf(" %s", i.Member.User.ID)
-}
+	if giveawayInfo.Entries == "" {
+		giveawayInfo.Entries = i.Member.User.ID
+	} else {
+		giveawayInfo.Entries += fmt.Sprintf("%s ", i.Member.User.ID)
+	}
 
 	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
 
@@ -276,14 +286,23 @@ if giveawayInfo.Entries == "" {
 
 func GiveawayEnd(s *discordgo.Session, messageID string) {
 
+	var winnerList string
 	giveawayInfo := database.Giveaway{
 		MessageID: messageID,
 	}
 	database.DB.First(&giveawayInfo, messageID)
 
-	for n := float64(0); n <= giveawayInfo.Winners; {
+	for n := float64(0); n < giveawayInfo.Winners; {
+
+		fmt.Println(giveawayInfo.Entries)
 
 		entryString := strings.Split(giveawayInfo.Entries, " ")
+
+		if len(entryString) == 0 {
+			winnerList += fmt.Sprintf("• Not enough entrants!")
+			fmt.Println("Not enough Entrants")
+			break
+		}
 
 		result, err := random.Int(random.Reader, big.NewInt(int64(len(entryString))))
 		if err != nil {
@@ -301,44 +320,52 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 		winner := fmt.Sprintf("<@%s> (%s#%s)", user.ID, user.Username, user.Discriminator)
 
-		_, err = PresetMessageSend(s, giveawayInfo.ChannelID, PresetResponse{
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label: "Claim prize!",
-							Style: 3,
-							Emoji: discordgo.ComponentEmoji{
-								Name: "cryopod",
-								ID:   "889307390690885692",
-							},
-							CustomID: "claim_prize",
-						},
-					},
-				},
-			},
-			Title:       "Giveaway Completed!",
-			Description: giveawayInfo.Description,
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:   "**Winner**",
-					Value:  winner,
-					Inline: true,
-				},
-				{
-					Name:   "**Giveaway Host**",
-					Value:  fmt.Sprintf("This Auction was hosted by: <@!%s>", giveawayInfo.Host),
-					Inline: false,
-				},
-			},
-			Image: &discordgo.MessageEmbedImage{
-				URL: giveawayInfo.ImageURL,
-			},
-		})
-		if err != nil {
-			fmt.Println(err)
+		winnerList += fmt.Sprintf("• %s\n", winner)
+
+		if len(strings.Split(giveawayInfo.Entries, " ")) == 1 {
+			giveawayInfo.Entries = ""
+		} else {
+			strings.ReplaceAll(giveawayInfo.Entries, " "+winnerID, "")
 		}
 
 		n++
+	}
+
+	_, err := PresetMessageSend(s, giveawayInfo.ChannelID, PresetResponse{
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label: "Claim prize!",
+						Style: 3,
+						Emoji: discordgo.ComponentEmoji{
+							Name: "cryopod",
+							ID:   "889307390690885692",
+						},
+						CustomID: "claim_prize",
+					},
+				},
+			},
+		},
+		Title:       "Giveaway Completed!",
+		Description: giveawayInfo.Description,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "**Giveaway Host**",
+				Value:  fmt.Sprintf("This Giveaway was hosted by: <@!%s>", giveawayInfo.Host),
+				Inline: true,
+			},
+			{
+				Name:   "**Winners**",
+				Value:  winnerList,
+				Inline: false,
+			},
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: giveawayInfo.ImageURL,
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
 	}
 }

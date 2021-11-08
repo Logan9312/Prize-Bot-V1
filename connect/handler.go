@@ -39,8 +39,10 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	case 4:
 		switch i.ApplicationCommandData().Name {
-		case "auction", "giveaway":
+		case "auction":
 			c.AuctionAutoComplete(s, i)
+		case "giveaway":
+			c.GiveawayAutoComplete(s, i)
 		}
 	}
 }

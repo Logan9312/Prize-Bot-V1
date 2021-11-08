@@ -250,6 +250,9 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
+
+	input = strings.Trim(input, "dhms")
+
 	_, err := strconv.ParseFloat(input, 64)
 	if err != nil {
 		fmt.Println(err)
@@ -629,7 +632,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 
 	auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 		Name:   "__**Current Highest Bid:**__",
-		Value:  fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+		Value:  fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
 		Inline: true,
 	}, &discordgo.MessageEmbedField{
 		Name:   "__**Current Winner**__",
@@ -1367,20 +1370,17 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err := SuccessResponse(s, i, PresetResponse{
-		Title:       "Success!",
-		Description: "Clearing Chat",
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{},
 	})
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	for {
 		messageIDs := make([]string, 0)
 		messages, err := s.ChannelMessages(i.ChannelID, 100, "", i.Message.ID, "")
 		if err != nil {
 			fmt.Println(err)
-			ErrorResponse(s, i, err.Error())
+			DeferredErrorResponse(s, i, err.Error())
 			return
 		}
 
@@ -1397,9 +1397,18 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
 		if err != nil {
 			fmt.Println(err)
-			ErrorResponse(s, i, err.Error())
+			DeferredErrorResponse(s, i, err.Error())
 			return
 		}
+	}
+
+	_, err := DeferredResponse(s, i, PresetResponse{
+		Title:       "Success!",
+		Description: "Clearing Chat",
+	})
+
+	if err != nil {
+		fmt.Println(err)
 	}
 
 }
@@ -1431,6 +1440,6 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 		inputDuration = fmt.Sprint(float*24) + "h"
 	}
 
-	return time.ParseDuration(inputDuration)
+	return time.ParseDuration(strings.ToLower(inputDuration))
 
 }
