@@ -66,14 +66,16 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set the message that will appear when someone tries to claim an auction prize",
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "snipe_extension",
-					Description: "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "snipe_extension",
+					Description:  "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
+					Autocomplete: true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "snipe_range",
-					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "snipe_range",
+					Description:  "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
+					Autocomplete: true,
 				},
 			},
 		},
@@ -222,9 +224,9 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			choices = TimeSuggestions(options["duration"].(string))
 		} else if options["schedule"] != nil {
 			choices = TimeSuggestions(options["schedule"].(string))
-		} else if options["schedule"] != nil {
+		} else if options["snipe_range"] != nil {
 			choices = TimeSuggestions(options["snipe_range"].(string))
-		} else if options["schedule"] != nil {
+		} else if options["snipe_extension"] != nil {
 			choices = TimeSuggestions(options["snipe_extension"].(string))
 		} else {
 			choices = []*discordgo.ApplicationCommandOptionChoice{
@@ -548,7 +550,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 	channelInfo := discordgo.GuildChannelCreateData{
 		Name:     "💸│" + auctionInfo.Item,
 		Type:     0,
-		ParentID: guildInfo.AuctionCategory,
+		ParentID: auctionInfo.Category,
 	}
 
 	channel, err := s.GuildChannelCreateComplex(auctionInfo.GuildID, channelInfo)
@@ -786,7 +788,6 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["category"] != nil {
 		info.AuctionCategory = options["category"].(string)
 	}
-
 	if options["description"] != nil {
 		description = options["description"].(string)
 	}
