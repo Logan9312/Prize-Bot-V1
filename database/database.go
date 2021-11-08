@@ -55,7 +55,6 @@ type AuctionQueue struct {
 	Category    string
 	TargetPrice float64
 	Buyout      float64
-	Errors      int
 }
 
 type GuildInfo struct {

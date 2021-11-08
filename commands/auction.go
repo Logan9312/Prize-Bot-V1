@@ -553,20 +553,18 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		ParentID: auctionInfo.Category,
 	})
 
-	if err != nil && auctionInfo.Errors < 1{
-		fmt.Println(err)
-		dmChannel, err := s.UserChannelCreate(auctionInfo.Host)
+	if err != nil {
+		channel, err = s.GuildChannelCreateComplex(auctionInfo.GuildID, discordgo.GuildChannelCreateData{
+			Name:     "💸│" + auctionInfo.Item,
+			Type:     0,
+			ParentID: "",
+		})
+		
+		auctionInfo.Category = channel.ID
 		if err != nil {
-			fmt.Println(err.Error())
-			time.Sleep(5 * time.Minute)
-			AuctionCreate(s, auctionInfo)
+			fmt.Println("Bot attempting to start a channelless auction", err.Error())
 			return
 		}
-		ErrorMessage(s, dmChannel.ID, "The auction channel could not be created. The bot will try again every 5 minutes. Error: "+err.Error())
-		auctionInfo.Errors += 1
-		time.Sleep(5 * time.Minute)
-		AuctionCreate(s, auctionInfo)
-		return
 	}
 
 	var message *discordgo.Message

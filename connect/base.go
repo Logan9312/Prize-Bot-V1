@@ -33,14 +33,10 @@ func BotConnect(token, environment, botName string) {
 	fmt.Println(botName + " Starting Up...")
 	var s *discordgo.Session
 	var err error
-	for {
-		s, err = discordgo.New("Bot " + token)
-		if err != nil {
-			fmt.Println("discordgo.New error:" + err.Error())
-		} else {
-			break
-		}
-		time.Sleep(time.Minute)
+
+	s, err = discordgo.New("Bot " + token)
+	if err != nil {
+		fmt.Println("discordgo.New error:" + err.Error())
 	}
 
 	commands.Session = s
@@ -58,7 +54,7 @@ func BotConnect(token, environment, botName string) {
 			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, c.local)
 			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("Bulk Overwrite Error:", err)
 			}
 		}
 		commands.HelpBuilder(c.local)
@@ -68,12 +64,18 @@ func BotConnect(token, environment, botName string) {
 	if environment == "prod" {
 		_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", c.prod)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Bulk Overwrite Error:", err)
 		}
 		commands.HelpBuilder(c.prod)
 	}
 
+	time.Sleep(10 * time.Second)
+	fmt.Println("Before Handlers")
+
 	s.AddHandler(CommandHandler)
+
+	time.Sleep(10 * time.Second)
+	fmt.Println("After Handlers")
 
 	Timers(s)
 
