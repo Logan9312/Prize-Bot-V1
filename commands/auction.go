@@ -558,6 +558,8 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		dmChannel, err := s.UserChannelCreate(auctionInfo.Host)
 		if err != nil {
 			fmt.Println(err.Error())
+			time.Sleep(5 * time.Minute)
+			AuctionCreate(s, auctionInfo)
 			return
 		}
 		ErrorMessage(s, dmChannel.ID, "The auction channel could not be created. The bot will try again every 5 minutes. Error: "+err.Error())
