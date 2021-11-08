@@ -547,16 +547,20 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		fmt.Println(err)
 	}
 
-	channelInfo := discordgo.GuildChannelCreateData{
+	channel, err := s.GuildChannelCreateComplex(auctionInfo.GuildID, discordgo.GuildChannelCreateData{
 		Name:     "💸│" + auctionInfo.Item,
 		Type:     0,
 		ParentID: auctionInfo.Category,
-	}
+	})
 
-	channel, err := s.GuildChannelCreateComplex(auctionInfo.GuildID, channelInfo)
-
-	if err != nil {
+	if err != nil && auctionInfo.Errors < 1{
 		fmt.Println(err)
+		dmChannel, err := s.UserChannelCreate(auctionInfo.Host)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		ErrorMessage(s, dmChannel.ID, "The auction channel could not be created. The bot will try again every 5 minutes. Error: "+err.Error())
+		auctionInfo.Errors += 1
 		return
 	}
 
@@ -706,8 +710,8 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 				},
 			})
 		}
-		fmt.Println(err)
-		ErrorMessage(s, channel.ID, "Error starting auction: "+err.Error())
+		fmt.Println(err.Error())
+		ErrorMessage(s, channel.ID, err.Error())
 	}
 
 	database.DB.Create(&database.Auction{
@@ -1352,6 +1356,10 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
 		return
 	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
 
 	for {
 		messageIDs := make([]string, 0)
