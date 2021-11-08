@@ -559,7 +559,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 			Type:     0,
 			ParentID: "",
 		})
-		
+
 		auctionInfo.Category = channel.ID
 		if err != nil {
 			fmt.Println("Bot attempting to start a channelless auction", err.Error())
@@ -1210,6 +1210,13 @@ func AuctionEnd(ChannelID, GuildID string) {
 	_, err = Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
 	if err != nil {
 		fmt.Println(err)
+		messageSend.Embed.Image.URL = ""
+		_, err = Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
+		if err != nil {
+			fmt.Println(err)
+			ErrorMessage(Session, ChannelID, err.Error())
+			return
+		}
 		ErrorMessage(Session, ChannelID, err.Error())
 		return
 	}
