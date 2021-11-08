@@ -560,11 +560,13 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 			ParentID: "",
 		})
 
-		auctionInfo.Category = channel.ID
 		if err != nil {
 			fmt.Println("Bot attempting to start a channelless auction", err.Error())
 			return
 		}
+
+		auctionInfo.Category = channel.ID
+
 	}
 
 	var message *discordgo.Message
