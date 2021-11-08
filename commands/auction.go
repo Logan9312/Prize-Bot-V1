@@ -561,6 +561,8 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		}
 		ErrorMessage(s, dmChannel.ID, "The auction channel could not be created. The bot will try again every 5 minutes. Error: "+err.Error())
 		auctionInfo.Errors += 1
+		time.Sleep(5 * time.Minute)
+		AuctionCreate(s, auctionInfo)
 		return
 	}
 
@@ -932,6 +934,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ErrorResponse(s, i, "Cannot out bid yourself on a capped bid auction!")
 		return
 	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
 
 	if time.Until(auctionInfo.EndTime) < guildInfo.SnipeRange && guildInfo.SnipeExtension != 0 {
 		auctionInfo.EndTime = auctionInfo.EndTime.Add(guildInfo.SnipeExtension)
