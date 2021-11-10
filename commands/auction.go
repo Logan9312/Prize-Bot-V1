@@ -1417,7 +1417,6 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -1448,5 +1447,4 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(strings.ToLower(inputDuration))
-
 }

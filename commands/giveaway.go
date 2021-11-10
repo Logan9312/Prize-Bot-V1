@@ -474,7 +474,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
-						Label: "Claim prize!",
+						Label: "Claim!",
 						Style: 3,
 						Emoji: discordgo.ComponentEmoji{
 							Name: "cryopod",
@@ -482,11 +482,17 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 						},
 						CustomID: "claim_giveaway",
 					},
+					discordgo.Button{
+						Label:    "Reroll",
+						Style:    1,
+						Disabled: true,
+						CustomID: "reroll_giveaway",
+					},
 				},
 			},
 		},
 		Title:       "Giveaway Completed!",
-		Description: giveawayInfo.Description,
+		Description: "You have 24 hours to reroll the winners if you would like.",
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "**Giveaway Host**",
@@ -496,7 +502,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 			{
 				Name:   "**Item Won**",
 				Value:  giveawayInfo.Item,
-				Inline: true,
+				Inline: false,
 			},
 			{
 				Name:   "**Winners**",
@@ -511,6 +517,8 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	time.Sleep(24 * time.Hour)
+	database.DB.Delete(database.Giveaway{}, messageID)
 }
 
 func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -528,4 +536,8 @@ func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
 }

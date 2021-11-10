@@ -37,6 +37,7 @@ type Giveaway struct {
 	Winners     float64
 	ImageURL    string
 	Entries     string
+	Finished    bool
 }
 
 type AuctionQueue struct {
