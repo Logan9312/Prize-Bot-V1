@@ -77,7 +77,8 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Description: "The channel where the giveaway will take place",
 					Required:    false,
 					ChannelTypes: []discordgo.ChannelType{
-						discordgo.ChannelTypeGuildText,
+						0,
+						5,
 					},
 				},
 				{
@@ -280,7 +281,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	message, err := PresetMessageSend(s, channel, PresetResponse{
 		Content:     content,
-		Title:       "Giveaway Item: __**" + item + "**__",
+		Title:       "__**" + item + "**__",
 		Description: fmt.Sprintf("<@%s> has hosted a giveaway! To enter, press the button below!", i.Member.User.ID),
 		Fields: []*discordgo.MessageEmbedField{
 			{

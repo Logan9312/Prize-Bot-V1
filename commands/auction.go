@@ -48,6 +48,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 					ChannelTypes: []discordgo.ChannelType{
 						0,
+						5,
 					},
 				},
 				{
@@ -684,7 +685,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		if strings.Contains(err.Error(), "http") {
 			message, err = PresetMessageSend(s, channel.ID, PresetResponse{
 				Content: guildInfo.AuctionRole,
-				Title:   "Auction Item: __**" + auctionInfo.Item + "**__",
+				Title:   "__**" + auctionInfo.Item + "**__",
 				Fields:  auctionfields,
 				Thumbnail: &discordgo.MessageEmbedThumbnail{
 					URL: guild.IconURL(),
