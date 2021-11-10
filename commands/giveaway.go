@@ -225,7 +225,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	duration := options["duration"].(string)
 	canHost := false
 
-	if guildInfo.AuctionHostRole != "" {
+	if guildInfo.GiveawayHostRole != "" {
 		for _, v := range i.Member.Roles {
 			if v == guildInfo.GiveawayHostRole {
 				canHost = true
