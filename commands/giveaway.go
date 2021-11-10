@@ -454,7 +454,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 					discordgo.Button{
 						Label:    "Reroll",
 						Style:    1,
-						Disabled: true,
+						Disabled: false,
 						CustomID: "reroll_giveaway",
 					},
 				},
