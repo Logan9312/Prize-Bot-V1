@@ -208,7 +208,6 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -407,12 +406,21 @@ func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: i.Message.Embeds,
-			Flags:  0,
-		},
+	messageEdit := discordgo.NewMessageEdit(i.ChannelID, i.Message.ID)
+
+	messageEdit.Embeds = i.Message.Embeds
+	messageEdit.Components = i.Message.Components
+
+	_, err := s.ChannelMessageEditComplex(messageEdit)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	
+	SuccessResponse(s, i, PresetResponse{
+		Content:     "",
+		Title:       "**Successful Entry!**",
+		Description: "You have successfully been entered into the giveaway.",
 	})
 }
 
