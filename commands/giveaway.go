@@ -517,6 +517,9 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	giveawayInfo.Finished = true
+	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
+
 	time.Sleep(24 * time.Hour)
 	database.DB.Delete(database.Giveaway{}, messageID)
 }
