@@ -58,21 +58,24 @@ type AuctionQueue struct {
 }
 
 type GuildInfo struct {
-	GuildID         string `gorm:"primaryKey"`
-	AuctionCategory string
-	AuctionRole     string
-	Currency        string
-	LogChannel      string
-	Claiming        string
-	AuctionHostRole string
-	AntiSnipe       bool
-	SnipeExtension  time.Duration
-	SnipeRange      time.Duration
-	GiveawayRole    string
+	GuildID          string `gorm:"primaryKey"`
+	AuctionCategory  string
+	AuctionRole      string
+	Currency         string
+	LogChannel       string
+	Claiming         string
+	AuctionHostRole  string
+	GiveawayHostRole string
+	AntiSnipe        bool
+	SnipeExtension   time.Duration
+	SnipeRange       time.Duration
+	GiveawayRole     string
+	GiveawayClaiming string
 }
 
 type UserProfile struct {
-	UserID string `gorm:"primaryKey"`
+	UserID  string `gorm:"primaryKey;autoIncrement:false"`
+	GuildID string `gorm:"primaryKey;autoIncrement:false"`
 }
 
 var DB *gorm.DB

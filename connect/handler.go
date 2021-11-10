@@ -34,6 +34,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.DeleteAuctionQueue(s, i)
 		case "enter_giveaway":
 			c.GiveawayEnter(s, i)
+		case "claim_giveaway":
+			c.ClaimGiveawayButton(s, i)
 		default:
 			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}

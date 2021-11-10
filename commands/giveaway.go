@@ -20,7 +20,32 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "setup",
 			Description: "Setup giveaways",
-			Options:     []*discordgo.ApplicationCommandOption{},
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "alert_role",
+					Description: "Set a role to get pinged whenever an auction starts. Choosing @everyone will reset it to default.",
+				},
+				/*{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "log_channel",
+					Description: "Sets the channel where auctions will send outputs when they end",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+					},
+				},*/
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "host_role",
+					Description: "Set a role that can host auctions. Choosing @everyone will reset it to default.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "claiming",
+					Description: "Set the message that will appear when someone tries to claim an auction prize",
+				},
+			},
 		},
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -82,23 +107,107 @@ func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	options := ParseSubCommand(i)
+	content := ""
+
 	if i.Member.Permissions&(1<<3) != 8 {
 		ErrorResponse(s, i, "User must have administrator permissions to run this command")
 		return
+	}
+
+	if options["alert_role"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.GiveawayRole = options["alert_role"].(string)
+
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"giveaway_role": info.GiveawayRole}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Alert Role has been successfully set.\n"
+	}
+
+	if options["host_role"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.GiveawayHostRole = options["host_role"].(string)
+
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"giveaway_host_role": info.GiveawayHostRole}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Host Role has been successfully set.\n"
+	}
+
+	if options["claiming"] != nil {
+		info := database.GuildInfo{
+			GuildID: i.GuildID,
+		}
+		info.GiveawayClaiming = options["claiming"].(string)
+		result := database.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "guild_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"giveaway_claiming": info.GiveawayClaiming}),
+		}).Create(&info)
+
+		if result.Error != nil {
+			fmt.Println(result.Error.Error())
+		}
+		content = content + "• Claiming Message has been successfully set.\n"
 	}
 
 	guildInfo := database.GuildInfo{
 		GuildID: i.GuildID,
 	}
 
-	result := database.DB.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "guild_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{"giveaway_role": guildInfo.GiveawayRole}),
-	}).Create(&guildInfo)
+	database.DB.First(&guildInfo, i.GuildID)
 
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
+	if guildInfo.GiveawayHostRole == "" {
+		guildInfo.GiveawayHostRole = "Not Set"
+	} else {
+		guildInfo.GiveawayHostRole = fmt.Sprintf("<@&%s>", guildInfo.GiveawayHostRole)
 	}
+	if guildInfo.GiveawayClaiming == "" {
+		guildInfo.GiveawayClaiming = "Not Set"
+	}
+	if guildInfo.GiveawayRole == "" {
+		guildInfo.GiveawayRole = "Not Set"
+	} else {
+		guildInfo.GiveawayRole = fmt.Sprintf("<@&%s>", guildInfo.GiveawayRole)
+	}
+
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "Giveaway Setup",
+		Description: content,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "**Host Role**",
+				Value: guildInfo.GiveawayHostRole,
+			},
+			{
+				Name:  "**Alert Role**",
+				Value: guildInfo.GiveawayRole,
+			},
+			{
+				Name:  "**Claiming Message**",
+				Value: guildInfo.GiveawayClaiming,
+			},
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
 }
 
 func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -114,6 +223,28 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	winners := options["winners"].(float64)
 	channel := i.ChannelID
 	duration := options["duration"].(string)
+	canHost := false
+
+	if guildInfo.AuctionHostRole != "" {
+		for _, v := range i.Member.Roles {
+			if v == guildInfo.GiveawayHostRole {
+				canHost = true
+			}
+		}
+		if i.Member.Permissions&(1<<3) == 8 {
+			canHost = true
+		}
+		if !canHost {
+			ErrorResponse(s, i, "User must be administrator or have the role <@&"+guildInfo.GiveawayHostRole+"> to host giveaways.")
+			return
+		}
+	}
+
+	if winners <= 0 {
+		ErrorResponse(s, i, "Must have 1 or more winners. Winners entered: "+fmt.Sprint(winners))
+		fmt.Println("Must have 1 or more winners. Winners entered: ", winners)
+		return
+	}
 
 	if options["channel"] != nil {
 		channel = options["channel"].(string)
@@ -124,7 +255,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		imageURL = options["image"].(string)
 	}
 
-	description := "No Description"
+	description := fmt.Sprintf("**%s** Winners!", fmt.Sprint(winners))
 	if options["description"] != nil {
 		description = options["description"].(string)
 	}
@@ -258,7 +389,7 @@ func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if giveawayInfo.Entries == "" {
 		giveawayInfo.Entries = i.Member.User.ID
 	} else {
-		giveawayInfo.Entries += fmt.Sprintf("%s ", i.Member.User.ID)
+		giveawayInfo.Entries += fmt.Sprintf(" %s", i.Member.User.ID)
 	}
 
 	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
@@ -294,11 +425,9 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 	for n := float64(0); n < giveawayInfo.Winners; {
 
-		fmt.Println(giveawayInfo.Entries)
-
 		entryString := strings.Split(giveawayInfo.Entries, " ")
 
-		if len(entryString) == 0 {
+		if len(entryString) == 0 || giveawayInfo.Entries == "" {
 			winnerList += fmt.Sprintf("• Not enough entrants!")
 			fmt.Println("Not enough Entrants")
 			break
@@ -306,7 +435,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 		result, err := random.Int(random.Reader, big.NewInt(int64(len(entryString))))
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Random Error: ", err)
 			return
 		}
 
@@ -314,7 +443,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 		user, err := s.User(winnerID)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("User Error:", err)
 			return
 		}
 
@@ -322,11 +451,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 		winnerList += fmt.Sprintf("• %s\n", winner)
 
-		if len(entryString) == 1 {
-			giveawayInfo.Entries = ""
-		} else {
-			strings.ReplaceAll(giveawayInfo.Entries, " "+winnerID, "")
-		}
+		giveawayInfo.Entries = strings.Trim(strings.ReplaceAll(" "+giveawayInfo.Entries, " "+winnerID, ""), " ")
 
 		n++
 	}
@@ -342,7 +467,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 							Name: "cryopod",
 							ID:   "889307390690885692",
 						},
-						CustomID: "claim_prize",
+						CustomID: "claim_giveaway",
 					},
 				},
 			},
@@ -356,6 +481,11 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 				Inline: true,
 			},
 			{
+				Name:   "**Item Won**",
+				Value:  giveawayInfo.Item,
+				Inline: true,
+			},
+			{
 				Name:   "**Winners**",
 				Value:  winnerList,
 				Inline: false,
@@ -364,6 +494,23 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		Image: &discordgo.MessageEmbedImage{
 			URL: giveawayInfo.ImageURL,
 		},
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var guildInfo database.GuildInfo
+	database.DB.First(&guildInfo, i.GuildID)
+
+	if guildInfo.GiveawayClaiming == "" {
+		guildInfo.GiveawayClaiming = "The discord owner has not set a claiming message. Common ways to claim include: Opening a ticket or contacting the auction host. \nTo customize this message, use the command: `/giveaway setup claiming:`."
+	}
+
+	err := SuccessResponse(s, i, PresetResponse{
+		Title:       "Claim Prize",
+		Description: guildInfo.GiveawayClaiming,
 	})
 	if err != nil {
 		fmt.Println(err)
