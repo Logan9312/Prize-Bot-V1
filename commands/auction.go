@@ -803,6 +803,11 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	if options["image"] != nil {
 		image = options["image"].(string)
+		if !strings.Contains(image, "http") {
+			ErrorResponse(s, i, "Image must be an http or https link.")
+			fmt.Println("Image must be an http or https link. Entered image: " + image)
+			return
+		}
 	}
 	if options["currency"] != nil {
 		currency = options["currency"].(string)
@@ -1158,6 +1163,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 	}
 
 	messageSend := discordgo.MessageSend{
+		Content: fmt.Sprintf("<@%s>", auctionInfo.Winner),
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{

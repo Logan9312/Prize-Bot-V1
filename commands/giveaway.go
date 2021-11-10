@@ -415,10 +415,11 @@ func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		fmt.Println(err.Error())
+		ErrorResponse(s, i, err.Error())
+		return
 	}
-	
+
 	SuccessResponse(s, i, PresetResponse{
-		Content:     "",
 		Title:       "**Successful Entry!**",
 		Description: "You have successfully been entered into the giveaway.",
 	})
@@ -427,6 +428,7 @@ func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func GiveawayEnd(s *discordgo.Session, messageID string) {
 
 	var winnerList string
+	var winnerTags string
 	giveawayInfo := database.Giveaway{
 		MessageID: messageID,
 	}
@@ -459,6 +461,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		winner := fmt.Sprintf("<@%s> (%s#%s)", user.ID, user.Username, user.Discriminator)
 
 		winnerList += fmt.Sprintf("• %s\n", winner)
+		winnerTags += fmt.Sprintf("<@%s>, ", winner)
 
 		giveawayInfo.Entries = strings.Trim(strings.ReplaceAll(" "+giveawayInfo.Entries, " "+winnerID, ""), " ")
 
@@ -466,6 +469,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 	}
 
 	_, err := PresetMessageSend(s, giveawayInfo.ChannelID, PresetResponse{
+		Content: winnerTags,
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{

@@ -87,6 +87,7 @@ func Timers(s *discordgo.Session) {
 
 	var Auctions []database.Auction
 	var AuctionQueue []database.AuctionQueue
+	var Giveaways []database.Giveaway
 
 	fmt.Println("Beginning Startup Timers")
 
@@ -98,6 +99,11 @@ func Timers(s *discordgo.Session) {
 	database.DB.Find(&AuctionQueue)
 	for _, v := range AuctionQueue {
 		go AuctionStartTimer(v, s)
+	}
+
+	database.DB.Find(&Giveaways)
+	for _, v := range Giveaways{
+		go GiveawayEndTimer(v, s)
 	}
 }
 
@@ -118,5 +124,15 @@ func AuctionStartTimer(v database.AuctionQueue, s *discordgo.Session) {
 	} else {
 		time.Sleep(time.Until(v.StartTime))
 		commands.AuctionCreate(s, v)
+	}
+}
+
+func GiveawayEndTimer(v database.Giveaway, s *discordgo.Session) {
+	fmt.Println("Giveaway Timer Re-Started: ", v.Item, "GuildID: ", v.GuildID, "ImageURL", v.ImageURL, "Host", v.Host, "End Time", v.EndTime.String())
+	if v.EndTime.Before(time.Now()) {
+		commands.GiveawayEnd(commands.Session, v.MessageID)
+	} else {
+		time.Sleep(time.Until(v.EndTime))
+		commands.GiveawayEnd(commands.Session, v.MessageID)
 	}
 }
