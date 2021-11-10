@@ -427,48 +427,48 @@ func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func GiveawayEnd(s *discordgo.Session, messageID string) {
 
-	var winnerList string
-	var winnerTags string
-	giveawayInfo := database.Giveaway{
-		MessageID: messageID,
-	}
-	database.DB.First(&giveawayInfo, messageID)
+	winnerTags, winnerList, giveawayInfo, err := GiveawayRoll(s, messageID)
 
-	for n := float64(0); n < giveawayInfo.Winners; {
-
-		entryString := strings.Split(giveawayInfo.Entries, " ")
-
-		if len(entryString) == 0 || giveawayInfo.Entries == "" {
-			winnerList += fmt.Sprintf("• Not enough entrants!")
-			fmt.Println("Not enough Entrants")
-			break
-		}
-
-		result, err := random.Int(random.Reader, big.NewInt(int64(len(entryString))))
-		if err != nil {
-			fmt.Println("Random Error: ", err)
-			return
-		}
-
-		winnerID := entryString[result.Int64()]
-
-		user, err := s.User(winnerID)
-		if err != nil {
-			fmt.Println("User Error:", err)
-			return
-		}
-
-		winner := fmt.Sprintf("<@%s> (%s#%s)", user.ID, user.Username, user.Discriminator)
-
-		winnerList += fmt.Sprintf("• %s\n", winner)
-		winnerTags += fmt.Sprintf("<@%s>, ", winnerID)
-
-		giveawayInfo.Entries = strings.Trim(strings.ReplaceAll(" "+giveawayInfo.Entries, " "+winnerID, ""), " ")
-
-		n++
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	_, err := PresetMessageSend(s, giveawayInfo.ChannelID, PresetResponse{
+	m, err := s.ChannelMessage(giveawayInfo.ChannelID, messageID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	m.Embeds[0].Fields = append(m.Embeds[0].Fields, &discordgo.MessageEmbedField{
+		Name:   "**Giveaway Has Ended!**",
+		Value:  "**Winners:** " + winnerList,
+		Inline: false,
+	})
+
+	_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		Content: &m.Content,
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label:    "Reroll",
+						Style:    1,
+						Disabled: true,
+						CustomID: "reroll_giveaway",
+					},
+				},
+			},
+		},
+		Embeds:  m.Embeds,
+		ID:      messageID,
+		Channel: m.ChannelID,
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = PresetMessageSend(s, giveawayInfo.ChannelID, PresetResponse{
 		Content: winnerTags,
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -481,12 +481,6 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 							ID:   "889307390690885692",
 						},
 						CustomID: "claim_giveaway",
-					},
-					discordgo.Button{
-						Label:    "Reroll",
-						Style:    1,
-						Disabled: true,
-						CustomID: "reroll_giveaway",
 					},
 				},
 			},
@@ -516,12 +510,59 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 	})
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	giveawayInfo.Finished = true
 	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
 
 	time.Sleep(24 * time.Hour)
 	database.DB.Delete(database.Giveaway{}, messageID)
+}
+
+func GiveawayRoll(s *discordgo.Session, messageID string) (string, string, database.Giveaway, error) {
+
+	var winnerList string
+	var winnerTags string
+	giveawayInfo := database.Giveaway{
+		MessageID: messageID,
+	}
+	database.DB.First(&giveawayInfo, messageID)
+
+	for n := float64(0); n < giveawayInfo.Winners; {
+
+		entryString := strings.Split(giveawayInfo.Entries, " ")
+
+		if len(entryString) == 0 || giveawayInfo.Entries == "" {
+			winnerList += fmt.Sprintf("• Not enough entrants!")
+			fmt.Println("Not enough Entrants")
+			break
+		}
+
+		result, err := random.Int(random.Reader, big.NewInt(int64(len(entryString))))
+		if err != nil {
+			fmt.Println("Random Error: ", err)
+			return "", "", database.Giveaway{}, err
+		}
+
+		winnerID := entryString[result.Int64()]
+
+		user, err := s.User(winnerID)
+		if err != nil {
+			fmt.Println("User Error:", err)
+			return "", "", database.Giveaway{}, err
+		}
+
+		winner := fmt.Sprintf("<@%s> (%s#%s)", user.ID, user.Username, user.Discriminator)
+
+		winnerList += fmt.Sprintf("• %s\n", winner)
+		winnerTags += fmt.Sprintf("<@%s>, ", winnerID)
+
+		giveawayInfo.Entries = strings.Trim(strings.ReplaceAll(" "+giveawayInfo.Entries, " "+winnerID, ""), " ")
+
+		n++
+	}
+
+	return winnerTags, winnerList, giveawayInfo, nil
 }
 
 func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -542,5 +583,7 @@ func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	GiveawayEnd(s, i.Message.ID)
 
 }

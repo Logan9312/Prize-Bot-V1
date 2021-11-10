@@ -36,6 +36,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.GiveawayEnter(s, i)
 		case "claim_giveaway":
 			c.ClaimGiveawayButton(s, i)
+		case "reroll_giveaway":
+			c.RerollGiveawayButton(s, i)
 		default:
 			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
