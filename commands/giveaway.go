@@ -461,7 +461,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		winner := fmt.Sprintf("<@%s> (%s#%s)", user.ID, user.Username, user.Discriminator)
 
 		winnerList += fmt.Sprintf("• %s\n", winner)
-		winnerTags += fmt.Sprintf("<@%s>, ", winner)
+		winnerTags += fmt.Sprintf("<@%s>, ", winnerID)
 
 		giveawayInfo.Entries = strings.Trim(strings.ReplaceAll(" "+giveawayInfo.Entries, " "+winnerID, ""), " ")
 
