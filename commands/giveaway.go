@@ -585,5 +585,9 @@ func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	GiveawayEnd(s, i.Message.ID)
-
+	SuccessResponse(s, i, PresetResponse{
+		Content:     "",
+		Title:       "**Reroll Successful!*",
+		Description: "New winners have been selected.",
+	})
 }
