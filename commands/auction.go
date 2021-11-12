@@ -1163,7 +1163,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 	}
 
 	messageSend := discordgo.MessageSend{
-		Content: fmt.Sprintf("<@%s>", auctionInfo.Winner),
+		Content: fmt.Sprintf("%s", auctionInfo.Winner),
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
