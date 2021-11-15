@@ -65,11 +65,11 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:         discordgo.ApplicationCommandOptionString,
-					Name:         "duration",
-					Description:  "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
-					Required:     true,
-					Autocomplete: true,
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "duration",
+					Description: "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
+					Required:    true,
+					//Autocomplete: true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
