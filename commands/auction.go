@@ -1053,6 +1053,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content = "Bid has successfully been placed"
 	} else {
 		ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
+		return
 	}
 
 	err := SuccessResponse(s, i, PresetResponse{
@@ -1210,7 +1211,11 @@ func AuctionEnd(ChannelID, GuildID string) {
 
 	if guildInfo.LogChannel == "" {
 		fmt.Println("Log channel has not been set for guild: " + GuildID)
-		ErrorMessage(Session, ChannelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+		_, err := ErrorMessage(Session, ChannelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		return
 	}
 
