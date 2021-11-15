@@ -1092,7 +1092,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		fmt.Println(result.Error.Error())
 	}
 
-	if auctionInfo.Bid <= auctionInfo.Buyout || auctionInfo.Buyout == 0 {
+	if auctionInfo.Bid < auctionInfo.Buyout || auctionInfo.Buyout == 0 {
 		if auctionInfo.EndTime.After(time.Now()) {
 			time.Sleep(time.Until(auctionInfo.EndTime))
 			AuctionEnd(ChannelID, GuildID)
@@ -1100,7 +1100,7 @@ func AuctionEnd(ChannelID, GuildID string) {
 		}
 	}
 
-	message := discordgo.NewMessageEdit(auctionInfo.ChannelID, auctionInfo.MessageID)
+	message := discordgo.NewMessageEdit(ChannelID, auctionInfo.MessageID)
 	messageEmbeds, err := Session.ChannelMessage(auctionInfo.ChannelID, auctionInfo.MessageID)
 	if err != nil {
 		fmt.Println(err)
