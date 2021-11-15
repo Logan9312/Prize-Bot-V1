@@ -963,12 +963,16 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		database.DB.Model(&auctionInfo).Updates(auctionInfo)
 
-		AuctionEnd(i.ChannelID, i.GuildID)
-
-		SuccessResponse(s, i, PresetResponse{
+		err := SuccessResponse(s, i, PresetResponse{
 			Title:       "Success!",
 			Description: "Auction has successfully been bought out!",
 		})
+
+		AuctionEnd(i.ChannelID, i.GuildID)
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 		return
 	} else if bidAmount > auctionInfo.Bid {
 		if bidAmount-auctionInfo.Bid < auctionInfo.MinBid {
