@@ -1111,6 +1111,16 @@ func AuctionEnd(ChannelID, GuildID string) {
 		return
 	}
 
+	if guildInfo.LogChannel == "" {
+		fmt.Println("Log channel has not been set for guild: " + GuildID)
+		_, err := ErrorMessage(Session, ChannelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`. You might need to end the auction manually after setting the channel.")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		return
+	}
+
 	if message != nil {
 		message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
 			Title:       "Auction has ended!",
@@ -1211,16 +1221,6 @@ func AuctionEnd(ChannelID, GuildID string) {
 				URL: imageURL,
 			},
 		},
-	}
-
-	if guildInfo.LogChannel == "" {
-		fmt.Println("Log channel has not been set for guild: " + GuildID)
-		_, err := ErrorMessage(Session, ChannelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/auction setup`")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		return
 	}
 
 	_, err = Session.ChannelMessageSendComplex(guildInfo.LogChannel, &messageSend)
