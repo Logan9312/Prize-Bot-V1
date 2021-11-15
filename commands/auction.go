@@ -1087,10 +1087,12 @@ func AuctionEnd(ChannelID, GuildID string) {
 		fmt.Println(result.Error.Error())
 	}
 
-	if auctionInfo.EndTime.After(time.Now()) {
-		time.Sleep(time.Until(auctionInfo.EndTime))
-		AuctionEnd(ChannelID, GuildID)
-		return
+	if auctionInfo.Bid <= auctionInfo.Buyout || auctionInfo.Buyout == 0 {
+		if auctionInfo.EndTime.After(time.Now()) {
+			time.Sleep(time.Until(auctionInfo.EndTime))
+			AuctionEnd(ChannelID, GuildID)
+			return
+		}
 	}
 
 	message := discordgo.NewMessageEdit(auctionInfo.ChannelID, auctionInfo.MessageID)
