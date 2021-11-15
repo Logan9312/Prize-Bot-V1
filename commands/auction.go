@@ -298,164 +298,93 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	content := ""
 	category := &discordgo.Channel{}
 
-	if options["category"] != nil {
+	info := database.GuildInfo{
+		GuildID: i.GuildID,
+	}
 
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
+	result := database.DB.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(&info)
+
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+		ErrorResponse(s, i, result.Error.Error())
+		return
+	}
+
+	if options["category"] != nil {
 
 		category := options["category"].(string)
 		info.AuctionCategory = category
-
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"auction_category": info.AuctionCategory}),
-		}).Create(&info)
-
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
 
 		content = content + "• Category has been successfully set.\n"
 	}
 
 	if options["currency"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
-		info.Currency = options["currency"].(string)
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"currency": info.Currency}),
-		}).Create(&info)
 
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
+		info.Currency = options["currency"].(string)
+
 		content = content + "• Currency has been successfully set.\n"
 	}
 
 	if options["log_channel"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
+
 		info.LogChannel = options["log_channel"].(string)
 
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"log_channel": info.LogChannel}),
-		}).Create(&info)
-
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
 		content = content + "• Log Channel has been successfully set.\n"
 	}
 
 	if options["alert_role"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
+
 		info.AuctionRole = fmt.Sprintf("<@&%s>", options["alert_role"].(string))
 
-		if i.GuildID == options["alert_role"] {
-			info.AuctionRole = ""
-		}
-
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"auction_role": info.AuctionRole}),
-		}).Create(&info)
-
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
 		content = content + "• Alert Role has been successfully set.\n"
 	}
 
 	if options["host_role"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
 
 		info.AuctionHostRole = options["host_role"].(string)
 
-		if i.GuildID == options["host_role"].(string) {
-			info.AuctionHostRole = ""
-		}
-
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"auction_host_role": info.AuctionHostRole}),
-		}).Create(&info)
-
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
 		content = content + "• Host Role Message has been successfully set.\n"
 	}
 
 	if options["claiming"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
-		info.Claiming = options["claiming"].(string)
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"claiming": info.Claiming}),
-		}).Create(&info)
 
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
+		info.Claiming = options["claiming"].(string)
+
 		content = content + "• Claiming Message has been successfully set.\n"
 	}
 
 	if options["snipe_extension"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
+
 		info.SnipeExtension, err = ParseTime(options["snipe_extension"].(string))
 		if err != nil {
 			fmt.Println(err)
 			ErrorResponse(s, i, err.Error())
 			return
 		}
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"snipe_extension": info.SnipeExtension}),
-		}).Create(&info)
 
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
 		content = content + "• Snipe Extension has been successfully set.\n"
 	}
 
 	if options["snipe_range"] != nil {
-		info := database.GuildInfo{
-			GuildID: i.GuildID,
-		}
+
 		info.SnipeRange, err = ParseTime(options["snipe_range"].(string))
 		if err != nil {
 			fmt.Println(err)
 			ErrorResponse(s, i, err.Error())
 			return
 		}
-		result := database.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "guild_id"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"snipe_range": info.SnipeRange}),
-		}).Create(&info)
 
-		if result.Error != nil {
-			fmt.Println(result.Error.Error())
-		}
 		content = content + "• Snipe Range has been successfully set.\n"
 	}
 
-	info := database.GuildInfo{
+	database.DB.Model(&info).Updates(info)
+
+	info = database.GuildInfo{
 		GuildID: i.GuildID,
 	}
+
 	database.DB.First(&info, i.GuildID)
 
 	antiSnipeDescription := fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", info.SnipeRange.String(), info.SnipeExtension.String())
