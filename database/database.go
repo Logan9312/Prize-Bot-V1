@@ -58,6 +58,25 @@ type AuctionQueue struct {
 	Buyout      float64
 }
 
+type AuctionSetup struct {
+	GuildID        string `gorm:"primaryKey"`
+	Category       string
+	AlertRole      string
+	Currency       string
+	LogChannel     string
+	Claiming       string
+	HostRole       string
+	SnipeExtension time.Duration
+	SnipeRange     time.Duration
+}
+
+type GiveawaySetup struct {
+	GuildID   string `gorm:"primaryKey"`
+	HostRole  string
+	AlertRole string
+	Claiming  string
+}
+
 type GuildInfo struct {
 	GuildID          string `gorm:"primaryKey"`
 	AuctionCategory  string
@@ -67,7 +86,6 @@ type GuildInfo struct {
 	Claiming         string
 	AuctionHostRole  string
 	GiveawayHostRole string
-	AntiSnipe        bool
 	SnipeExtension   time.Duration
 	SnipeRange       time.Duration
 	GiveawayRole     string
@@ -91,8 +109,41 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(GuildInfo{}, Auction{}, AuctionQueue{}, Giveaway{})
+	err := DB.AutoMigrate(GuildInfo{}, AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{})
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	MigrateData()
+}
+
+func MigrateData() {
+
+	fmt.Println("Migrating Database")
+	defer fmt.Println("Finished Migrating Database")
+
+	var oldDatabase []GuildInfo
+
+	DB.Find(&oldDatabase)
+
+	for _, v := range oldDatabase {
+		DB.Create(AuctionSetup{
+			GuildID:        v.GuildID,
+			Category:       v.AuctionCategory,
+			AlertRole:      v.AuctionRole,
+			Currency:       v.Currency,
+			LogChannel:     v.LogChannel,
+			Claiming:       v.Claiming,
+			HostRole:       v.AuctionHostRole,
+			SnipeExtension: v.SnipeExtension,
+			SnipeRange:     v.SnipeRange,
+		})
+		DB.Create(GiveawaySetup{
+			GuildID:   v.GuildID,
+			HostRole:  v.GiveawayHostRole,
+			AlertRole: v.GiveawayRole,
+			Claiming:  v.GiveawayClaiming,
+		})
+	}
+
 }
