@@ -3,6 +3,7 @@ package connect
 import (
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
+	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -20,7 +21,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "giveaway":
 			c.Giveaway(s, i)
 		default:
-			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
+			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case 3:
 		switch i.MessageComponentData().CustomID {
@@ -38,8 +39,12 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.ClaimGiveawayButton(s, i)
 		case "reroll_giveaway":
 			c.RerollGiveawayButton(s, i)
+		case "clear_auction_setup":
+			c.AuctionSetupClearButton(s, i)
+		case "clear_giveaway_setup":
+			c.GiveawaySetupClearButton(s, i)
 		default:
-			c.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
+			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case 4:
 		switch i.ApplicationCommandData().Name {

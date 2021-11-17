@@ -1,6 +1,10 @@
-package commands
+package helpers
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -23,3 +27,16 @@ func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
 	return options
 }
 
+func ParseTime(inputDuration string) (time.Duration, error) {
+	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
+		inputDuration = strings.TrimSuffix(strings.ToLower(inputDuration), "d")
+		float, err := strconv.ParseFloat(inputDuration, 64)
+		if err != nil {
+			fmt.Println(err)
+			return 0, err
+		}
+		inputDuration = fmt.Sprint(float*24) + "h"
+	}
+
+	return time.ParseDuration(strings.ToLower(inputDuration))
+}

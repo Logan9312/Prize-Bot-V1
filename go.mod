@@ -3,7 +3,7 @@ module gitlab.com/logan9312/discord-auction-bot
 go 1.17
 
 require (
-	github.com/bwmarrin/discordgo v0.0.0-00010101000000-000000000000
+	github.com/bwmarrin/discordgo v0.23.3-0.20211117035633-fd6228c0d536
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/mux v1.8.0
 	gorm.io/driver/postgres v1.2.1
@@ -29,4 +29,4 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 )
 
-replace github.com/bwmarrin/discordgo => github.com/FedorLap2006/discordgo v0.22.1-0.20211027194205-0a1b2fb6073c
+//replace github.com/bwmarrin/discordgo => github.com/FedorLap2006/discordgo v0.22.1-0.20211027194205-0a1b2fb6073c

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
 var ProfileCommand = discordgo.ApplicationCommand{
@@ -25,7 +26,7 @@ func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	username := i.ApplicationCommandData().Options[0].UserValue(s).Username
 	Discriminator := i.ApplicationCommandData().Options[0].UserValue(s).Discriminator
 
-	err := SuccessResponse(s, i, PresetResponse{
+	err := h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**__" + username + "__**" + "#" + Discriminator,
 		Description: "Inventory For: <@" + userID + ">",
 		Thumbnail: &discordgo.MessageEmbedThumbnail{

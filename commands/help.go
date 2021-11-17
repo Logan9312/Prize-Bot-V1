@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
 var fields []*discordgo.MessageEmbedField
@@ -32,12 +33,12 @@ func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	fields := append(fields,  &discordgo.MessageEmbedField{
+	fields := append(fields, &discordgo.MessageEmbedField{
 		Name:  "**Ping**",
 		Value: s.HeartbeatLatency().String(),
 	})
 
-	err := SuccessResponse(s, i, PresetResponse{
+	err := h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Discord Bot Help",
 		Description: "Developed by Logan. Thank you for using my bot!",
 		Fields:      fields,
