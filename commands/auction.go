@@ -1564,6 +1564,11 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	if i.Member.Permissions&(1<<3) != 8 || i.Member.User.ID == auctionInfo.Host {
+		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+		return
+	}
+
 	err := h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "End Auction",
 		Description: "Auction Ending...",
