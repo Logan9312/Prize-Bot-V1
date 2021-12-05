@@ -131,6 +131,24 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 	})
 }
 
+func SuccessMessage(s *discordgo.Session, channelID string, r PresetResponse) (*discordgo.Message, error) {
+
+	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Content:    r.Content,
+		Components: r.Components,
+		Embeds: []*discordgo.MessageEmbed{
+			{
+				Title:       r.Title,
+				Description: r.Description,
+				Color:       0x8073ff,
+				Image:       r.Image,
+				Thumbnail:   r.Thumbnail,
+				Fields:      r.Fields,
+			},
+		},
+	})
+}
+
 func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) (*discordgo.Message, error) {
 	return s.InteractionResponseEdit(s.State.User.ID, i.Interaction, &discordgo.WebhookEdit{
 		Content:    r.Content,

@@ -71,10 +71,11 @@ func BotConnect(token, environment, botName string) {
 	}
 
 	s.AddHandler(CommandHandler)
+	s.AddHandler(MessageHandler)
 
 	Timers(s)
 
-	err = s.UpdateGameStatus(0, "Bot Version v0.8")
+	err = s.UpdateGameStatus(0, "Bot Version v1.0")
 	if err != nil {
 		fmt.Println(err)
 		return

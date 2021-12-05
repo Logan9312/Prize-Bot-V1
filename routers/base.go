@@ -10,7 +10,6 @@ import (
 )
 
 func BotStatus() {
-	fmt.Println("Routers starting")
 	r := mux.NewRouter().StrictSlash(true)
 	HandleRequests(r)
 	log.Fatal(http.ListenAndServe(":8080", r))

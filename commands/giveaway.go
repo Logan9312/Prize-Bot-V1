@@ -25,7 +25,7 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "alert_role",
-					Description: "Set a role to get pinged whenever an auction starts. Choosing @everyone will reset it to default.",
+					Description: "Set a role to get pinged whenever an auction starts.",
 				},
 				/*{
 					Type:        discordgo.ApplicationCommandOptionChannel,
@@ -39,7 +39,7 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "host_role",
-					Description: "Set a role that can host auctions. Choosing @everyone will reset it to default.",
+					Description: "Set a role that can host auctions.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -110,11 +110,6 @@ func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
-
 	var err error
 
 	options := h.ParseSubCommand(i)
@@ -147,9 +142,9 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	responseFields := []*discordgo.MessageEmbedField{}
 
-	for _, v := range GiveawayCommand.Options[1].Options {
+	for _, v := range GiveawayCommand.Options[0].Options {
 		switch {
-		case setOptions[v.Name] == "", setOptions[v.Name] == 0:
+		case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
 			setOptions[v.Name] = "Not Set"
 		case strings.Contains(v.Name, "role"):
 			setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
@@ -162,25 +157,9 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	err = h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "Giveaway Setup",
-		Description: content,
-		Fields:      responseFields,
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func GiveawaySetupClear(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
-
 	menuOptions := []discordgo.SelectMenuOption{}
 
-	for _, v := range GiveawayCommand.Options[1].Options {
+	for _, v := range GiveawayCommand.Options[0].Options {
 		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
 			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
 			Value:       v.Name,
@@ -188,23 +167,27 @@ func GiveawaySetupClear(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "**Clear Giveaway Setup**",
-		Description: "Please select which setup options you would like to clear",
+	err = h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "Giveaway Setup",
+		Description: content,
+		Fields:      responseFields,
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.SelectMenu{
 						CustomID:    "clear_giveaway_setup",
-						Placeholder: "Select options to clear!",
+						Placeholder: "Clear Setup Options",
 						MinValues:   1,
-						MaxValues:   len(GiveawayCommand.Options[1].Options),
+						MaxValues:   len(GiveawayCommand.Options[0].Options),
 						Options:     menuOptions,
 					},
 				},
 			},
 		},
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {

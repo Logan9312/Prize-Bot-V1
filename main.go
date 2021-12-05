@@ -27,7 +27,7 @@ func main() {
 		fmt.Println(err)
 		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
 	}
-	
+
 	//Connects database
 	database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
 

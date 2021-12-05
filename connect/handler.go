@@ -1,14 +1,27 @@
 package connect
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
 	switch i.Type {
 	case 2:
+		switch i.ApplicationCommandData().Options[0].Name {
+		case "setup":
+			if i.Member.Permissions&(1<<3) != 8 {
+				h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+				return
+			}
+		}
 		switch i.ApplicationCommandData().Name {
 		case "help":
 			c.Help(s, i)
@@ -54,4 +67,43 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.GiveawayAutoComplete(s, i)
 		}
 	}
+}
+
+func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	bidValue := ""
+	mentioned := false
+	if m.Content == "" {
+		return
+	}
+
+	for _, v := range m.Message.Mentions {
+		if v.ID == s.State.User.ID {
+			mentioned = true
+		}
+	}
+
+	if !mentioned {
+		return
+	}
+
+	splitString := strings.Split(m.Content, " ")
+
+	for n, v := range splitString {
+		if v == "bid" {
+			bidValue = splitString[n+1]
+			bidAmount, err := strconv.ParseFloat(bidValue, 64)
+			if err != nil {
+				h.ErrorMessage(s, m.ChannelID, err.Error())
+				fmt.Println(err)
+				return
+			}
+			c.AuctionBidAlternate(s, database.Auction{
+				ChannelID: m.ChannelID,
+				Bid:       bidAmount,
+				Winner:    m.Author.ID,
+				GuildID:   m.GuildID,
+			})
+		}
+	}
+
 }
