@@ -79,21 +79,6 @@ type GiveawaySetup struct {
 	Claiming  string
 }
 
-type GuildInfo struct {
-	GuildID          string `gorm:"primaryKey"`
-	AuctionCategory  string
-	AuctionRole      string
-	Currency         string
-	LogChannel       string
-	Claiming         string
-	AuctionHostRole  string
-	GiveawayHostRole string
-	SnipeExtension   time.Duration
-	SnipeRange       time.Duration
-	GiveawayRole     string
-	GiveawayClaiming string
-}
-
 type UserProfile struct {
 	UserID  string `gorm:"primaryKey;autoIncrement:false"`
 	GuildID string `gorm:"primaryKey;autoIncrement:false"`
@@ -114,38 +99,6 @@ func DatabaseConnect(password, host, env string) {
 	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{})
 	if err != nil {
 		fmt.Println(err)
-	}
-
-	MigrateData()
-}
-
-func MigrateData() {
-
-	fmt.Println("Migrating Database")
-	defer fmt.Println("Finished Migrating Database")
-
-	var oldDatabase []GuildInfo
-
-	DB.Find(&oldDatabase)
-
-	for _, v := range oldDatabase {
-		DB.Create(AuctionSetup{
-			GuildID:        v.GuildID,
-			Category:       v.AuctionCategory,
-			AlertRole:      v.AuctionRole,
-			Currency:       v.Currency,
-			LogChannel:     v.LogChannel,
-			Claiming:       v.Claiming,
-			HostRole:       v.AuctionHostRole,
-			SnipeExtension: v.SnipeExtension,
-			SnipeRange:     v.SnipeRange,
-		})
-		DB.Create(GiveawaySetup{
-			GuildID:   v.GuildID,
-			HostRole:  v.GiveawayHostRole,
-			AlertRole: v.GiveawayRole,
-			Claiming:  v.GiveawayClaiming,
-		})
 	}
 
 }
