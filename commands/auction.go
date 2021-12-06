@@ -190,18 +190,18 @@ var AuctionCommand = discordgo.ApplicationCommand{
 			Name:        "queue",
 			Description: "Display the current auction Queue",
 		},
-		/*{
+		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "edit",
 			Description: "Edit any auction details",
 			Options: []*discordgo.ApplicationCommandOption{
-				{
+				/*{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "queue_number",
 					Description: "The number of the auction if you are editing one in queue.",
 					Required:    false,
 					//Autocomplete: true,
-				},
+				},*/
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "item",
@@ -267,13 +267,13 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "image",
+					Name:        "image_url",
 					Description: "Edit the image link",
 					Required:    false,
 					//Autocomplete: true,
 				},
 			},
-		},*/
+		},
 	},
 }
 
@@ -768,12 +768,38 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 
 func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := h.ParseSubCommand(i)
-	auctionInfo := database.Auction{}
+	auctionInfo := database.Auction{
+		ChannelID: i.ChannelID,
+	}
+	database.DB.First(&auctionInfo)
+
+	for key, value := range options {
+		switch key {
+		case "extend":
+			extraDuration, err := h.ParseTime(strings.ToLower(value.(string)))
+			if err != nil {
+				fmt.Println(err)
+				h.ErrorResponse(s, i, err.Error())
+				return
+			}
+			options["end_time"] = auctionInfo.EndTime.Add(extraDuration)
+			delete(options, "extend")
+		}
+	}
 
 	if options["queue_number"] != nil {
 
+		queueNumber, err := strconv.Atoi(options["queue_number"].(string))
+		if err != nil {
+			fmt.Println(err)
+			h.ErrorResponse(s, i, err.Error())
+			return
+		}
+
+		delete(options, "queue_number")
+
 		result := database.DB.Model(database.AuctionQueue{
-			ID: options["queue_number"].(int),
+			ID: queueNumber,
 		}).Updates(options)
 
 		if result.Error != nil {
