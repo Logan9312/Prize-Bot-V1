@@ -81,8 +81,6 @@ func BotConnect(token, environment, botName string) {
 	s.AddHandler(CommandHandler)
 	s.AddHandler(MessageHandler)
 
-	DataFix()
-
 	Timers(s)
 
 	err = s.UpdateGameStatus(0, "Bot Version v0.9")
@@ -150,19 +148,5 @@ func GiveawayEndTimer(v database.Giveaway, s *discordgo.Session) {
 	} else {
 		time.Sleep(time.Until(v.EndTime))
 		commands.GiveawayEnd(commands.Session, v.MessageID)
-	}
-}
-
-func DataFix() {
-	auctiondata := []database.AuctionSetup{}
-
-	database.DB.Find(&auctiondata)
-
-	for _, v := range auctiondata {
-		if v.AlertRole != "" {
-			database.DB.Model(&database.AuctionSetup{
-				GuildID: v.GuildID,
-			}).Update("alert_role", strings.Trim(v.AlertRole, "<@&>"))
-		}
 	}
 }
