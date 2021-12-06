@@ -557,7 +557,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						category, err := s.Channel(info.Category)
 						if err != nil {
 							fmt.Println("Category Error:", err)
-							setOptions[v.Name] = err.Error()
+							setOptions[v.Name] = "Error Displaying Category: "+err.Error()
 						} else {
 							setOptions[v.Name] = category.Name
 						}
