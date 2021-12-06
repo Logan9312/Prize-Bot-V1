@@ -190,18 +190,18 @@ var AuctionCommand = discordgo.ApplicationCommand{
 			Name:        "queue",
 			Description: "Display the current auction Queue",
 		},
-		{
+		/*{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "edit",
 			Description: "Edit any auction details",
 			Options: []*discordgo.ApplicationCommandOption{
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "queue_number",
 					Description: "The number of the auction if you are editing one in queue.",
 					Required:    false,
 					//Autocomplete: true,
-				},*/
+				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "item",
@@ -273,7 +273,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					//Autocomplete: true,
 				},
 			},
-		},
+		},*/
 	},
 }
 
