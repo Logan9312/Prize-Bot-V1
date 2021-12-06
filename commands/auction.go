@@ -599,7 +599,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 								CustomID:    "clear_auction_setup",
 								Placeholder: "Clear Setup Options",
 								MinValues:   1,
-								MaxValues:   len(AuctionCommand.Options[1].Options),
+								MaxValues:   len(AuctionCommand.Options[n].Options),
 								Options:     menuOptions,
 							},
 						},
