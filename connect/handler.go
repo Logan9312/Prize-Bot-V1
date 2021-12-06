@@ -89,9 +89,9 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	splitString := strings.Split(m.Content, " ")
 
 	for n, v := range splitString {
-		if v == "bid" {
-			if len(splitString) < n {
-				h.ErrorMessage(s, m.ChannelID, "Error Bidding. Your message must contain the bid amount after the word bid")
+		if strings.ToLower(v) == "bid" {
+			if len(splitString) <= n+1 {
+				h.ErrorMessage(s, m.ChannelID, "Error Bidding. Your message must contain the bid amount after the word bid. Ex: Bid 500")
 				return
 			}
 			bidValue = splitString[n+1]
