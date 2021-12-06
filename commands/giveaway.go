@@ -462,7 +462,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		fmt.Println(err)
 	}
 
-	_, err = h.PresetMessageSend(s, giveawayInfo.ChannelID, h.PresetResponse{
+	message, err := h.PresetMessageSend(s, giveawayInfo.ChannelID, h.PresetResponse{
 		Content: winnerTags,
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -507,6 +507,13 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		return
 	}
 	giveawayInfo.Finished = true
+	if giveawayInfo.WinnerOutput != "" {
+		err = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	giveawayInfo.WinnerOutput = message.ID
 	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
 
 	time.Sleep(24 * time.Hour)
@@ -578,14 +585,19 @@ func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+	giveawayInfo := database.Giveaway{
+		MessageID: i.Message.ChannelID,
+	}
+
+	database.DB.First(&giveawayInfo)
+
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != giveawayInfo.Host {
+		h.ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
 		return
 	}
 
 	GiveawayEnd(s, i.Message.ID)
 	h.SuccessResponse(s, i, h.PresetResponse{
-		Content:     "",
 		Title:       "**Reroll Successful!*",
 		Description: "New winners have been selected.",
 	})

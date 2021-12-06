@@ -29,17 +29,18 @@ type Auction struct {
 }
 
 type Giveaway struct {
-	MessageID   string `gorm:"primaryKey"`
-	ChannelID   string
-	GuildID     string
-	Item        string
-	EndTime     time.Time
-	Description string
-	Host        string
-	Winners     float64
-	ImageURL    string
-	Entries     string
-	Finished    bool
+	MessageID    string `gorm:"primaryKey"`
+	ChannelID    string
+	GuildID      string
+	Item         string
+	EndTime      time.Time
+	Description  string
+	Host         string
+	Winners      float64
+	ImageURL     string
+	Entries      string
+	Finished     bool
+	WinnerOutput string
 }
 
 type AuctionQueue struct {
