@@ -142,51 +142,55 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	responseFields := []*discordgo.MessageEmbedField{}
 
-	for _, v := range GiveawayCommand.Options[0].Options {
-		switch {
-		case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
-			setOptions[v.Name] = "Not Set"
-		case strings.Contains(v.Name, "role"):
-			setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
-		case strings.Contains(v.Name, "channel"):
-			setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
-		}
-		responseFields = append(responseFields, &discordgo.MessageEmbedField{
-			Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-			Value: setOptions[v.Name].(string),
-		})
-	}
+	for n, v := range GiveawayCommand.Options {
+		if v.Name == "setup" {
+			for _, v := range GiveawayCommand.Options[n].Options {
+				switch {
+				case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
+					setOptions[v.Name] = "Not Set"
+				case strings.Contains(v.Name, "role"):
+					setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
+				case strings.Contains(v.Name, "channel"):
+					setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
+				}
+				responseFields = append(responseFields, &discordgo.MessageEmbedField{
+					Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
+					Value: setOptions[v.Name].(string),
+				})
+			}
 
-	menuOptions := []discordgo.SelectMenuOption{}
+			menuOptions := []discordgo.SelectMenuOption{}
 
-	for _, v := range GiveawayCommand.Options[0].Options {
-		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
-			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
-			Value:       v.Name,
-			Description: v.Description,
-		})
-	}
+			for _, v := range GiveawayCommand.Options[n].Options {
+				menuOptions = append(menuOptions, discordgo.SelectMenuOption{
+					Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
+					Value:       v.Name,
+					Description: v.Description,
+				})
+			}
 
-	err = h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "Giveaway Setup",
-		Description: content,
-		Fields:      responseFields,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
+			err = h.SuccessResponse(s, i, h.PresetResponse{
+				Title:       "Giveaway Setup",
+				Description: content,
+				Fields:      responseFields,
 				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						CustomID:    "clear_giveaway_setup",
-						Placeholder: "Clear Setup Options",
-						MinValues:   1,
-						MaxValues:   len(GiveawayCommand.Options[0].Options),
-						Options:     menuOptions,
+					discordgo.ActionsRow{
+						Components: []discordgo.MessageComponent{
+							discordgo.SelectMenu{
+								CustomID:    "clear_giveaway_setup",
+								Placeholder: "Clear Setup Options",
+								MinValues:   1,
+								MaxValues:   len(GiveawayCommand.Options[n].Options),
+								Options:     menuOptions,
+							},
+						},
 					},
 				},
-			},
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 }
 
