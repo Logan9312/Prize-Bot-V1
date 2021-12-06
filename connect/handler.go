@@ -15,13 +15,6 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.Type {
 	case 2:
-		switch i.ApplicationCommandData().Options[0].Name {
-		case "setup":
-			if i.Member.Permissions&(1<<3) != 8 {
-				h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-				return
-			}
-		}
 		switch i.ApplicationCommandData().Name {
 		case "help":
 			c.Help(s, i)

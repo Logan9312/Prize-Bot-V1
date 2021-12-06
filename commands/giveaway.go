@@ -578,6 +578,11 @@ func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	if i.Member.Permissions&(1<<3) != 8 {
+		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+		return
+	}
+
 	GiveawayEnd(s, i.Message.ID)
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Content:     "",

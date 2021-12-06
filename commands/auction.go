@@ -503,6 +503,11 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := h.ParseSubCommand(i)
 	content := ""
 
+	if i.Member.Permissions&(1<<3) != 8 {
+		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+		return
+	}
+
 	info := database.AuctionSetup{
 		GuildID: i.GuildID,
 	}
@@ -772,6 +777,11 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ChannelID: i.ChannelID,
 	}
 	database.DB.First(&auctionInfo)
+
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionInfo.Host{
+		h.ErrorResponse(s, i, "User must have be host or have administrator permissions to run this command")
+		return
+	}
 
 	for key, value := range options {
 		switch key {
