@@ -79,6 +79,9 @@ type GiveawaySetup struct {
 	Claiming  string
 }
 
+type AuctionClaim struct {
+}
+
 type UserProfile struct {
 	UserID  string `gorm:"primaryKey;autoIncrement:false"`
 	GuildID string `gorm:"primaryKey;autoIncrement:false"`

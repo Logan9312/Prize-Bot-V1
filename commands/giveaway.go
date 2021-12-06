@@ -420,11 +420,26 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		return
 	}
 
-	m.Embeds[0].Fields = append(m.Embeds[0].Fields, &discordgo.MessageEmbedField{
-		Name:   "**Giveaway Has Ended!**",
-		Value:  "**Winners:** " + winnerList,
-		Inline: false,
-	})
+	updateWinner := false
+
+	for num, v := range m.Embeds[0].Fields {
+		if v.Name == "**Giveaway Has Ended!**" {
+			updateWinner = true
+			m.Embeds[0].Fields[num] = &discordgo.MessageEmbedField{
+				Name:   "**Giveaway Has Ended!**",
+				Value:  "**Winners:**\n" + winnerList,
+				Inline: false,
+			}
+		}
+	}
+
+	if !updateWinner {
+		m.Embeds[0].Fields = append(m.Embeds[0].Fields, &discordgo.MessageEmbedField{
+			Name:   "**Giveaway Has Ended!**",
+			Value:  "**Winners:**\n" + winnerList,
+			Inline: false,
+		})
+	}
 
 	_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		Content: &m.Content,
@@ -434,7 +449,6 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 					discordgo.Button{
 						Label:    "Reroll",
 						Style:    1,
-						Disabled: true,
 						CustomID: "reroll_giveaway",
 					},
 				},
@@ -479,7 +493,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 				Inline: false,
 			},
 			{
-				Name:   "**Winners**",
+				Name:   "**Winners:**",
 				Value:  winnerList,
 				Inline: false,
 			},

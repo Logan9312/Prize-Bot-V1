@@ -1,4 +1,4 @@
-FROM golang:1.17.2-alpine3.13 AS build_base
+FROM golang:1.17.4-alpine3.15 AS build_base
 
 RUN apk add --no-cache git
 RUN apk add build-base
@@ -17,7 +17,7 @@ COPY . .
 # Build the Go app
 RUN go build -o ./main .
 
-FROM alpine:3.13
+FROM alpine:3.15
 RUN apk add ca-certificates
 RUN apk add jq
 
