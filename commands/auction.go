@@ -79,12 +79,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
 					//Autocomplete: true,
 				},
-				{
-					Type:        10,
-					Name:        "quick_bid",
-					Description: "Set the value of the quickbid reaction.",
-					//Autocomplete: true,
-				},
 			},
 		},
 		{
@@ -548,33 +542,34 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	responseFields := []*discordgo.MessageEmbedField{}
 
-	for _, v := range AuctionCommand.Options[1].Options {
-		if !strings.Contains(v.Name, "snipe") {
-			switch {
-			case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
-				setOptions[v.Name] = "Not Set"
-			case strings.Contains(v.Name, "role"):
-				setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
-			case strings.Contains(v.Name, "channel"):
-				setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
-			case strings.Contains(v.Name, "category"):
-				category, err := s.Channel(info.Category)
-				if err != nil {
-					fmt.Println("Category Error:", err)
-					setOptions[v.Name] = err.Error()
-				} else {
-					setOptions[v.Name] = category.Name
+	for n, v := range AuctionCommand.Options {
+		if v.Name == "setup" {
+			for _, v := range AuctionCommand.Options[n].Options {
+				if !strings.Contains(v.Name, "snipe") {
+					switch {
+					case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
+						setOptions[v.Name] = "Not Set"
+					case strings.Contains(v.Name, "role"):
+						setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
+					case strings.Contains(v.Name, "channel"):
+						setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
+					case strings.Contains(v.Name, "category"):
+						category, err := s.Channel(info.Category)
+						if err != nil {
+							fmt.Println("Category Error:", err)
+							setOptions[v.Name] = err.Error()
+						} else {
+							setOptions[v.Name] = category.Name
+						}
+					}
+					responseFields = append(responseFields, &discordgo.MessageEmbedField{
+						Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
+						Value: setOptions[v.Name].(string),
+					})
 				}
-			case v.Name == "quick_bid":
-				setOptions[v.Name] = fmt.Sprintf("%s %s", setOptions["currency"], strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", setOptions[v.Name]), "0"), "."))
 			}
-			responseFields = append(responseFields, &discordgo.MessageEmbedField{
-				Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-				Value: setOptions[v.Name].(string),
-			})
 		}
 	}
-
 	if setOptions["snipe_range"].(time.Duration) == 0 || setOptions["snipe_extension"].(time.Duration) == 0 {
 		antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
 	}
@@ -778,7 +773,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	database.DB.First(&auctionInfo)
 
-	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionInfo.Host{
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionInfo.Host {
 		h.ErrorResponse(s, i, "User must have be host or have administrator permissions to run this command")
 		return
 	}
@@ -1718,7 +1713,6 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 
 	clearedValues := map[string]interface{}{}
 
-	clearedValues["guild_id"] = i.GuildID
 	info := database.AuctionSetup{
 		GuildID: i.GuildID,
 	}
@@ -1738,7 +1732,13 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 		clearedSettings += fmt.Sprintf("• %s\n", strings.Title(strings.ReplaceAll(v, "_", " ")))
 	}
 
+	fmt.Println(info)
+
 	database.DB.Model(&info).Updates(clearedValues)
+
+	database.DB.First(&info)
+
+	fmt.Println(info)
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Cleared Auction Settings**",
