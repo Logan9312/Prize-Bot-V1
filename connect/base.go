@@ -63,9 +63,9 @@ func BotConnect(token, environment, botName string) {
 		}
 		commands.HelpBuilder(c.local)
 		database.DB.Create(database.AuctionSetup{
-			GuildID:        "915767892467920967",
-			Category:       "915768615742103625",
-			LogChannel:     "915768633752449054",
+			GuildID:    "915767892467920967",
+			Category:   "915768615742103625",
+			LogChannel: "915768633752449054",
 		})
 	}
 
@@ -160,9 +160,9 @@ func DataFix() {
 
 	for _, v := range auctiondata {
 		if v.AlertRole != "" {
-			v.AlertRole = strings.Trim(v.AlertRole, "<@&>")
+			database.DB.Model(&database.AuctionSetup{
+				GuildID: v.GuildID,
+			}).Update("alert_role", strings.Trim(v.AlertRole, "<@&>"))
 		}
 	}
-
-	database.DB.Updates(auctiondata)
 }
