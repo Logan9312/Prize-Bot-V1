@@ -568,47 +568,48 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					})
 				}
 			}
-		}
-	}
-	if setOptions["snipe_range"].(time.Duration) == 0 || setOptions["snipe_extension"].(time.Duration) == 0 {
-		antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
-	}
 
-	responseFields = append(responseFields, &discordgo.MessageEmbedField{
-		Name:  "**Anti Snipe**",
-		Value: antiSnipeDescription,
-	})
+			if setOptions["snipe_range"].(time.Duration) == 0 || setOptions["snipe_extension"].(time.Duration) == 0 {
+				antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
+			}
 
-	menuOptions := []discordgo.SelectMenuOption{}
+			responseFields = append(responseFields, &discordgo.MessageEmbedField{
+				Name:  "**Anti Snipe**",
+				Value: antiSnipeDescription,
+			})
 
-	for _, v := range AuctionCommand.Options[1].Options {
-		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
-			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
-			Value:       v.Name,
-			Description: v.Description,
-		})
-	}
+			menuOptions := []discordgo.SelectMenuOption{}
 
-	err = h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "Auction Setup",
-		Description: content,
-		Fields:      responseFields,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
+			for _, v := range AuctionCommand.Options[n].Options {
+				menuOptions = append(menuOptions, discordgo.SelectMenuOption{
+					Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
+					Value:       v.Name,
+					Description: v.Description,
+				})
+			}
+
+			err = h.SuccessResponse(s, i, h.PresetResponse{
+				Title:       "Auction Setup",
+				Description: content,
+				Fields:      responseFields,
 				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						CustomID:    "clear_auction_setup",
-						Placeholder: "Clear Setup Options",
-						MinValues:   1,
-						MaxValues:   len(AuctionCommand.Options[1].Options),
-						Options:     menuOptions,
+					discordgo.ActionsRow{
+						Components: []discordgo.MessageComponent{
+							discordgo.SelectMenu{
+								CustomID:    "clear_auction_setup",
+								Placeholder: "Clear Setup Options",
+								MinValues:   1,
+								MaxValues:   len(AuctionCommand.Options[1].Options),
+								Options:     menuOptions,
+							},
+						},
 					},
 				},
-			},
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 }
 
