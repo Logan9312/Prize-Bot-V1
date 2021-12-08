@@ -79,6 +79,22 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
 					//Autocomplete: true,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency_side",
+					Description: "Left/Right currency",
+					//Autocomplete: true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
 			},
 		},
 		{
@@ -327,10 +343,10 @@ func AuctionFormat(s *discordgo.Session, auctionInfo database.Auction) discordgo
 	if auctionInfo.IncrementMin != 0 || auctionInfo.IncrementMax != 0 {
 		bidRanges := ""
 		if auctionInfo.IncrementMin != 0 {
-			bidRanges += fmt.Sprintf("• Minimum %s %s above previous bid\n", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.IncrementMin), "0"), "."))
+			bidRanges += fmt.Sprintf("• Minimum %s above previous bid\n", PriceFormat(auctionInfo, auctionInfo.IncrementMin))
 		}
 		if auctionInfo.IncrementMax != 0 {
-			bidRanges += fmt.Sprintf("• Maximum %s %s above previous bid", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.IncrementMax), "0"), "."))
+			bidRanges += fmt.Sprintf("• Maximum %s above previous bid", PriceFormat(auctionInfo, auctionInfo.IncrementMax))
 		}
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**Bid Range**__",
@@ -358,14 +374,14 @@ func AuctionFormat(s *discordgo.Session, auctionInfo database.Auction) discordgo
 	if auctionInfo.Buyout != 0 {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**Buyout Price**__",
-			Value:  fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")),
+			Value:  PriceFormat(auctionInfo, auctionInfo.Buyout),
 			Inline: false,
 		})
 	}
 
 	auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 		Name:   "__**Current Highest Bid:**__",
-		Value:  fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), ".")),
+		Value:  PriceFormat(auctionInfo, auctionInfo.Bid),
 		Inline: true,
 	}, &discordgo.MessageEmbedField{
 		Name:   "__**Current Winner**__",
@@ -554,10 +570,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					case strings.Contains(v.Name, "channel"):
 						setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
 					case strings.Contains(v.Name, "category"):
-						category, err := s.Channel(info.Category)
+						category, err := s.Channel(setOptions[v.Name].(string))
 						if err != nil {
 							fmt.Println("Category Error:", err)
-							setOptions[v.Name] = "Error Displaying Category: "+err.Error()
+							setOptions[v.Name] = "Error Displaying Category: " + err.Error()
 						} else {
 							setOptions[v.Name] = category.Name
 						}
@@ -661,6 +677,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		ImageURL:     auctionInfo.ImageURL,
 		TargetPrice:  auctionInfo.TargetPrice,
 		Buyout:       auctionInfo.Buyout,
+		CurrencySide: auctionInfo.CurrencySide,
 	}).Fields
 
 	alertRole := ""
@@ -759,6 +776,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		ImageURL:     auctionInfo.ImageURL,
 		TargetPrice:  auctionInfo.TargetPrice,
 		Buyout:       auctionInfo.Buyout,
+		CurrencySide: auctionInfo.CurrencySide,
 	})
 
 	database.DB.Delete(auctionInfo, auctionInfo.ID)
@@ -948,6 +966,9 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["target_price"] != nil {
 		targetPrice = options["target_price"].(float64)
 	}
+	if options["currency_side"] != nil {
+		info.CurrencySide = options["currency_side"].(string)
+	}
 
 	if options["schedule"] != nil {
 
@@ -986,9 +1007,12 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Description:  description,
 		ImageURL:     image,
 		Category:     info.Category,
-		Buyout:       buyout,
 		TargetPrice:  targetPrice,
+		Buyout:       buyout,
+		CurrencySide: info.CurrencySide,
 	}
+
+	fmt.Println(info.CurrencySide)
 
 	if options["schedule"] != nil {
 
@@ -1031,13 +1055,6 @@ func AuctionBidAlternate(s *discordgo.Session, bidData database.Auction) {
 	var auction database.Auction
 	database.DB.First(&auction, bidData.ChannelID)
 	database.DB.First(&auctionSetup, bidData.GuildID)
-	currency := auctionSetup.Currency
-
-	fmt.Println("bidding")
-
-	if auction.Currency != "" {
-		currency = auction.Currency
-	}
 
 	if time.Until(auction.EndTime) < auction.SnipeRange && auction.SnipeExtension != 0 {
 		auction.EndTime = auction.EndTime.Add(auction.SnipeExtension)
@@ -1078,10 +1095,10 @@ func AuctionBidAlternate(s *discordgo.Session, bidData database.Auction) {
 	case bidData.Bid > auction.Bid:
 		switch {
 		case bidData.Bid-auction.Bid < auction.IncrementMin:
-			h.ErrorMessage(s, bidData.ChannelID, "Bid must be higher than the previous bid by: "+auction.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auction.IncrementMin), "0"), "."))
+			h.ErrorMessage(s, bidData.ChannelID, "Bid must be higher than the previous bid by: "+fmt.Sprintf("%s\n\u200b", PriceFormat(auction, auction.IncrementMin)))
 			return
 		case bidData.Bid-auction.Bid > auction.IncrementMax && auction.IncrementMax != 0:
-			h.ErrorMessage(s, bidData.ChannelID, "Bid must be no more than "+auction.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auction.IncrementMax), "0"), ".")+" Higher than the previous bid.")
+			h.ErrorMessage(s, bidData.ChannelID, "Bid must be no more than "+fmt.Sprintf("%s\n\u200b", PriceFormat(auction, auction.IncrementMax))+" Higher than the previous bid.")
 			return
 		}
 
@@ -1124,9 +1141,9 @@ func AuctionBidAlternate(s *discordgo.Session, bidData database.Auction) {
 		for n, v := range updateAuction.Embeds[0].Fields {
 			switch v.Name {
 			case "__**Current Highest Bid:**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s\n\u200b", PriceFormat(auction, bidAmount))
 			case "__**Starting Bid:**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s\n\u200b", PriceFormat(auction, bidAmount))
 				updateAuction.Embeds[0].Fields[n].Name = "__**Current Highest Bid:**__"
 			case "__**Current Winner**__":
 				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("<@%s>", auction.Winner)
@@ -1164,7 +1181,7 @@ func AuctionBidAlternate(s *discordgo.Session, bidData database.Auction) {
 		Content = "Bid has successfully been placed"
 
 	default:
-		h.ErrorMessage(s, bidData.ChannelID, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auction.Bid), "0"), "."))
+		h.ErrorMessage(s, bidData.ChannelID, "You must bid higher than: "+PriceFormat(auction, auction.Bid))
 		return
 	}
 
@@ -1193,13 +1210,8 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	auctionInfo.ChannelID = i.ChannelID
 	database.DB.First(&auctionInfo, i.ChannelID)
 	database.DB.First(&AuctionSetup, i.GuildID)
-	currency := AuctionSetup.Currency
 	var Content string
 	var antiSnipeFlag bool
-
-	if auctionInfo.Currency != "" {
-		currency = auctionInfo.Currency
-	}
 
 	if auctionInfo.EndTime.Before(time.Now()) {
 		h.ErrorResponse(s, i, "Cannot Bid, Auction has ended")
@@ -1243,12 +1255,12 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	} else if bidAmount > auctionInfo.Bid {
 		if bidAmount-auctionInfo.Bid < auctionInfo.IncrementMin {
-			h.ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+auctionInfo.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.IncrementMin), "0"), "."))
+			h.ErrorResponse(s, i, "Bid must be higher than the previous bid by: "+PriceFormat(auctionInfo, auctionInfo.IncrementMin))
 			return
 		}
 
 		if bidAmount-auctionInfo.Bid > auctionInfo.IncrementMax && auctionInfo.IncrementMax != 0 {
-			h.ErrorResponse(s, i, "Bid must be no more than "+auctionInfo.Currency+" "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.IncrementMax), "0"), ".")+" Higher than the previous bid.")
+			h.ErrorResponse(s, i, "Bid must be no more than "+PriceFormat(auctionInfo, auctionInfo.IncrementMax)+" Higher than the previous bid.")
 			return
 		}
 
@@ -1284,9 +1296,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		for n, v := range updateAuction.Embeds[0].Fields {
 			switch v.Name {
 			case "__**Current Highest Bid:**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionInfo, bidAmount))
 			case "__**Starting Bid:**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s %s\n\u200b", currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
+				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionInfo, bidAmount))
 				updateAuction.Embeds[0].Fields[n].Name = "__**Current Highest Bid:**__"
 			case "__**Current Winner**__":
 				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("<@%s>", Winner)
@@ -1323,7 +1335,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		Content = "Bid has successfully been placed"
 	} else {
-		h.ErrorResponse(s, i, "You must bid higher than: "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
+		h.ErrorResponse(s, i, "You must bid higher than: "+PriceFormat(auctionInfo, auctionInfo.Bid))
 		return
 	}
 
@@ -1435,15 +1447,15 @@ func AuctionEnd(ChannelID, GuildID string) {
 		auctionInfo.Winner = "<@" + auctionInfo.Winner + ">"
 	}
 
-	auctionWinner := fmt.Sprintf("The host had set a target price of %s that has not been reached.", fmt.Sprintf("%s %s", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.TargetPrice), "0"), ".")))
+	auctionWinner := fmt.Sprintf("The host had set a target price of %s that has not been reached.", PriceFormat(auctionInfo, auctionInfo.TargetPrice))
 	if auctionInfo.TargetPrice <= auctionInfo.Bid {
 		auctionWinner = fmt.Sprintf("%s %s", auctionInfo.Winner, username)
 	}
 
-	finalBid := fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Bid), "0"), "."))
+	finalBid := fmt.Sprintf("%s\n\u200b", PriceFormat(auctionInfo, auctionInfo.Bid))
 
 	if auctionInfo.Bid >= auctionInfo.Buyout && auctionInfo.Buyout != 0 {
-		finalBid = fmt.Sprintf("%s %s\n\u200b", auctionInfo.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", auctionInfo.Buyout), "0"), ".")) + " BUYOUT!"
+		finalBid = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionInfo, auctionInfo.Buyout)) + " BUYOUT!"
 	}
 
 	messageSend := discordgo.MessageSend{
@@ -1537,8 +1549,11 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, v := range AuctionQueue {
 
 		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:  fmt.Sprintf("**%s%s**", fmt.Sprint(len(fields)+1), v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d:R>\n**End Time:** <t:%d>\n**Starting Price:** %s %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), v.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", v.Bid), "0"), ".")),
+			Name: fmt.Sprintf("**%s%s**", fmt.Sprint(len(fields)+1), v.Item),
+			Value: fmt.Sprintf("**Start time:** <t:%d:R>\n**End Time:** <t:%d>\n**Starting Price:** %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), PriceFormat(database.Auction{
+				Currency:     v.Currency,
+				CurrencySide: v.CurrencySide,
+			}, v.Bid)),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,
@@ -1751,4 +1766,13 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 			},
 		},
 	})
+}
+
+func PriceFormat(auction database.Auction, price float64) string {
+
+	if auction.CurrencySide == "right" {
+		return fmt.Sprintf("%s %s", strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", price), "0"), "."), auction.Currency)
+	} else {
+		return fmt.Sprintf("%s %s", auction.Currency, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", price), "0"), "."))
+	}
 }

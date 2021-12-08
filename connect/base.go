@@ -2,7 +2,6 @@ package connect
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
