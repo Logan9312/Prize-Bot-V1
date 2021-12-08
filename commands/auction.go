@@ -43,6 +43,22 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Sets the auction currency",
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency_side",
+					Description: "Left/Right currency",
+					//Autocomplete: true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
+				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "log_channel",
 					Description: "Sets the channel where auctions will send outputs when they end",
@@ -78,22 +94,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "snipe_range",
 					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
 					//Autocomplete: true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency_side",
-					Description: "Left/Right currency",
-					//Autocomplete: true,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "Left",
-							Value: "left",
-						},
-						{
-							Name:  "Right",
-							Value: "right",
-						},
-					},
 				},
 			},
 		},
@@ -132,6 +132,22 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "currency",
 					Description: "A one time currency to use for this auction.",
 					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency_side",
+					Description: "Left/Right currency",
+					//Autocomplete: true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
 				},
 				{
 					Type:        10,
@@ -248,6 +264,22 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					//Autocomplete: true,
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency_side",
+					Description: "Left/Right currency",
+					//Autocomplete: true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
+				{
 					Type:        10,
 					Name:        "increment_max",
 					Description: "The max amount someone can bid at once",
@@ -281,22 +313,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Edit the image link",
 					Required:    false,
 					//Autocomplete: true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency_side",
-					Description: "Left/Right currency",
-					//Autocomplete: true,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "Left",
-							Value: "left",
-						},
-						{
-							Name:  "Right",
-							Value: "right",
-						},
-					},
 				},
 			},
 		},
@@ -877,6 +893,10 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if options["item"] != nil {
 			message.Embeds[0].Title = fmt.Sprintf("Auction Item: __**%s**__", auctionInfo.Item)
+			_, err := s.ChannelEdit(i.ChannelID, "💸│" + auctionInfo.Item)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 
 		message.Embeds[0].Fields = AuctionFormat(s, auctionInfo).Fields
