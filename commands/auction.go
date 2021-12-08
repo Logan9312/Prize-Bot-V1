@@ -282,6 +282,22 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 					//Autocomplete: true,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency_side",
+					Description: "Left/Right currency",
+					//Autocomplete: true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
 			},
 		},
 	},
