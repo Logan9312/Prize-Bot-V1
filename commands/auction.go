@@ -243,6 +243,13 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					//Autocomplete: true,
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "winner",
+					Description: "Set the current winner",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "extend",
 					Description: "Extend the length of the auction, use a negative value to reduce the time. (Example: 24h, or 1d)",
@@ -417,7 +424,7 @@ func AuctionFormat(s *discordgo.Session, auctionInfo database.Auction) discordgo
 		Inline: true,
 	}, &discordgo.MessageEmbedField{
 		Name:   "__**Current Winner**__",
-		Value:  fmt.Sprintf("<@%s>", auctionInfo.Host),
+		Value:  fmt.Sprintf("<@%s>", auctionInfo.Winner),
 		Inline: true,
 	}, &discordgo.MessageEmbedField{
 		Name:   "__**How to Bid**__",
@@ -893,7 +900,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if options["item"] != nil {
 			message.Embeds[0].Title = fmt.Sprintf("Auction Item: __**%s**__", auctionInfo.Item)
-			_, err := s.ChannelEdit(i.ChannelID, "💸│" + auctionInfo.Item)
+			_, err := s.ChannelEdit(i.ChannelID, "💸│"+auctionInfo.Item)
 			if err != nil {
 				fmt.Println(err)
 			}
