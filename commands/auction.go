@@ -236,6 +236,13 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					//Autocomplete: true,
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "host",
+					Description: "Changes the host",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
 					Type:        10,
 					Name:        "bid",
 					Description: "Change the original bid, or edit the current bid",
@@ -1070,8 +1077,6 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Buyout:       buyout,
 		CurrencySide: info.CurrencySide,
 	}
-
-	fmt.Println(info.CurrencySide)
 
 	if options["schedule"] != nil {
 
