@@ -820,6 +820,22 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 
 	database.DB.Delete(auctionInfo, auctionInfo.ID)
 
+	hasRole := false
+
+	member, err := s.GuildMember("885228283573178408", auctionInfo.Host)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for _, v := range member.Roles {
+			if v == "918264848884854874" {
+				hasRole = true
+			}
+		}
+		if !hasRole {
+			s.GuildMemberRoleAdd("885228283573178408", auctionInfo.Host, "918264848884854874")
+		}
+	}
+
 	time.Sleep(time.Until(auctionInfo.EndTime))
 	AuctionEnd(channel.ID, auctionInfo.GuildID)
 }
