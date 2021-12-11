@@ -929,6 +929,10 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 		}
 
+		if options["image_url"] != nil {
+			message.Embeds[0].Image.URL = strings.Trim(options["image_url"].(string), " ")
+		}
+
 		message.Embeds[0].Fields = AuctionFormat(s, auctionInfo).Fields
 
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
