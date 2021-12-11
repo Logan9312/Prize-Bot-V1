@@ -1009,8 +1009,8 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["description"] != nil {
 		description = options["description"].(string)
 	}
-	if options["image"] != nil {
-		image = options["image"].(string)
+	if options["image_url"] != nil {
+		image = options["image_url"].(string)
 		if !strings.Contains(image, "http") {
 			h.ErrorResponse(s, i, "Image must be an http or https link.")
 			fmt.Println("Image must be an http or https link. Entered image: " + image)
