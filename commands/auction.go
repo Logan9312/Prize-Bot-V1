@@ -931,7 +931,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if options["image_url"] != nil {
 			message.Embeds[0].Image = &discordgo.MessageEmbedImage{
-				URL:      options["image_url"].(string),
+				URL:      strings.Trim(options["image_url"].(string), " "),
 				ProxyURL: "",
 				Width:    0,
 				Height:   0,
