@@ -849,6 +849,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		TargetPrice:  auctionInfo.TargetPrice,
 		Buyout:       auctionInfo.Buyout,
 		CurrencySide: auctionInfo.CurrencySide,
+		IntegerOnly:  auctionInfo.IntegerOnly,
 	})
 
 	database.DB.Delete(auctionInfo, auctionInfo.ID)
@@ -1178,6 +1179,9 @@ func AuctionBidAlternate(s *discordgo.Session, bidData database.Auction) {
 	case bidData.Winner == auction.Winner && bidData.Winner != "280812467775471627" && auction.IncrementMax != 0:
 		h.ErrorMessage(s, bidData.ChannelID, "Cannot out bid yourself on a capped bid auction!")
 		return
+	case auction.IntegerOnly && bidData.Bid != math.Floor(bidData.Bid):
+		h.ErrorMessage(s, bidData.ChannelID, "Your bid must be an integer for this auction! For example: "+fmt.Sprint(math.Floor(bidData.Bid))+" instead of "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidData.Bid), "0"), "."))
+		return
 	case bidData.Bid >= auction.Buyout && auction.Buyout != 0:
 		auction.Bid = bidData.Bid
 		auction.Winner = bidData.Winner
@@ -1325,6 +1329,10 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		h.ErrorResponse(s, i, "Cannot out bid yourself on a capped bid auction!")
 		return
 	}
+
+	fmt.Println(auctionInfo.IntegerOnly)
+	fmt.Println(bidAmount)
+	fmt.Println(math.Floor(bidAmount))
 
 	if auctionInfo.IntegerOnly && bidAmount != math.Floor(bidAmount) {
 		h.ErrorResponse(s, i, "Your bid must be an integer for this auction! For example: "+fmt.Sprint(math.Floor(bidAmount))+" instead of "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
