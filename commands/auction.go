@@ -426,7 +426,7 @@ func AuctionFormat(s *discordgo.Session, auctionInfo database.Auction) discordgo
 		})
 	}
 
-	if !auctionInfo.IntegerOnly {
+	if auctionInfo.IntegerOnly {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**Integer Only Bidding**__",
 			Value:  "All bids must be in integers (No decimals).",
