@@ -1330,10 +1330,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	fmt.Println(auctionInfo.IntegerOnly)
-	fmt.Println(bidAmount)
-	fmt.Println(math.Floor(bidAmount))
-
 	if auctionInfo.IntegerOnly && bidAmount != math.Floor(bidAmount) {
 		h.ErrorResponse(s, i, "Your bid must be an integer for this auction! For example: "+fmt.Sprint(math.Floor(bidAmount))+" instead of "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
 		return
