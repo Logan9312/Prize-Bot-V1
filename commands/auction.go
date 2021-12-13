@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,6 +43,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Name:        "currency",
 					Description: "Sets the auction currency",
 				},
+
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "currency_side",
@@ -57,6 +59,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 							Value: "right",
 						},
 					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
@@ -148,6 +155,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 							Value: "right",
 						},
 					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
 				},
 				{
 					Type:        10,
@@ -294,6 +306,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					},
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
+				},
+				{
 					Type:        10,
 					Name:        "increment_max",
 					Description: "The max amount someone can bid at once",
@@ -405,6 +422,14 @@ func AuctionFormat(s *discordgo.Session, auctionInfo database.Auction) discordgo
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**Target Price**__",
 			Value:  "The host has set a hidden target price for this auction.",
+			Inline: false,
+		})
+	}
+
+	if !auctionInfo.IntegerOnly {
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+			Name:   "__**Integer Only Bidding**__",
+			Value:  "All bids must be in integers (No decimals).",
 			Inline: false,
 		})
 	}
@@ -626,7 +651,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					}
 					responseFields = append(responseFields, &discordgo.MessageEmbedField{
 						Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-						Value: setOptions[v.Name].(string),
+						Value: fmt.Sprint(setOptions[v.Name]),
 					})
 				}
 			}
@@ -724,6 +749,7 @@ func AuctionCreate(s *discordgo.Session, auctionInfo database.AuctionQueue) {
 		TargetPrice:  auctionInfo.TargetPrice,
 		Buyout:       auctionInfo.Buyout,
 		CurrencySide: auctionInfo.CurrencySide,
+		IntegerOnly:  auctionInfo.IntegerOnly,
 	}).Fields
 
 	alertRole := ""
@@ -1044,6 +1070,9 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if options["currency_side"] != nil {
 		info.CurrencySide = options["currency_side"].(string)
 	}
+	if options["integer_only"] != nil {
+		info.IntegerOnly = options["integer_only"].(bool)
+	}
 
 	if options["schedule"] != nil {
 
@@ -1085,6 +1114,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		TargetPrice:  targetPrice,
 		Buyout:       buyout,
 		CurrencySide: info.CurrencySide,
+		IntegerOnly:  info.IntegerOnly,
 	}
 
 	if options["schedule"] != nil {
@@ -1293,6 +1323,11 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if i.Member.User.ID == auctionInfo.Winner && i.Member.User.ID != "280812467775471627" && auctionInfo.IncrementMax != 0 {
 		h.ErrorResponse(s, i, "Cannot out bid yourself on a capped bid auction!")
+		return
+	}
+
+	if auctionInfo.IntegerOnly && bidAmount != math.Floor(bidAmount) {
+		h.ErrorResponse(s, i, "Your bid must be an integer for this auction! For example: "+fmt.Sprint(math.Floor(bidAmount))+" instead of "+strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), "."))
 		return
 	}
 

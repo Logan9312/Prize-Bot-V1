@@ -8,6 +8,20 @@ import (
 	"gorm.io/gorm"
 )
 
+type AuctionSetup struct {
+	GuildID        string `gorm:"primaryKey"`
+	Category       string
+	AlertRole      string
+	Currency       string
+	LogChannel     string
+	Claiming       string
+	HostRole       string
+	SnipeExtension time.Duration
+	SnipeRange     time.Duration
+	CurrencySide   string
+	IntegerOnly    bool
+}
+
 type Auction struct {
 	ChannelID      string `gorm:"primaryKey"`
 	Bid            float64
@@ -27,6 +41,30 @@ type Auction struct {
 	SnipeExtension time.Duration
 	SnipeRange     time.Duration
 	CurrencySide   string
+	IntegerOnly    bool
+}
+
+type AuctionQueue struct {
+	ID           int `gorm:"primaryKey"`
+	Bid          float64
+	StartTime    time.Time
+	EndTime      time.Time
+	GuildID      string
+	Item         string
+	Host         string
+	Currency     string
+	IncrementMin float64
+	IncrementMax float64
+	Description  string
+	ImageURL     string
+	Category     string
+	TargetPrice  float64
+	Buyout       float64
+	CurrencySide string
+	IntegerOnly  bool
+}
+
+type AuctionClaim struct {
 }
 
 type Giveaway struct {
@@ -44,46 +82,11 @@ type Giveaway struct {
 	WinnerOutput string
 }
 
-type AuctionQueue struct {
-	ID             int `gorm:"primaryKey"`
-	Bid            float64
-	StartTime      time.Time
-	EndTime        time.Time
-	GuildID        string
-	Item           string
-	Host           string
-	Currency       string
-	IncrementMin   float64
-	IncrementMax   float64
-	Description    string
-	ImageURL       string
-	Category       string
-	TargetPrice    float64
-	Buyout         float64
-	CurrencySide   string
-}
-
-type AuctionSetup struct {
-	GuildID        string `gorm:"primaryKey"`
-	Category       string
-	AlertRole      string
-	Currency       string
-	LogChannel     string
-	Claiming       string
-	HostRole       string
-	SnipeExtension time.Duration
-	SnipeRange     time.Duration
-	CurrencySide   string
-}
-
 type GiveawaySetup struct {
 	GuildID   string `gorm:"primaryKey"`
 	HostRole  string
 	AlertRole string
 	Claiming  string
-}
-
-type AuctionClaim struct {
 }
 
 type UserProfile struct {
