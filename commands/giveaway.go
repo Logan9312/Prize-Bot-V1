@@ -512,7 +512,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 	}
 	giveawayInfo.Finished = true
 	if giveawayInfo.WinnerOutput != "" {
-		err = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		err = s.ChannelMessageDelete(m.ChannelID, giveawayInfo.WinnerOutput)
 		if err != nil {
 			fmt.Println(err)
 		}
