@@ -239,9 +239,9 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		imageURL = options["image"].(string)
 	}
 
-	description := fmt.Sprintf("**%s** Winners!", fmt.Sprint(winners))
+	description := fmt.Sprintf("**%s** Winners!\n", fmt.Sprint(winners))
 	if options["description"] != nil {
-		description = options["description"].(string)
+		description += options["description"].(string)
 	}
 	guild, err := s.Guild(i.GuildID)
 	if err != nil {

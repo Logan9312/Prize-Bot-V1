@@ -1661,7 +1661,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, v := range AuctionQueue {
 
 		fields = append(fields, &discordgo.MessageEmbedField{
-			Name: fmt.Sprintf("**%s%s**", fmt.Sprint(len(fields)+1), v.Item),
+			Name: fmt.Sprintf("**%s. %s**", fmt.Sprint(len(fields)+1), v.Item),
 			Value: fmt.Sprintf("**Start time:** <t:%d:R>\n**End Time:** <t:%d>\n**Starting Price:** %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), PriceFormat(database.Auction{
 				Currency:     v.Currency,
 				CurrencySide: v.CurrencySide,
