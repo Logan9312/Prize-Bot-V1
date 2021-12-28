@@ -34,7 +34,7 @@ func main() {
 	//Connects main bot
 	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
 
-	fmt.Println("Bot is running! To stop, use: docker kill $(docker ps -q)")
+	fmt.Println("Bot is running!")
 
 	routers.BotStatus()
 }
