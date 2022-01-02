@@ -1190,6 +1190,9 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		}
 
 		bidHistory := auctionMap["bid_history"].(string)
+		if len(bidHistory) > 4095 {
+			bidHistory = bidHistory[len(bidHistory)-4095:]
+		}
 
 		m, err := AuctionFormat(s, auctionMap)
 		if err != nil {
@@ -1201,7 +1204,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		if len(updateAuction.Embeds) != 2 {
 			updateAuction.Embeds = append(updateAuction.Embeds, &discordgo.MessageEmbed{
 				Title:       "**Bid History**",
-				Description: bidHistory[len(bidHistory)-4095:],
+				Description: bidHistory,
 				Color:       0x8073ff,
 				Image: &discordgo.MessageEmbedImage{
 					URL: "https://i.imgur.com/9wo7diC.png",
