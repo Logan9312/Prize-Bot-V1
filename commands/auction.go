@@ -890,6 +890,10 @@ func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) erro
 		return err
 	}
 
+	if auctionMap["category"] == nil {
+		auctionMap["category"] = ""
+	}
+
 	channel, err := s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
 		Name:     "💸│" + auctionMap["item"].(string),
 		Type:     0,
