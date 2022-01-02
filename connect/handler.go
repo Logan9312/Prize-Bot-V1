@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
@@ -39,6 +40,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.ClearAuctionButton(s, i)
 		case "delete_auction_queue":
 			c.DeleteAuctionQueue(s, i)
+		case "delete_auction_channel":
+			c.DeleteAuctionChannel(s, i)
 		case "enter_giveaway":
 			c.GiveawayEnter(s, i)
 		case "claim_giveaway":
@@ -94,12 +97,20 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println(err)
 				return
 			}
-			c.AuctionBidAlternate(s, database.Auction{
+			response, err := c.AuctionBidFormat(s, database.Auction{
 				ChannelID: m.ChannelID,
 				Bid:       bidAmount,
 				Winner:    m.Author.ID,
 				GuildID:   m.GuildID,
 			})
+			message, err := h.SuccessMessage(s, m.ChannelID, response)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			time.Sleep(10 * time.Second)
+			s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+			s.ChannelMessageDelete(m.ChannelID, message.ID)
 		}
 	}
 

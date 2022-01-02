@@ -64,7 +64,13 @@ type AuctionQueue struct {
 	IntegerOnly  bool
 }
 
-type AuctionClaim struct {
+type Claim struct {
+	MessageID  string `gorm:"primaryKey"`
+	Type       string
+	Winner     string
+	Cost       string
+	Owner      string
+	Bidhistory string
 }
 
 type Giveaway struct {
@@ -106,7 +112,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{})
+	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, Claim{})
 	if err != nil {
 		fmt.Println(err)
 	}

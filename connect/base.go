@@ -40,7 +40,7 @@ func BotConnect(token, environment, botName string) {
 		fmt.Println("discordgo.New error:" + err.Error())
 	}
 
-	s.ChannelMessageSend("915768633752449054", "Bot has finished restarting")
+	defer s.ChannelMessageSend("915768633752449054", "Bot has finished restarting")
 
 	commands.Session = s
 
@@ -93,59 +93,59 @@ func BotConnect(token, environment, botName string) {
 
 func Timers(s *discordgo.Session) {
 
-	var Auctions []database.Auction
-	var AuctionQueue []database.AuctionQueue
-	var Giveaways []database.Giveaway
+	var Auctions []map[string]interface{}
+	var AuctionQueue []map[string]interface{}
+	var Giveaways []map[string]interface{}
 
 	fmt.Println("Beginning Startup Timers")
 
-	database.DB.Find(&Auctions)
+	database.DB.Model([]database.Auction{}).Find(&Auctions)
 	for _, v := range Auctions {
 		go AuctionEndTimer(v, s)
 	}
 
-	database.DB.Find(&AuctionQueue)
+	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
 	for _, v := range AuctionQueue {
 		go AuctionStartTimer(v, s)
 	}
 
-	database.DB.Find(&Giveaways)
+	database.DB.Model([]database.Giveaway{}).Find(&Giveaways)
 	for _, v := range Giveaways {
 		go GiveawayEndTimer(v, s)
 	}
 }
 
-func AuctionEndTimer(v database.Auction, s *discordgo.Session) {
-	fmt.Println("Auction Timer Re-Started: ", v.Item, "GuildID: ", v.GuildID, "ImageURL", v.ImageURL, "Host", v.Host, "End Time", v.EndTime.String())
-	if v.EndTime.Before(time.Now()) {
-		commands.AuctionEnd(v.ChannelID, v.GuildID)
+func AuctionEndTimer(v map[string]interface{}, s *discordgo.Session) {
+	fmt.Println("Auction Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
+	if v["end_time"].(time.Time).Before(time.Now()) {
+		commands.AuctionEnd(v)
 	} else {
-		time.Sleep(time.Until(v.EndTime))
-		commands.AuctionEnd(v.ChannelID, v.GuildID)
+		time.Sleep(time.Until(v["end_time"].(time.Time)))
+		commands.AuctionEnd(v)
 	}
 }
 
-func AuctionStartTimer(v database.AuctionQueue, s *discordgo.Session) {
-	fmt.Println("Auction Re-Queued: ", v.Item, "GuildID: ", v.GuildID, "ImageURL", v.ImageURL, "Host", v.Host, "Start Time", v.StartTime.String())
-	if v.StartTime.Before(time.Now()) {
+func AuctionStartTimer(v map[string]interface{}, s *discordgo.Session) {
+	fmt.Println("Auction Re-Queued: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "Start Time", v["start_time"].(time.Time).String())
+	if v["start_time"].(time.Time).Before(time.Now()) {
 		commands.AuctionCreate(s, v)
 	} else {
-		time.Sleep(time.Until(v.StartTime))
+		time.Sleep(time.Until(v["start_time"].(time.Time)))
 		commands.AuctionCreate(s, v)
 	}
 }
 
-func GiveawayEndTimer(v database.Giveaway, s *discordgo.Session) {
-	fmt.Println("Giveaway Timer Re-Started: ", v.Item, "GuildID: ", v.GuildID, "ImageURL", v.ImageURL, "Host", v.Host, "End Time", v.EndTime.String())
-	if v.EndTime.Before(time.Now()) {
-		if v.Finished {
-			time.Sleep(time.Until(v.EndTime.Add(24 * time.Hour)))
-			database.DB.Delete(database.Giveaway{}, v.MessageID)
+func GiveawayEndTimer(v map[string]interface{}, s *discordgo.Session) {
+	fmt.Println("Giveaway Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
+	if v["end_time"].(time.Time).Before(time.Now()) {
+		if v["finished"].(bool) {
+			time.Sleep(time.Until(v["end_time"].(time.Time).Add(24 * time.Hour)))
+			database.DB.Delete(database.Giveaway{}, v["message_id"].(string))
 		} else {
-			commands.GiveawayEnd(commands.Session, v.MessageID)
+			commands.GiveawayEnd(commands.Session, v["message_id"].(string))
 		}
 	} else {
-		time.Sleep(time.Until(v.EndTime))
-		commands.GiveawayEnd(commands.Session, v.MessageID)
+		time.Sleep(time.Until(v["end_time"].(time.Time)))
+		commands.GiveawayEnd(commands.Session, v["message_id"].(string))
 	}
 }

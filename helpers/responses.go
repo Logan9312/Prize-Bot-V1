@@ -1,6 +1,8 @@
 package helpers
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
 /*type PresetMessageComplex struct {
 	Content     string `json:"content,omitempty"`
@@ -24,7 +26,7 @@ type PresetResponse struct {
 	Thumbnail   *discordgo.MessageEmbedThumbnail
 	Image       *discordgo.MessageEmbedImage
 	Components  []discordgo.MessageComponent
-	//Embeds          []*discordgo.MessageEmbed         `json:"embeds,omitempty"`
+	Embeds      []*discordgo.MessageEmbed `json:"embeds,omitempty"`
 
 	//Flags uint64 `json:"flags,omitempty"`
 
@@ -111,21 +113,26 @@ func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Messa
 }
 
 func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
+
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       r.Title,
+			Description: r.Description,
+			Color:       0x8073ff,
+			Image:       r.Image,
+			Thumbnail:   r.Thumbnail,
+			Fields:      r.Fields,
+		},
+	}
+
+	embed = append(embed, r.Embeds...)
+
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content:    r.Content,
 			Components: r.Components,
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       r.Title,
-					Description: r.Description,
-					Color:       0x8073ff,
-					Image:       r.Image,
-					Thumbnail:   r.Thumbnail,
-					Fields:      r.Fields,
-				},
-			},
+			Embeds: embed,
 			Flags: 64,
 		},
 	})
@@ -205,18 +212,23 @@ func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 }
 
 func PresetMessageSend(s *discordgo.Session, channelID string, m PresetResponse) (*discordgo.Message, error) {
-	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
-		Content: m.Content,
-		Embeds: []*discordgo.MessageEmbed{
-			{
-				Title:       m.Title,
-				Description: m.Description,
-				Color:       0x8073ff,
-				Fields:      m.Fields,
-				Thumbnail:   m.Thumbnail,
-				Image:       m.Image,
-			},
+
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       m.Title,
+			Description: m.Description,
+			Color:       0x8073ff,
+			Fields:      m.Fields,
+			Thumbnail:   m.Thumbnail,
+			Image:       m.Image,
 		},
+	}
+
+	embed = append(embed, m.Embeds...)
+
+	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Content:    m.Content,
+		Embeds:     embed,
 		Components: m.Components,
 	})
 }
@@ -228,6 +240,22 @@ func PremiumResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 		Value:  "Eventually this is gonna be a premium feature, since it's just for convenience and it took more effort to create. For now though, its free for all users!",
 		Inline: false,
 	})
+
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       r.Title,
+			Description: r.Description,
+			Color:       0xffd700,
+			Footer:      &discordgo.MessageEmbedFooter{},
+			Image:       r.Image,
+			Thumbnail:   r.Thumbnail,
+			Video:       &discordgo.MessageEmbedVideo{},
+			Author:      &discordgo.MessageEmbedAuthor{},
+			Fields:      r.Fields,
+		},
+	}
+
+	embed = append(embed, r.Embeds...)
 
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -250,19 +278,7 @@ func PremiumResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 					},
 				},
 			},
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       r.Title,
-					Description: r.Description,
-					Color:       0xffd700,
-					Footer:      &discordgo.MessageEmbedFooter{},
-					Image:       r.Image,
-					Thumbnail:   r.Thumbnail,
-					Video:       &discordgo.MessageEmbedVideo{},
-					Author:      &discordgo.MessageEmbedAuthor{},
-					Fields:      r.Fields,
-				},
-			},
+			Embeds: embed,
 			Flags: 64,
 		},
 	})
