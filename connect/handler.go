@@ -115,11 +115,11 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println(err)
 			}
 			if message != nil {
-			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
-			if err != nil {
-				fmt.Println(err)
+				err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
-		}
 		}
 	}
 
