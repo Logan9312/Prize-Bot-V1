@@ -1622,7 +1622,7 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User have administrator permissions to run this command")
+		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
 		return
 	}
 
