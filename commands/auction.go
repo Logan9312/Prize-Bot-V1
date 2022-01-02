@@ -1638,6 +1638,7 @@ func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := i.MessageComponentData().Values
+	clearedMap := map[string]interface{}{}
 
 	info := database.AuctionSetup{
 		GuildID: i.GuildID,
@@ -1650,9 +1651,10 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 
 	for _, v := range options {
 		clearedSettings += fmt.Sprintf("• %s\n", strings.Title(strings.ReplaceAll(v, "_", " ")))
+		clearedMap[v] = nil
 	}
 
-	database.DB.Model(&info).Select(options).Updates(map[string]interface{}{})
+	database.DB.Model(&info).Select(options).Updates(clearedMap)
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Cleared Auction Settings**",
