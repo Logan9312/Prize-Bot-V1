@@ -572,7 +572,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 
 			if setOptions["snipe_range"] != nil && setOptions["snipe_extension"] != nil {
-				antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", fmt.Sprint(setOptions["snipe_range"]), fmt.Sprint(setOptions["snipe_extension"]))
+				antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", setOptions["snipe_range"].(time.Duration).String(), setOptions["snipe_extension"].(time.Duration).String())
 			}
 
 			responseFields = append(responseFields, &discordgo.MessageEmbedField{
