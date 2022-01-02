@@ -541,7 +541,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			for _, v := range AuctionCommand.Options[n].Options {
 				if !strings.Contains(v.Name, "snipe") {
 					switch {
-					case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
+					case setOptions[v.Name] == nil:
 						setOptions[v.Name] = "Not Set"
 					case strings.Contains(v.Name, "role"):
 						setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
@@ -563,7 +563,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 			}
 
-			if setOptions["snipe_range"].(time.Duration) == 0 || setOptions["snipe_extension"].(time.Duration) == 0 {
+			if setOptions["snipe_range"] == nil || setOptions["snipe_extension"] == nil {
 				antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
 			}
 
@@ -1227,7 +1227,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		fmt.Println(result.Error.Error())
 	}
 
-	if auctionMap["buyout"] != nil {
+	if auctionMap["buyout"] != nil && auctionMap["buyout"].(float64) != 0 {
 		if auctionMap["bid"].(float64) < auctionMap["buyout"].(float64) && auctionMap["end_time"].(time.Time).After(time.Now()) {
 			time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 			AuctionEnd(auctionMap)
@@ -1311,7 +1311,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	}
 	finalBid := fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap, auctionMap["bid"].(float64)))
 
-	if auctionMap["buyout"] != nil {
+	if auctionMap["buyout"] != nil && auctionMap["buyout"].(float64) != 0 {
 		if auctionMap["bid"].(float64) >= auctionMap["buyout"].(float64) {
 			finalBid = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap, auctionMap["buyout"].(float64))) + " BUYOUT!"
 		}
@@ -1639,8 +1639,6 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 
 	options := i.MessageComponentData().Values
 
-	clearedValues := map[string]interface{}{}
-
 	info := database.AuctionSetup{
 		GuildID: i.GuildID,
 	}
@@ -1651,22 +1649,10 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 
 	for _, v := range options {
-		switch v {
-		case "snipe_extension", "snipe_range":
-			clearedValues[v] = 0
-		default:
-			clearedValues[v] = ""
-		}
 		clearedSettings += fmt.Sprintf("• %s\n", strings.Title(strings.ReplaceAll(v, "_", " ")))
 	}
 
-	fmt.Println(info)
-
-	database.DB.Model(&info).Updates(clearedValues)
-
-	database.DB.First(&info)
-
-	fmt.Println(info)
+	database.DB.Model(&info).Select(options).Updates(map[string]interface{}{})
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Cleared Auction Settings**",
