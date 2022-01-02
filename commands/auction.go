@@ -916,9 +916,8 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := h.ParseSubCommand(i)
 
 	auctionMap := map[string]interface{}{}
-	result := database.DB.Model(database.Auction{
-		ChannelID: i.ChannelID,
-	}).First(&auctionMap)
+	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
+	fmt.Println("ChannelID: ", i.ChannelID)
 
 	if result.Error != nil {
 		fmt.Println(result.Error)
