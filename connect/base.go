@@ -82,7 +82,7 @@ func BotConnect(token, environment, botName string) {
 
 	Timers(s)
 
-	err = s.UpdateGameStatus(0, "Bot Version v0.9.3")
+	err = s.UpdateGameStatus(0, "Bot Version v0.9.4")
 	if err != nil {
 		fmt.Println(err)
 		return
