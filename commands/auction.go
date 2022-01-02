@@ -1149,7 +1149,9 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		auctionMap["bid"] = bidData.Bid
 		auctionMap["winner"] = bidData.Winner
 
-		database.DB.Model(database.Auction{}).Updates(auctionMap)
+		database.DB.Model(database.Auction{
+			ChannelID: bidData.ChannelID,
+		}).Updates(auctionMap)
 
 		response = h.PresetResponse{
 			Title:       "Success!",
