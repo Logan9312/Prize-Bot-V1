@@ -104,6 +104,10 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Winner:    m.Author.ID,
 				GuildID:   m.GuildID,
 			})
+			if err != nil {
+				fmt.Println(err)
+				h.ErrorMessage(m.ChannelID, err.Error())
+			}
 			message, err := h.SuccessMessage(s, m.ChannelID, response)
 			if err != nil {
 				fmt.Println(err)
