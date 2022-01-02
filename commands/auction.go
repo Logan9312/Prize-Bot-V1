@@ -993,6 +993,10 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
+		for key, value := range auctionMap {
+			fmt.Println(key, value)
+		}
+
 		message, err := s.ChannelMessage(i.ChannelID, auctionMap["message_id"].(string))
 		if err != nil {
 			fmt.Println("Error fetching message", err)
@@ -1024,6 +1028,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			ID:         message.ID,
 			Channel:    i.ChannelID,
 		})
+
 		if err != nil {
 			fmt.Println(err)
 			h.ErrorResponse(s, i, err.Error())
