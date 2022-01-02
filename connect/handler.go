@@ -110,8 +110,16 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 			time.Sleep(10 * time.Second)
-			s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
-			s.ChannelMessageDelete(m.ChannelID, message.ID)
+			err = s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if message != nil {
+			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 		}
 	}
 
