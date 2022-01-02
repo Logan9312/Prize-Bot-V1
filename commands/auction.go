@@ -620,7 +620,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 		imageURL = auctionMap["image_url"].(string)
 	}
 
-	description := fmt.Sprintf("**HOST:** <@%s>.\n", auctionMap["host"])
+	description := fmt.Sprintf("**Host:** <@%s>.\n", auctionMap["host"])
 
 	if auctionMap["description"] != nil {
 		description += fmt.Sprintf("**Description:** %s\n", auctionMap["description"])
@@ -698,8 +698,6 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 		content = fmt.Sprintf("<@&%s>", strings.Trim(auctionMap["alert_role"].(string), " "))
 	}
 
-	fmt.Println("Done formatting")
-
 	return h.PresetResponse{
 		Content: content,
 		Title:   fmt.Sprintf("Item: __**%s**__", auctionMap["item"]),
@@ -740,14 +738,17 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	auctionMap := h.ParseSubCommand(i)
-	info := database.AuctionSetup{
-		GuildID: i.GuildID,
-	}
+	auctionSetup := map[string]interface{}{}
 
-	database.DB.Model(&info).First(&info)
+	database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
 	auctionMap["guild_id"] = i.GuildID
 	auctionMap["host"] = i.Member.User.ID
-	auctionMap["category"] = info.Category
+
+	for _, key := range []string{"category", "alert_role", "currency", "snipe_extension", "snipe_range", "currency_side", "integer_only"} {
+		if auctionMap[key] == nil {
+			auctionMap[key] = auctionSetup[key]
+		}
+	}
 
 	endTimeDuration, err := h.ParseTime(strings.ToLower(auctionMap["duration"].(string)))
 	if err != nil {
@@ -760,9 +761,9 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	canHost := false
 
-	if info.HostRole != "" {
+	if auctionSetup["host_role"] != nil {
 		for _, v := range i.Member.Roles {
-			if v == info.HostRole {
+			if v == auctionSetup["host_role"].(string) {
 				canHost = true
 			}
 		}
@@ -770,22 +771,16 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			canHost = true
 		}
 		if !canHost {
-			h.ErrorResponse(s, i, "User must be administrator or have the role <@&"+info.HostRole+"> to host auctions.")
+			h.ErrorResponse(s, i, "User must be administrator or have the role <@&"+auctionSetup["host_role"].(string)+"> to host auctions.")
 			return
 		}
 	}
-
-	for key, value := range auctionMap {
-		auctionMap[key] = value
-	}
-
-	//Add a preview of the auction to the response when making a scheduled auction
 
 	if auctionMap["schedule"] != nil {
 
 		var AuctionQueue []database.AuctionQueue
 
-		database.DB.Where(map[string]interface{}{"guild_id": info.GuildID}).Find(&AuctionQueue)
+		database.DB.Where(map[string]interface{}{"guild_id": i.GuildID}).Find(&AuctionQueue)
 
 		if len(AuctionQueue) >= 25 {
 			h.ErrorResponse(s, i, "You can only schedule 25 auctions in advance.")
@@ -822,7 +817,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			Embeds: []*discordgo.MessageEmbed{
 				{
-					Title:       exampleMessage.Title + " [__**PREVIEW:**__]",
+					Title:       "[__**PREVIEW:**__] " + exampleMessage.Title,
 					Description: exampleMessage.Description,
 					Color:       0x8073ff,
 					Image:       exampleMessage.Image,
@@ -917,7 +912,6 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	auctionMap := map[string]interface{}{}
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
-	fmt.Println("ChannelID: ", i.ChannelID)
 
 	if result.Error != nil {
 		fmt.Println(result.Error)
@@ -990,10 +984,6 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if auctionMap["message_id"] == nil {
 			h.ErrorResponse(s, i, "No auction found in this channel")
 			return
-		}
-
-		for key, value := range auctionMap {
-			fmt.Println(key, value)
 		}
 
 		message, err := s.ChannelMessage(i.ChannelID, auctionMap["message_id"].(string))
