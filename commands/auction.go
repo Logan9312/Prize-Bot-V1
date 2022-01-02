@@ -502,7 +502,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	result := database.DB.Clauses(clause.OnConflict{
 		DoNothing: true,
-	}).Create(&info)
+	}).Model(database.AuctionSetup{}).Create(&info)
 
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
