@@ -744,7 +744,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	auctionMap["guild_id"] = i.GuildID
 	auctionMap["host"] = i.Member.User.ID
 
-	for _, key := range []string{"category", "alert_role", "currency", "snipe_extension", "snipe_range", "currency_side", "integer_only"} {
+	for _, key := range []string{"category", "currency", "snipe_extension", "snipe_range", "currency_side", "integer_only"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
