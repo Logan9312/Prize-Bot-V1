@@ -31,7 +31,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case 3:
-		switch i.MessageComponentData().CustomID {
+
+		switch strings.Split(i.MessageComponentData().CustomID, ":")[0] {
 		case "endauction":
 			c.AuctionEndButton(s, i)
 		case "claim_prize":

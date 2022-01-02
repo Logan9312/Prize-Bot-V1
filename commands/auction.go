@@ -496,8 +496,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	info := database.AuctionSetup{
-		GuildID: i.GuildID,
+	info := map[string]interface{}{
+		"guild_id": i.GuildID,
 	}
 
 	result := database.DB.Clauses(clause.OnConflict{
@@ -525,14 +525,22 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	}
 
-	database.DB.Model(&info).Updates(options)
+	result = database.DB.Model(database.AuctionSetup{
+		GuildID: i.GuildID,
+	}).Updates(options)
+
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
 
 	//Now check what options are set
 	setOptions := map[string]interface{}{}
 
 	database.DB.Model(database.AuctionSetup{}).First(&setOptions, i.GuildID)
 
-	antiSnipeDescription := fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", info.SnipeRange.String(), info.SnipeExtension.String())
+	antiSnipeDescription := "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
 
 	responseFields := []*discordgo.MessageEmbedField{}
 
@@ -541,7 +549,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			for _, v := range AuctionCommand.Options[n].Options {
 				if !strings.Contains(v.Name, "snipe") {
 					switch {
-					case setOptions[v.Name] == nil:
+					case setOptions[v.Name] == nil, setOptions[v.Name] == "":
 						setOptions[v.Name] = "Not Set"
 					case strings.Contains(v.Name, "role"):
 						setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
@@ -563,8 +571,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 			}
 
-			if setOptions["snipe_range"] == nil || setOptions["snipe_extension"] == nil {
-				antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
+			if setOptions["snipe_range"] != nil || setOptions["snipe_extension"] != nil {
+				antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", info["snipe_range"].(time.Duration).String(), info["snipe_extension"].(time.Duration).String())
 			}
 
 			responseFields = append(responseFields, &discordgo.MessageEmbedField{
@@ -580,6 +588,10 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Value:       v.Name,
 					Description: v.Description,
 				})
+			}
+
+			for _, v := range responseFields {
+				fmt.Println(v.Name, v.Value)
 			}
 
 			err = h.SuccessResponse(s, i, h.PresetResponse{
@@ -653,12 +665,12 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 		{
 			Name:   "__**Auction Details:**__",
 			Value:  description,
-			Inline: false,
+			Inline: true,
 		},
 		{
 			Name:   "__**End Time**__",
 			Value:  fmt.Sprintf("<t:%d:R>", auctionMap["end_time"].(time.Time).Unix()),
-			Inline: false,
+			Inline: true,
 		},
 	}
 
@@ -671,22 +683,20 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 			Name:   "__**Current Winner**__",
 			Value:  fmt.Sprintf("<@%s>", auctionMap["winner"]),
 			Inline: true,
-		}, &discordgo.MessageEmbedField{
-			Name:   "__**How to Bid**__",
-			Value:  "Use the command `/auction bid` below.\n• Ex: `/auction bid 550`.\n**Alternate Method:** reply to this auction or @ the bot with `bid <amount>`",
-			Inline: false,
 		})
 	} else {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**Starting Bid:**__",
 			Value:  PriceFormat(auctionMap, auctionMap["bid"].(float64)),
 			Inline: true,
-		}, &discordgo.MessageEmbedField{
-			Name:   "__**How to Bid**__",
-			Value:  "Use the command `/auction bid` below.\n• Ex: `/auction bid 550`.\n**Alternate Method:** reply to this auction or @ the bot with `bid <amount>`",
-			Inline: false,
 		})
 	}
+
+	auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
+		Name:   "__**How to Bid**__",
+		Value:  "Use the command `/auction bid` below.\n• Ex: `/auction bid 550`.\n**Alternate Method:** reply to this auction or @ the bot with `bid <amount>`",
+		Inline: false,
+	})
 
 	guild, err := s.Guild(auctionMap["guild_id"].(string))
 	if err != nil {
@@ -1056,10 +1066,6 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		options = h.ParseSubCommand(i)
 	}
 
-	for key, value := range options {
-		fmt.Println(key, value)
-	}
-
 	message, err := AuctionBidFormat(s, database.Auction{
 		ChannelID: i.ChannelID,
 		Bid:       options["amount"].(float64),
@@ -1220,6 +1226,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		GuildID: auctionMap["guild_id"].(string),
 	}
 	username := ""
+	winnerID := ""
 	imageURL := "https://i.imgur.com/9wo7diC.png"
 
 	result := database.DB.First(&AuctionSetup)
@@ -1298,6 +1305,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		if err != nil {
 			fmt.Println(err)
 		}
+		winnerID = auctionMap["winner"].(string)
 		username = fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
 		auctionMap["winner"] = "<@" + auctionMap["winner"].(string) + ">"
 	}
@@ -1318,7 +1326,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	}
 
 	_, err = h.SuccessMessage(Session, AuctionSetup.LogChannel, h.PresetResponse{
-		Content:     auctionWinner,
+		Content:     fmt.Sprintf("<@%s>", winnerID),
 		Title:       "Auction Completed!",
 		Description: description,
 		Fields: []*discordgo.MessageEmbedField{
@@ -1352,7 +1360,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 							Name: "cryopod",
 							ID:   "889307390690885692",
 						},
-						CustomID: "claim_prize",
+						CustomID: "claim_prize:" + winnerID,
 					},
 				},
 			},
@@ -1546,6 +1554,24 @@ func DeleteAuctionChannel(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var AuctionSetup database.AuctionSetup
+
+	idSlice := strings.Split(i.MessageComponentData().CustomID, ":")
+	if len(idSlice) == 2 {
+		if idSlice[1] != i.Member.User.ID {
+			h.ErrorResponse(s, i, "UserID does not match. You can only claim your own prizes")
+			return
+		}
+	} else {
+		err := h.SuccessResponse(s, i, h.PresetResponse{
+			Title:       "Claim Prize",
+			Description: "This button was created before the Claim Prize update, and has no ID saved so the bot cannot easily verify if you are the winner. Contact the auction host to claim.",
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		return
+	}
+
 	database.DB.First(&AuctionSetup, i.GuildID)
 
 	if AuctionSetup.Claiming == "" {
