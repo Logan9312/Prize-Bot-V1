@@ -620,10 +620,39 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 		imageURL = auctionMap["image_url"].(string)
 	}
 
+	description := fmt.Sprintf("**HOST:** <@%s>.\n", auctionMap["host"])
+
+	if auctionMap["description"] != nil {
+		description += fmt.Sprintf("**Description:** %s\n", auctionMap["description"])
+	}
+	if auctionMap["increment_min"] != nil {
+		description += fmt.Sprintf("**Minimum Bid:** + %s above previous.\n", PriceFormat(auctionMap, auctionMap["increment_min"].(float64)))
+	}
+
+	if auctionMap["increment_max"] != nil {
+		description += fmt.Sprintf("**Maximum Bid:** + %s above previous.\n", PriceFormat(auctionMap, auctionMap["increment_max"].(float64)))
+	}
+
+	if auctionMap["target_price"] != nil {
+		description += "**Target Price:** The host has set a hidden target price for this auction.\n"
+	}
+
+	if auctionMap["integer_only"] != nil {
+		description += fmt.Sprintf("**Integer Only:** %s.\n", auctionMap["integer_only"])
+	}
+
+	if auctionMap["snipe_extension"] != nil && auctionMap["snipe_range"] != nil {
+		description += fmt.Sprintf("**Anti Snipe:** If a bid is placed within the last %s, the auction will be extended by %s.\n", auctionMap["snipe_range"], auctionMap["snipe_extension"].(time.Duration).String())
+	}
+
+	if auctionMap["buyout"] != nil {
+		description += fmt.Sprintf("**Buyout Price:** %s.\n", PriceFormat(auctionMap, auctionMap["buyout"].(float64)))
+	}
+
 	auctionfields := []*discordgo.MessageEmbedField{
 		{
-			Name:   "__**Hosted By**__",
-			Value:  fmt.Sprintf("<@%s>", auctionMap["host"]),
+			Name:   "__**Auction Details:**__",
+			Value:  description,
 			Inline: false,
 		},
 		{
@@ -631,61 +660,6 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 			Value:  fmt.Sprintf("<t:%d:R>", auctionMap["end_time"].(time.Time).Unix()),
 			Inline: false,
 		},
-	}
-
-	if auctionMap["description"] != "" && auctionMap["description"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Item Description**__",
-			Value:  auctionMap["description"].(string),
-			Inline: false,
-		})
-	}
-
-	if auctionMap["increment_min"] != nil || auctionMap["increment_max"] != nil {
-		bidRanges := ""
-		if auctionMap["increment_min"] != nil {
-			bidRanges += fmt.Sprintf("• Minimum %s above previous bid\n", PriceFormat(auctionMap, auctionMap["increment_min"].(float64)))
-		}
-		if auctionMap["increment_max"] != nil {
-			bidRanges += fmt.Sprintf("• Maximum %s above previous bid", PriceFormat(auctionMap, auctionMap["increment_max"].(float64)))
-		}
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Bid Range**__",
-			Value:  bidRanges,
-			Inline: false,
-		})
-	}
-
-	if auctionMap["target_price"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Target Price**__",
-			Value:  "The host has set a hidden target price for this auction.",
-			Inline: false,
-		})
-	}
-
-	if auctionMap["integer_only"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Integer Only Bidding**__",
-			Value:  "Integer only bidding has been set to: " + fmt.Sprint(auctionMap["integer_only"]),
-			Inline: false,
-		})
-	}
-
-	if auctionMap["snipe_extension"] != nil && auctionMap["snipe_range"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Anti-Snipe**__",
-			Value:  fmt.Sprintf("Anti-Snipe has been enabled for this auction. If a bid is placed within the last %s, the auction will be extended by %s.", auctionMap["snipe_range"], auctionMap["snipe_extension"].(time.Duration).String()),
-			Inline: false,
-		})
-	}
-
-	if auctionMap["buyout"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Buyout Price**__",
-			Value:  PriceFormat(auctionMap, auctionMap["buyout"].(float64)),
-			Inline: false,
-		})
 	}
 
 	if auctionMap["winner"] != nil {
@@ -728,7 +702,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 
 	return h.PresetResponse{
 		Content: content,
-		Title:   fmt.Sprintf("Auction Item: __**%s**__", auctionMap["item"]),
+		Title:   fmt.Sprintf("Item: __**%s**__", auctionMap["item"]),
 		Fields:  auctionfields,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: guild.IconURL(),
