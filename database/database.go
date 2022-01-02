@@ -42,6 +42,7 @@ type Auction struct {
 	SnipeRange     time.Duration
 	CurrencySide   string
 	IntegerOnly    bool
+	BidHistory     string
 }
 
 type AuctionQueue struct {
@@ -68,9 +69,9 @@ type Claim struct {
 	MessageID  string `gorm:"primaryKey"`
 	Type       string
 	Winner     string
-	Cost       string
+	Cost       float64
 	Owner      string
-	Bidhistory string
+	BidHistory string
 }
 
 type Giveaway struct {

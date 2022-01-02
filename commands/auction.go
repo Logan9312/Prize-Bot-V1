@@ -1123,6 +1123,23 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		auctionMap["bid"] = bidData.Bid
 		auctionMap["winner"] = bidData.Winner
 
+		user, err := s.GuildMember(bidData.GuildID, bidData.Winner)
+		if err != nil {
+			return response, err
+		}
+		username := user.Nick
+		if username == "" {
+			username = user.User.Username
+		}
+
+		bidAmount := bidData.Bid
+
+		if auctionMap["bid_history"] == nil {
+			auctionMap["bid_history"] = ""
+		}
+
+		auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
+
 		database.DB.Model(database.Auction{
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
@@ -1146,6 +1163,23 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		auctionMap["bid"] = bidData.Bid
 		auctionMap["winner"] = bidData.Winner
 
+		user, err := s.GuildMember(bidData.GuildID, bidData.Winner)
+		if err != nil {
+			return response, err
+		}
+		username := user.Nick
+		if username == "" {
+			username = user.User.Username
+		}
+
+		bidAmount := bidData.Bid
+
+		if auctionMap["bid_history"] == nil {
+			auctionMap["bid_history"] = ""
+		}
+
+		auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
+
 		database.DB.Model(database.Auction{
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
@@ -1155,27 +1189,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			return response, err
 		}
 
-		user, err := s.GuildMember(bidData.GuildID, bidData.Winner)
-		if err != nil {
-			return response, err
-		}
-
-		bidHistory := ""
-		username := user.Nick
-		if username == "" {
-			username = user.User.Username
-		}
-		bidAmount := bidData.Bid
-
-		if len(updateAuction.Embeds) == 2 {
-			bidHistory = updateAuction.Embeds[1].Description + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
-		} else {
-			bidHistory = "-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
-		}
-
-		if len(strings.ReplaceAll(bidHistory, " ", "")) >= 4096 {
-			bidHistory = "BidHistory was too long and has been reset to prevent a crash.\n-> " + username + ": " + fmt.Sprint(bidAmount)
-		}
+		bidHistory := auctionMap["bid_history"].(string)
 
 		m, err := AuctionFormat(s, auctionMap)
 		if err != nil {
@@ -1187,7 +1201,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		if len(updateAuction.Embeds) != 2 {
 			updateAuction.Embeds = append(updateAuction.Embeds, &discordgo.MessageEmbed{
 				Title:       "**Bid History**",
-				Description: bidHistory,
+				Description: bidHistory[len(bidHistory)-4095:],
 				Color:       0x8073ff,
 				Image: &discordgo.MessageEmbedImage{
 					URL: "https://i.imgur.com/9wo7diC.png",
@@ -1325,7 +1339,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		}
 	}
 
-	_, err = h.SuccessMessage(Session, AuctionSetup.LogChannel, h.PresetResponse{
+	m, err := h.SuccessMessage(Session, AuctionSetup.LogChannel, h.PresetResponse{
 		Content:     fmt.Sprintf("<@%s>", winnerID),
 		Title:       "Auction Completed!",
 		Description: description,
@@ -1371,6 +1385,29 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		fmt.Println(err)
 		h.ErrorMessage(Session, auctionMap["channel_id"].(string), err.Error())
 		return
+	}
+
+	//probably don't need these and can edit out later
+	if auctionMap["bid_history"] == nil {
+		auctionMap["bid_history"] = ""
+	}
+	if auctionMap["bid"] == nil {
+		auctionMap["bid"] = 0
+	}
+	if auctionMap["host"] == nil {
+		auctionMap["host"] = ""
+	}
+
+	result = database.DB.Create(database.Claim{
+		MessageID:  m.ID,
+		Type:       "auction",
+		Winner:     winnerID,
+		Cost:       auctionMap["bid"].(float64),
+		Owner:      auctionMap["host"].(string),
+		BidHistory: auctionMap["bid_history"].(string),
+	})
+	if result.Error != nil {
+		fmt.Println(result.Error)
 	}
 
 	time.Sleep(30 * time.Second)

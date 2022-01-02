@@ -61,10 +61,12 @@ func BotConnect(token, environment, botName string) {
 			}
 		}
 		commands.HelpBuilder(c.local)
-		database.DB.Create(database.AuctionSetup{
+		database.DB.Model(database.AuctionSetup{
 			GuildID:    "915767892467920967",
-			Category:   "915768615742103625",
-			LogChannel: "915768633752449054",
+		}).Create(map[string]interface{}{
+			"GuildID":    "915767892467920967",
+			"category":   "915768615742103625",
+			"log_channel": "915768633752449054",
 		})
 	}
 
