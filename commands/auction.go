@@ -571,7 +571,7 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 			}
 
-			if setOptions["snipe_range"] != nil || setOptions["snipe_extension"] != nil {
+			if setOptions["snipe_range"] != nil && setOptions["snipe_extension"] != nil {
 				antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", info["snipe_range"].(time.Duration).String(), info["snipe_extension"].(time.Duration).String())
 			}
 
