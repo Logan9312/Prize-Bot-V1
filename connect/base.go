@@ -93,9 +93,9 @@ func BotConnect(token, environment, botName string) {
 
 func Timers(s *discordgo.Session) {
 
-	var Auctions []map[string]interface{}
-	var AuctionQueue []map[string]interface{}
-	var Giveaways []map[string]interface{}
+	Auctions := []map[string]interface{}{}
+	AuctionQueue := []map[string]interface{}{}
+	Giveaways := []map[string]interface{}{}
 
 	fmt.Println("Beginning Startup Timers")
 

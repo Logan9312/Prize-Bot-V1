@@ -1115,7 +1115,6 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 
 	response := h.PresetResponse{}
 	var Content string
-	var antiSnipeFlag bool
 	var responseFields []*discordgo.MessageEmbedField
 	var auctionSetup database.AuctionSetup
 	auctionMap := map[string]interface{}{}
@@ -1136,7 +1135,6 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 					Inline: false,
 				},
 			}
-			antiSnipeFlag = true
 		}
 	}
 
@@ -1201,21 +1199,12 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			bidHistory = "BidHistory was too long and has been reset to prevent a crash.\n-> " + username + ": " + fmt.Sprint(bidAmount)
 		}
 
-		for n, v := range updateAuction.Embeds[0].Fields {
-			switch v.Name {
-			case "__**Current Highest Bid:**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap, bidAmount))
-			case "__**Starting Bid:**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap, bidAmount))
-				updateAuction.Embeds[0].Fields[n].Name = "__**Current Highest Bid:**__"
-			case "__**Current Winner**__":
-				updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("<@%s>", auctionMap["winner"])
-			case "__**End Time**__":
-				if antiSnipeFlag {
-					updateAuction.Embeds[0].Fields[n].Value = fmt.Sprintf("New End Time: <t:%d:R>", auctionMap["end_time"].(time.Time).Unix())
-				}
-			}
+		m, err := AuctionFormat(s, auctionMap)
+		if err != nil {
+			return response, err
 		}
+		updateAuction.Embeds[0].Fields = m.Fields
+		updateAuction.Embeds[0].Description = m.Description
 
 		if len(updateAuction.Embeds) != 2 {
 			updateAuction.Embeds = append(updateAuction.Embeds, &discordgo.MessageEmbed{
