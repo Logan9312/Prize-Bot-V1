@@ -1247,6 +1247,30 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	return response, nil
 }
 
+func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate){
+
+	claimMap := map[string]interface{}{}
+
+	database.DB.Model(database.Claim{}).First(claimMap, i.Message.ID)
+
+	if claimMap["bidHistory"] == nil {
+		h.ErrorResponse(s, i, "No bid history found for this auction.")
+		return
+	}
+
+	bidHistory := claimMap["bidHistory"].(string)
+
+	if len(bidHistory) > 4095 {
+		bidHistory = bidHistory[len(bidHistory)-4095:]
+	}
+
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "**Bid History**",
+		Description: bidHistory,
+	})
+
+}
+
 func AuctionEnd(auctionMap map[string]interface{}) {
 
 	AuctionSetup := database.AuctionSetup{
@@ -1263,6 +1287,12 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	result = database.DB.Model(database.Auction{}).First(&auctionMap, auctionMap["channel_id"])
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
+	}
+
+	if auctionMap["end_time"].(time.Time).After(time.Now()) {
+		time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
+		AuctionEnd(auctionMap)
+		return
 	}
 
 	if auctionMap["buyout"] != nil && auctionMap["buyout"].(float64) != 0 {
@@ -1392,6 +1422,14 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 							ID:   "889307390690885692",
 						},
 						CustomID: "claim_prize:" + winnerID,
+					},
+					discordgo.Button{
+						Label: "Bids",
+						Style: 2,
+						Emoji: discordgo.ComponentEmoji{
+							Name: "📜",
+						},
+						CustomID: "bid_history",
 					},
 				},
 			},
