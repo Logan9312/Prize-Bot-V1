@@ -1191,10 +1191,6 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
 
-		for key, value := range auctionMap {
-			fmt.Println(key, value)
-		}
-
 		updateAuction, err := s.ChannelMessage(auctionMap["channel_id"].(string), auctionMap["message_id"].(string))
 		if err != nil {
 			return response, err
