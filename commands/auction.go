@@ -925,6 +925,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := h.ParseSubCommand(i)
 
 	auctionMap := map[string]interface{}{}
+	auctionSetup := map[string]interface{}{}
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
 
 	if result.Error != nil {
@@ -985,6 +986,12 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	} else {
 
+		result = database.DB.Model(database.AuctionSetup{}).First(auctionSetup, i.GuildID)
+
+		if result.Error != nil {
+			fmt.Println(result.Error)
+		}
+
 		result := database.DB.Model(database.Auction{
 			ChannelID: i.ChannelID,
 		}).Updates(options)
@@ -999,6 +1006,9 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			h.ErrorResponse(s, i, "No auction found in this channel")
 			return
 		}
+
+		auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
+		auctionMap["snipe_range"] = auctionSetup["snipe_range"]
 
 		message, err := s.ChannelMessage(i.ChannelID, auctionMap["message_id"].(string))
 		if err != nil {

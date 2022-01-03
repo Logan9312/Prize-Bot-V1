@@ -27,10 +27,9 @@ type PresetResponse struct {
 	Image       *discordgo.MessageEmbedImage
 	Components  []discordgo.MessageComponent
 	Embeds      []*discordgo.MessageEmbed `json:"embeds,omitempty"`
-
+	Files       []*discordgo.File         `json:"-"`
 	//Flags uint64 `json:"flags,omitempty"`
 
-	//Files []*File `json:"-"`
 }
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) error {
@@ -132,8 +131,9 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 		Data: &discordgo.InteractionResponseData{
 			Content:    r.Content,
 			Components: r.Components,
-			Embeds: embed,
-			Flags: 64,
+			Embeds:     embed,
+			Flags:      64,
+			Files: r.Files,
 		},
 	})
 }
@@ -153,6 +153,7 @@ func SuccessMessage(s *discordgo.Session, channelID string, r PresetResponse) (*
 				Fields:      r.Fields,
 			},
 		},
+		Files: r.Files,
 	})
 }
 
@@ -279,7 +280,7 @@ func PremiumResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 				},
 			},
 			Embeds: embed,
-			Flags: 64,
+			Flags:  64,
 		},
 	})
 }
