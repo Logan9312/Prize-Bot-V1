@@ -1268,7 +1268,6 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate){
 		Title:       "**Bid History**",
 		Description: bidHistory,
 	})
-
 }
 
 func AuctionEnd(auctionMap map[string]interface{}) {
