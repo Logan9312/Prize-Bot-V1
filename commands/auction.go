@@ -1273,6 +1273,9 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Bid History**",
 		Description: bidHistory,
+		Image: &discordgo.MessageEmbedImage{
+			URL: "https://i.imgur.com/9wo7diC.png",
+		},
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -1287,6 +1290,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	username := ""
 	winnerID := ""
 	imageURL := "https://i.imgur.com/9wo7diC.png"
+	thumbnail := ""
 
 	result := database.DB.First(&AuctionSetup)
 	if result.Error != nil {
@@ -1362,9 +1366,9 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		Session.ChannelMessageEditComplex(message)
 	}
 
-	description := fmt.Sprintf("**Item:** %s", auctionMap["item"])
+	description := fmt.Sprintf("**Item:** %s\n", auctionMap["item"])
 	if auctionMap["description"] != nil {
-		description += fmt.Sprintf("\n**Description:** %s", auctionMap["description"])
+		description += fmt.Sprintf("**Description:** %s\n", auctionMap["description"])
 	}
 
 	if auctionMap["winner"] == nil {
@@ -1394,6 +1398,10 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		}
 	}
 
+	if auctionMap["image_url"] != nil {
+		thumbnail = auctionMap["image_url"].(string)
+	}
+
 	m, err := h.SuccessMessage(Session, AuctionSetup.LogChannel, h.PresetResponse{
 		Content:     fmt.Sprintf("<@%s>", winnerID),
 		Title:       "Auction Completed!",
@@ -1415,7 +1423,9 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 				Inline: false,
 			},
 		},
-		Thumbnail: &discordgo.MessageEmbedThumbnail{},
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: thumbnail,
+		},
 		Image: &discordgo.MessageEmbedImage{
 			URL: imageURL,
 		},
