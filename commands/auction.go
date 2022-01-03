@@ -1388,7 +1388,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		winnerID = auctionMap["winner"].(string)
 		username = fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
 		auctionMap["winner"] = "<@" + auctionMap["winner"].(string) + ">"
-		winnerTag = "<@" + auctionMap["winner"].(string) + ">"
+		winnerTag = auctionMap["winner"].(string)
 	}
 
 	auctionWinner := fmt.Sprintf("%s %s", auctionMap["winner"], username)

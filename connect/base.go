@@ -22,6 +22,7 @@ func BotConnect(token, environment, botName string) {
 			&commands.AuctionCommand,
 			&commands.BidCommand,
 			&commands.GiveawayCommand,
+			&commands.PrivacyCommand,
 		},
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,
@@ -63,10 +64,10 @@ func BotConnect(token, environment, botName string) {
 		}
 		commands.HelpBuilder(c.local)
 		database.DB.Model(database.AuctionSetup{
-			GuildID:    "915767892467920967",
+			GuildID: "915767892467920967",
 		}).Create(map[string]interface{}{
-			"GuildID":    "915767892467920967",
-			"category":   "915768615742103625",
+			"GuildID":     "915767892467920967",
+			"category":    "915768615742103625",
 			"log_channel": "915768633752449054",
 		})
 	}
