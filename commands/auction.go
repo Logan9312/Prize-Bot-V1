@@ -1247,11 +1247,17 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	return response, nil
 }
 
-func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate){
+func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	claimMap := map[string]interface{}{}
 
-	database.DB.Model(database.Claim{}).First(claimMap, i.Message.ID)
+	result := database.DB.Model(database.Claim{}).First(claimMap, i.Message.ID)
+
+	if result.Error != nil {
+		fmt.Println(result.Error)
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
 
 	if claimMap["bidHistory"] == nil {
 		h.ErrorResponse(s, i, "No bid history found for this auction.")
