@@ -590,10 +590,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				})
 			}
 
-			for _, v := range responseFields {
-				fmt.Println(v.Name, v.Value)
-			}
-
 			err = h.SuccessResponse(s, i, h.PresetResponse{
 				Title:       "Auction Setup",
 				Description: content,
