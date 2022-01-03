@@ -8,6 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type DevSetup struct {
+	Bot     string `gorm:"primaryKey"`
+	Version string
+}
+
 type AuctionSetup struct {
 	GuildID        string `gorm:"primaryKey"`
 	Category       string
@@ -113,7 +118,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, Claim{})
+	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, Claim{}, DevSetup{})
 	if err != nil {
 		fmt.Println(err)
 	}

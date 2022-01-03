@@ -32,7 +32,7 @@ func main() {
 	database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
 
 	//Connects main bot
-	connect.BotConnect(environment.DiscordToken, environment.Environment, "Main Bot")
+	connect.BotConnect(environment.DiscordToken, environment.Environment, "main")
 
 	fmt.Println("Bot is running!")
 

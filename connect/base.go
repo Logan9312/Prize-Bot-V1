@@ -23,6 +23,7 @@ func BotConnect(token, environment, botName string) {
 			&commands.BidCommand,
 			&commands.GiveawayCommand,
 			&commands.PrivacyCommand,
+			&commands.DevCommand,
 		},
 		prod: []*discordgo.ApplicationCommand{
 			&commands.HelpCommand,
@@ -30,6 +31,7 @@ func BotConnect(token, environment, botName string) {
 			&commands.BidCommand,
 			&commands.GiveawayCommand,
 			&commands.PrivacyCommand,
+			&commands.DevCommand,
 		},
 	}
 
@@ -86,13 +88,21 @@ func BotConnect(token, environment, botName string) {
 
 	Timers(s)
 
-	err = s.UpdateGameStatus(0, "Bot Version v0.9.4")
+	devData := database.DevSetup{
+		Bot: botName,
+	}
+	result := database.DB.First(&devData)
+	if result.Error != nil {
+		fmt.Println(result.Error)
+	}
+
+	err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(botName + " Startup Complete!")
+	fmt.Println(botName + " bot startup complete!")
 }
 
 func Timers(s *discordgo.Session) {
