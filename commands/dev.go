@@ -41,7 +41,7 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	result := database.DB.Clauses(clause.OnConflict{
 		DoNothing: true,
-	}).Model(database.AuctionSetup{}).Create(&devCreate)
+	}).Model(database.DevSetup{}).Create(&devCreate)
 
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())

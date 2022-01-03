@@ -51,23 +51,25 @@ type Auction struct {
 }
 
 type AuctionQueue struct {
-	ID           int `gorm:"primaryKey"`
-	Bid          float64
-	StartTime    time.Time
-	EndTime      time.Time
-	GuildID      string
-	Item         string
-	Host         string
-	Currency     string
-	IncrementMin float64
-	IncrementMax float64
-	Description  string
-	ImageURL     string
-	Category     string
-	TargetPrice  float64
-	Buyout       float64
-	CurrencySide string
-	IntegerOnly  bool
+	ID             int `gorm:"primaryKey"`
+	Bid            float64
+	StartTime      time.Time
+	EndTime        time.Time
+	GuildID        string
+	Item           string
+	Host           string
+	Currency       string
+	IncrementMin   float64
+	IncrementMax   float64
+	Description    string
+	ImageURL       string
+	Category       string
+	TargetPrice    float64
+	Buyout         float64
+	CurrencySide   string
+	IntegerOnly    bool
+	SnipeExtension time.Duration
+	SnipeRange     time.Duration
 }
 
 type Claim struct {
