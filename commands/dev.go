@@ -72,4 +72,21 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	fields := []*discordgo.MessageEmbedField{}
+
+	for key, value := range options {
+		if value != nil && value != "" {
+			fields = append(fields, &discordgo.MessageEmbedField{
+				Name:   key,
+				Value:  fmt.Sprint(value),
+				Inline: true,
+			})
+		}
+	}
+
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title:  "Success!",
+		Fields: fields,
+	})
+
 }
