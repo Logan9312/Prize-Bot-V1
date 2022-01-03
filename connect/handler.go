@@ -53,6 +53,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.AuctionSetupClearButton(s, i)
 		case "clear_giveaway_setup":
 			c.GiveawaySetupClearButton(s, i)
+		case "bid_history":
+			c.AuctionBidHistory(s, i)
 		default:
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
