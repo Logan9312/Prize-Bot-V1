@@ -1264,16 +1264,19 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	bidHistory := claimMap["bidHistory"].(string)
+	bidHistory := claimMap["bid_history"].(string)
 
 	if len(bidHistory) > 4095 {
 		bidHistory = bidHistory[len(bidHistory)-4095:]
 	}
 
-	h.SuccessResponse(s, i, h.PresetResponse{
+	err := h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Bid History**",
 		Description: bidHistory,
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func AuctionEnd(auctionMap map[string]interface{}) {
