@@ -35,11 +35,13 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	devCreate := map[string]interface{}{
+		"bot": "main",
+	}
+
 	result := database.DB.Clauses(clause.OnConflict{
 		DoNothing: true,
-	}).Model(database.AuctionSetup{}).Create(&database.DevSetup{
-		Bot: "main",
-	})
+	}).Model(database.AuctionSetup{}).Create(&devCreate)
 
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
