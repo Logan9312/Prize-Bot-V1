@@ -1101,7 +1101,10 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	if result.Error != nil {
 		return response, result.Error
 	}
-	database.DB.First(&auctionSetup, bidData.GuildID)
+	result = database.DB.First(&auctionSetup, bidData.GuildID)
+	if result.Error != nil {
+		return response, result.Error
+	}
 
 	if auctionMap["snipe_range"] != nil && auctionMap["snipe_extension"] != nil {
 		if time.Until(auctionMap["end_time"].(time.Time)) < auctionMap["snipe_range"].(time.Duration) && auctionMap["snipe_extension"] != 0 {
@@ -1188,6 +1191,10 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
 
+		for key, value := range auctionMap {
+			fmt.Println(key, value)
+		}
+
 		updateAuction, err := s.ChannelMessage(auctionMap["channel_id"].(string), auctionMap["message_id"].(string))
 		if err != nil {
 			return response, err
@@ -1228,7 +1235,6 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			return response, err
 		}
 		Content = "Bid has successfully been placed"
-
 	default:
 		return response, fmt.Errorf("You must bid higher than: " + PriceFormat(auctionMap, auctionMap["bid"].(float64)))
 	}
@@ -1251,6 +1257,10 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	imageURL := "https://i.imgur.com/9wo7diC.png"
 
 	result := database.DB.First(&AuctionSetup)
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+	}
+	result = database.DB.Model(database.Auction{}).First(&auctionMap, auctionMap["channel_id"])
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 	}
