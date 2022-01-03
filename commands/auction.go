@@ -650,7 +650,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}) (h.P
 	}
 
 	if auctionMap["integer_only"] != nil {
-		description += fmt.Sprintf("**Integer Only:** %s.\n", auctionMap["integer_only"])
+		description += fmt.Sprintf("**Integer Only:** %t.\n", auctionMap["integer_only"].(bool))
 	}
 
 	if auctionMap["snipe_extension"] != nil && auctionMap["snipe_range"] != nil {
