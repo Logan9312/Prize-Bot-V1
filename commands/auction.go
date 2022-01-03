@@ -1259,7 +1259,7 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if claimMap["bidHistory"] == nil {
+	if claimMap["bid_history"] == nil {
 		h.ErrorResponse(s, i, "No bid history found for this auction.")
 		return
 	}
