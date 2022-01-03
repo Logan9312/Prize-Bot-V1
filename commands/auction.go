@@ -1295,6 +1295,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	}
 	username := ""
 	winnerID := ""
+	winnerTag := ""
 	imageURL := "https://i.imgur.com/9wo7diC.png"
 	thumbnail := ""
 
@@ -1387,6 +1388,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 		winnerID = auctionMap["winner"].(string)
 		username = fmt.Sprintf("(%s#%s)", user.Username, user.Discriminator)
 		auctionMap["winner"] = "<@" + auctionMap["winner"].(string) + ">"
+		winnerTag = "<@" + auctionMap["winner"].(string) + ">"
 	}
 
 	auctionWinner := fmt.Sprintf("%s %s", auctionMap["winner"], username)
@@ -1409,7 +1411,7 @@ func AuctionEnd(auctionMap map[string]interface{}) {
 	}
 
 	m, err := h.SuccessMessage(Session, AuctionSetup.LogChannel, h.PresetResponse{
-		Content:     fmt.Sprintf("<@%s>", winnerID),
+		Content:     winnerTag,
 		Title:       "Auction Completed!",
 		Description: description,
 		Fields: []*discordgo.MessageEmbedField{

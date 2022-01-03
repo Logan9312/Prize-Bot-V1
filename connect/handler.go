@@ -27,6 +27,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.Profile(s, i)
 		case "giveaway":
 			c.Giveaway(s, i)
+		case "privacy_policy":
+			c.Privacy(s, i)
 		default:
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
