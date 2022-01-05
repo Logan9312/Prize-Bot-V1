@@ -36,7 +36,8 @@ type PresetResponse struct {
 }
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) error {
-	fmt.Println(runtime.Caller(1))
+	_, file, line, _ := runtime.Caller(1)
+	fmt.Println(file, line, errorText)
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -79,7 +80,8 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 }
 
 func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Message, error) {
-
+	_, file, line, _ := runtime.Caller(1)
+	fmt.Println(file, line, err)
 	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Error",
