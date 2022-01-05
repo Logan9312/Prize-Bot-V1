@@ -749,9 +749,8 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
 	auctionMap["guild_id"] = i.GuildID
 	auctionMap["host"] = i.Member.User.ID
-	auctionMap["alert_role"] = auctionSetup["alert_role"]
 
-	for _, key := range []string{"category", "currency", "snipe_extension", "snipe_range", "currency_side", "integer_only"} {
+	for _, key := range []string{"category", "currency", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
@@ -805,7 +804,12 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		auctionMap["start_time"] = time.Now().Add(startTimeDuration)
 		delete(auctionMap, "schedule")
 
-		database.DB.Model(database.AuctionQueue{}).Create(&auctionMap)
+		result := database.DB.Model(database.AuctionQueue{}).Create(&auctionMap)
+		if result.Error != nil {
+			fmt.Println(result.Error)
+			h.ErrorResponse(s, i, result.Error.Error())
+			return
+		}
 		exampleMessage, err := AuctionFormat(s, auctionMap)
 		if err != nil {
 			fmt.Println(err)
@@ -888,6 +892,8 @@ func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) erro
 	}
 
 	delete(auctionMap, "alert_role")
+	delete(auctionMap, "snipe_extension")
+	delete(auctionMap, "snipe_range")
 
 	if auctionMap["category"] == nil {
 		auctionMap["category"] = ""
