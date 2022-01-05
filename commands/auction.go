@@ -1109,21 +1109,20 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	response := h.PresetResponse{}
 	var Content string
 	var responseFields []*discordgo.MessageEmbedField
-	var auctionSetup database.AuctionSetup
+	auctionSetup := map[string]interface{}{}
 	auctionMap := map[string]interface{}{}
 
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, bidData.ChannelID)
 	if result.Error != nil {
 		return response, result.Error
 	}
-	result = database.DB.First(&auctionSetup, bidData.GuildID)
+	result = database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, bidData.GuildID)
 	if result.Error != nil {
 		return response, result.Error
 	}
 
-	for key, value := range auctionMap {
-		fmt.Println(key, value)
-	}
+	auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
+	auctionMap["snipe_range"] = auctionSetup["snipe_range"]
 
 	if auctionMap["snipe_range"] != nil && auctionMap["snipe_extension"] != nil {
 		if time.Until(auctionMap["end_time"].(time.Time)) < auctionMap["snipe_range"].(time.Duration) && auctionMap["snipe_extension"] != 0 {
