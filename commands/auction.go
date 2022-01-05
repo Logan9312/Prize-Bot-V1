@@ -887,6 +887,8 @@ func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) erro
 		return err
 	}
 
+	delete(auctionMap, "alert_role")
+
 	if auctionMap["category"] == nil {
 		auctionMap["category"] = ""
 	}
