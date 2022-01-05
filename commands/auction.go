@@ -749,6 +749,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
 	auctionMap["guild_id"] = i.GuildID
 	auctionMap["host"] = i.Member.User.ID
+	auctionMap["alert_role"] = auctionSetup["alert_role"]
 
 	for _, key := range []string{"category", "currency", "snipe_extension", "snipe_range", "currency_side", "integer_only"} {
 		if auctionMap[key] == nil {
