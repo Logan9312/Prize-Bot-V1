@@ -1137,6 +1137,9 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		}
 	}
 
+	delete(auctionMap, "snipe_range")
+	delete(auctionMap, "snipe_extension")
+
 	switch {
 	case auctionMap["end_time"].(time.Time).Before(time.Now()):
 		return response, fmt.Errorf("Cannot Bid, Auction has ended")
