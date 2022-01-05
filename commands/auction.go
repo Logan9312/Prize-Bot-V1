@@ -1121,6 +1121,10 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		return response, result.Error
 	}
 
+	for key, value := range auctionMap {
+		fmt.Println(key, value)
+	}
+
 	if auctionMap["snipe_range"] != nil && auctionMap["snipe_extension"] != nil {
 		if time.Until(auctionMap["end_time"].(time.Time)) < auctionMap["snipe_range"].(time.Duration) && auctionMap["snipe_extension"] != 0 {
 			auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(auctionMap["snipe_extension"].(time.Duration))
