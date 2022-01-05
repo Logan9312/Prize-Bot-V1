@@ -1,6 +1,9 @@
 package helpers
 
 import (
+	"fmt"
+	"runtime"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -33,6 +36,7 @@ type PresetResponse struct {
 }
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) error {
+	fmt.Println(runtime.Caller(1))
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
