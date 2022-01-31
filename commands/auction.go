@@ -492,6 +492,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := h.ParseSubCommand(i)
 	content := ""
 
+fmt.Println(1)
+
 	if i.Member.Permissions&(1<<3) != 8 {
 		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
 		return
@@ -525,6 +527,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 
 	}
+
+	fmt.Println(2)
 
 	result = database.DB.Model(database.AuctionSetup{
 		GuildID: i.GuildID,
@@ -588,6 +592,8 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Description: v.Description,
 		})
 	}
+
+	fmt.Println(3)
 
 	err = h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Auction Setup",

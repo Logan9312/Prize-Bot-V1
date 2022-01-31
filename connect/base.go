@@ -46,7 +46,7 @@ func BotConnect(token, environment, botName string) {
 		fmt.Println("discordgo.New error:" + err.Error())
 	}
 
-	defer s.ChannelMessageSend("915768633752449054", "Bot has finished restarting")
+	defer s.ChannelMessageSend("937519464671490118", "Bot has finished restarting")
 
 	commands.Session = s
 
