@@ -16,7 +16,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.Type {
 	case 2:
-		fmt.Println(i.ApplicationCommandData().Name, " is being run by: ", i.Member.User.Username)
+		fmt.Println(i.ApplicationCommandData().Name, "is being run by:", i.Member.User.Username)
 		switch i.ApplicationCommandData().Name {
 		case "help":
 			c.Help(s, i, botCommands.prod)

@@ -58,7 +58,7 @@ var ClaimCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionUser,
+					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "item",
 					Description: "The user who will receive the prize.",
 					Required:    true,
@@ -72,6 +72,8 @@ func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "setup":
 		ClaimSetup(s, i)
+	case "create":
+		ClaimCreate(s, i)
 	}
 }
 
@@ -207,6 +209,7 @@ func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate)
 func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	claimSetup := map[string]any{}
+	auctionSetup := map[string]any{}
 
 	claimMap := h.ParseSubCommand(i)
 
@@ -216,8 +219,15 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(result.Error)
 		return
 	}
+	result = database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
+	if result.Error != nil {
+		h.ErrorResponse(s, i, result.Error.Error())
+		fmt.Println(result.Error)
+		return
+	}
 
-	claimMap["channel_id"] = claimSetup["log_channel"]
+	claimMap["log_channel"] = auctionSetup["log_channel"]
+	claimMap["host"] = i.Member.User.ID
 
 	err := ClaimOutput(s, claimMap, "Custom Claim")
 	if err != nil {
@@ -225,6 +235,18 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 		return
 	}
+
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Content:     "",
+		Title:       "Claim Successfully Created!",
+		Description: "Check out <#" + claimMap["channel_id"].(string) + "> to see the claim",
+		Fields:      []*discordgo.MessageEmbedField{},
+		Thumbnail:   &discordgo.MessageEmbedThumbnail{},
+		Image:       &discordgo.MessageEmbedImage{},
+		Components:  []discordgo.MessageComponent{},
+		Embeds:      []*discordgo.MessageEmbed{},
+		Files:       []*discordgo.File{},
+	})
 
 }
 

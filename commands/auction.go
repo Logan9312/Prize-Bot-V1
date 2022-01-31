@@ -1371,6 +1371,7 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 
 	if auctionMap["target_price"] != nil && auctionMap["target_price"].(float64) > auctionMap["bid"].(float64) {
 		auctionMap["target_message"] = fmt.Sprintf("The host had set a target price of %s that has not been reached.", PriceFormat(auctionMap, auctionMap["target_price"].(float64)))
+		auctionMap["winner"] = nil
 	}
 
 	auctionMap["formatted_price"] = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap, auctionMap["bid"].(float64)))
