@@ -492,8 +492,6 @@ func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := h.ParseSubCommand(i)
 	content := ""
 
-fmt.Println(1)
-
 	if i.Member.Permissions&(1<<3) != 8 {
 		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
 		return
@@ -528,8 +526,6 @@ fmt.Println(1)
 
 	}
 
-	fmt.Println(2)
-
 	result = database.DB.Model(database.AuctionSetup{
 		GuildID: i.GuildID,
 	}).Updates(options)
@@ -552,7 +548,7 @@ fmt.Println(1)
 	for _, v := range AuctionCommand.Options[0].Options {
 		if !strings.Contains(v.Name, "snipe") {
 			switch {
-			case setOptions[v.Name] == nil:
+			case setOptions[v.Name] == nil || setOptions[v.Name] == "":
 				setOptions[v.Name] = "Not Set"
 			case strings.Contains(v.Name, "role"):
 				setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
@@ -592,8 +588,6 @@ fmt.Println(1)
 			Description: v.Description,
 		})
 	}
-
-	fmt.Println(3)
 
 	err = h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Auction Setup",
