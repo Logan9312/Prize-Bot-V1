@@ -46,6 +46,7 @@ type Auction struct {
 	CurrencySide string
 	IntegerOnly  bool
 	BidHistory   string
+	Note         string
 }
 
 type AuctionQueue struct {
@@ -69,15 +70,31 @@ type AuctionQueue struct {
 	SnipeExtension time.Duration
 	SnipeRange     time.Duration
 	AlertRole      string
+	Note           string
+}
+
+//Make sure to remove LogChannel and ClaimMessage from auction log
+type ClaimSetup struct {
+	GuildID      string `gorm:"primaryKey"`
+	Category     string
+	StaffRole    string
+	Instructions string
+	LogChannel   string
+	Expiration   string
 }
 
 type Claim struct {
 	MessageID  string `gorm:"primaryKey"`
+	ChannelID  string
+	Item       string
 	Type       string
 	Winner     string
 	Cost       float64
-	Owner      string
+	Host       string
 	BidHistory string
+	Note       string
+	ImageURL   string
+	TicketID   string
 }
 
 type Giveaway struct {
@@ -119,7 +136,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, Claim{}, DevSetup{})
+	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, Claim{}, DevSetup{})
 	if err != nil {
 		fmt.Println(err)
 	}

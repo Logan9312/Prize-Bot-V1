@@ -8,14 +8,15 @@ import (
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
-var fields []*discordgo.MessageEmbedField
-
 var HelpCommand = discordgo.ApplicationCommand{
 	Name:        "help",
 	Description: "Basic bot functionality",
 }
 
-func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
+func Help(s *discordgo.Session, i *discordgo.InteractionCreate, slashCommands []*discordgo.ApplicationCommand) {
+
+	fields := []*discordgo.MessageEmbedField{}
+
 	for _, command := range slashCommands {
 
 		if command.Name == "help" {
@@ -29,11 +30,8 @@ func HelpBuilder(slashCommands []*discordgo.ApplicationCommand) {
 
 		fields = append(fields, field)
 	}
-}
 
-func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	fields := append(fields, &discordgo.MessageEmbedField{
+	fields = append(fields, &discordgo.MessageEmbedField{
 		Name:  "**Ping**",
 		Value: s.HeartbeatLatency().String(),
 	})

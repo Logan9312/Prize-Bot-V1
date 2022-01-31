@@ -13,27 +13,28 @@ type slashCommands struct {
 	local, prod []*discordgo.ApplicationCommand
 }
 
-func BotConnect(token, environment, botName string) {
+var botCommands = slashCommands{
+	local: []*discordgo.ApplicationCommand{
+		&commands.HelpCommand,
+		&commands.ProfileCommand,
+		&commands.AuctionCommand,
+		&commands.BidCommand,
+		&commands.GiveawayCommand,
+		&commands.PrivacyCommand,
+		&commands.DevCommand,
+		&commands.ClaimCommand,
+	},
+	prod: []*discordgo.ApplicationCommand{
+		&commands.HelpCommand,
+		&commands.AuctionCommand,
+		&commands.BidCommand,
+		&commands.GiveawayCommand,
+		&commands.PrivacyCommand,
+		&commands.DevCommand,
+	},
+}
 
-	var c = slashCommands{
-		local: []*discordgo.ApplicationCommand{
-			&commands.HelpCommand,
-			&commands.ProfileCommand,
-			&commands.AuctionCommand,
-			&commands.BidCommand,
-			&commands.GiveawayCommand,
-			&commands.PrivacyCommand,
-			&commands.DevCommand,
-		},
-		prod: []*discordgo.ApplicationCommand{
-			&commands.HelpCommand,
-			&commands.AuctionCommand,
-			&commands.BidCommand,
-			&commands.GiveawayCommand,
-			&commands.PrivacyCommand,
-			&commands.DevCommand,
-		},
-	}
+func BotConnect(token, environment, botName string) {
 
 	fmt.Println(botName + " Starting Up...")
 	var s *discordgo.Session
@@ -58,29 +59,27 @@ func BotConnect(token, environment, botName string) {
 	//Builds local commands
 	if environment == "local" {
 		for _, v := range s.State.Guilds {
-			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, c.local)
+			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, botCommands.local)
 			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
 				fmt.Println("Bulk Overwrite Error:", err)
 			}
 		}
-		commands.HelpBuilder(c.local)
 		database.DB.Model(database.AuctionSetup{
 			GuildID: "915767892467920967",
 		}).Create(map[string]interface{}{
 			"GuildID":     "915767892467920967",
 			"category":    "915768615742103625",
-			"log_channel": "915768633752449054",
+			"log_channel": "937519464671490118",
 		})
 	}
 
 	//Builds prod commands
 	if environment == "prod" {
-		_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", c.prod)
+		_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", botCommands.prod)
 		if err != nil {
 			fmt.Println("Bulk Overwrite Error:", err)
 		}
-		commands.HelpBuilder(c.prod)
 	}
 
 	s.AddHandler(CommandHandler)

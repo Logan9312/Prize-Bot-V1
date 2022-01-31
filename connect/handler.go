@@ -19,7 +19,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(i.ApplicationCommandData().Name, " is being run by: ", i.Member.User.Username)
 		switch i.ApplicationCommandData().Name {
 		case "help":
-			c.Help(s, i)
+			c.Help(s, i, botCommands.prod)
 		case "auction":
 			c.Auction(s, i)
 		case "bid":
@@ -28,6 +28,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.Profile(s, i)
 		case "giveaway":
 			c.Giveaway(s, i)
+		case "claim":
+			c.Claim(s, i)
 		case "privacy_policy":
 			c.Privacy(s, i)
 		case "dev":
@@ -36,7 +38,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case 3:
-
+		fmt.Println(i.MessageComponentData().CustomID)
 		switch strings.Split(i.MessageComponentData().CustomID, ":")[0] {
 		case "endauction":
 			c.AuctionEndButton(s, i)
@@ -58,8 +60,16 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.AuctionSetupClearButton(s, i)
 		case "clear_giveaway_setup":
 			c.GiveawaySetupClearButton(s, i)
+		case "clear_claim_setup":
+			c.ClaimSetupClearButton(s, i)
 		case "bid_history":
 			c.AuctionBidHistory(s, i)
+		case "claim_cancel":
+			c.CancelButton(s, i)
+		case "claim_complete":
+			c.CompleteButton(s, i)
+		case "reopen_ticket":
+			c.ReopenTicket(s, i)
 		default:
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}

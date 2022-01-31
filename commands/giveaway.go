@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -45,6 +46,11 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "claiming",
 					Description: "Set the message that will appear when someone tries to claim an auction prize",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "auto_enter",
+					Description: "Anyone with this role will be automatically entered.",
 				},
 			},
 		},
@@ -142,55 +148,51 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	responseFields := []*discordgo.MessageEmbedField{}
 
-	for n, v := range GiveawayCommand.Options {
-		if v.Name == "setup" {
-			for _, v := range GiveawayCommand.Options[n].Options {
-				switch {
-				case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
-					setOptions[v.Name] = "Not Set"
-				case strings.Contains(v.Name, "role"):
-					setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
-				case strings.Contains(v.Name, "channel"):
-					setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
-				}
-				responseFields = append(responseFields, &discordgo.MessageEmbedField{
-					Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-					Value: setOptions[v.Name].(string),
-				})
-			}
+	for _, v := range GiveawayCommand.Options[0].Options {
+		switch {
+		case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
+			setOptions[v.Name] = "Not Set"
+		case strings.Contains(v.Name, "role"):
+			setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
+		case strings.Contains(v.Name, "channel"):
+			setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
+		}
+		responseFields = append(responseFields, &discordgo.MessageEmbedField{
+			Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
+			Value: setOptions[v.Name].(string),
+		})
+	}
 
-			menuOptions := []discordgo.SelectMenuOption{}
+	menuOptions := []discordgo.SelectMenuOption{}
 
-			for _, v := range GiveawayCommand.Options[n].Options {
-				menuOptions = append(menuOptions, discordgo.SelectMenuOption{
-					Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
-					Value:       v.Name,
-					Description: v.Description,
-				})
-			}
+	for _, v := range GiveawayCommand.Options[0].Options {
+		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
+			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
+			Value:       v.Name,
+			Description: v.Description,
+		})
+	}
 
-			err = h.SuccessResponse(s, i, h.PresetResponse{
-				Title:       "Giveaway Setup",
-				Description: content,
-				Fields:      responseFields,
+	err = h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "Giveaway Setup",
+		Description: content,
+		Fields:      responseFields,
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
-					discordgo.ActionsRow{
-						Components: []discordgo.MessageComponent{
-							discordgo.SelectMenu{
-								CustomID:    "clear_giveaway_setup",
-								Placeholder: "Clear Setup Options",
-								MinValues:   1,
-								MaxValues:   len(GiveawayCommand.Options[n].Options),
-								Options:     menuOptions,
-							},
-						},
+					discordgo.SelectMenu{
+						CustomID:    "clear_giveaway_setup",
+						Placeholder: "Clear Setup Options",
+						MinValues:   1,
+						MaxValues:   len(GiveawayCommand.Options[0].Options),
+						Options:     menuOptions,
 					},
 				},
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
+			},
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
@@ -237,6 +239,10 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var imageURL string
 	if options["image"] != nil {
 		imageURL = options["image"].(string)
+	}
+
+	if options["auto_enter"] != nil {
+		s.GuildMembers(i.GuildID, "", 1000)
 	}
 
 	description := fmt.Sprintf("**%s** Winners!\n", fmt.Sprint(winners))
@@ -623,13 +629,9 @@ func GiveawaySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCrea
 		clearedSettings = ""
 	}
 
+	//Might need editing
 	for _, v := range options {
-		switch v {
-		case "snipe_extension", "snipe_range":
-			clearedValues[v] = 0
-		default:
-			clearedValues[v] = ""
-		}
+		clearedValues[v] = gorm.Expr("NULL")
 		clearedSettings += fmt.Sprintf("• %s\n", strings.Title(strings.ReplaceAll(v, "_", " ")))
 	}
 
