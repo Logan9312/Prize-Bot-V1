@@ -31,6 +31,7 @@ var botCommands = slashCommands{
 		&commands.GiveawayCommand,
 		&commands.PrivacyCommand,
 		&commands.DevCommand,
+		&commands.ClaimCommand,
 	},
 }
 
