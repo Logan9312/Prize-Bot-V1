@@ -50,8 +50,7 @@ func BotConnect(token, environment, botName string) {
 
 	commands.Session = s
 
-	s.Identify.Intents = discordgo.IntentsAll
-
+	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
 	err = s.Open()
 
 	if err != nil {
