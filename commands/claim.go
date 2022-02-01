@@ -262,37 +262,52 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.ApplicationCommandData().Options[0].Options[0].Name {
 	case "role":
-
-		guild, err := s.State.Guild(i.GuildID)
-		if err != nil {
-			h.ErrorResponse(s, i, err.Error())
-			return
-		}
-		
-		fmt.Println("Printing members: ")
-
-		for _, v := range guild.Members {
-			fmt.Println(v.User.Username)
-			for _, role := range v.Roles {
-				if role == claimMap["role"] {
-					claimMap["winner"] = v.User.ID
-					err = ClaimOutput(s, claimMap, "Custom Claim")
-					if err != nil {
-						h.ErrorResponse(s, i, err.Error())
-						fmt.Println(err)
-						return
-					}
-				}
-			}
-		}
-
-		err = h.ExperimentalResponse(s, i, h.PresetResponse{
-			Title:       "Claims Successfully Created!",
-			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claim",
+		err := h.ExperimentalResponse(s, i, h.PresetResponse{
+			Title:       "Claims are being created!",
+			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claims. The bot will respond here when complete, or if there is an error.",
 		})
 		if err != nil {
 			fmt.Println(err)
 		}
+		afterID := ""
+		for {
+
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+			})
+
+			memberSlice, err := s.GuildMembers(i.GuildID, afterID, 1000)
+
+			fmt.Println("Printing members: ")
+
+			for _, v := range memberSlice {
+				fmt.Println(v.User.Username)
+				for _, role := range v.Roles {
+					if role == claimMap["role"] {
+						claimMap["winner"] = v.User.ID
+						err = ClaimOutput(s, claimMap, "Custom Claim")
+						if err != nil {
+							h.FollowUpErrorResponse(s, i, err.Error())
+							fmt.Println(err)
+							return
+						}
+					}
+				}
+			}
+
+			if len(memberSlice) < 1000 {
+				break
+			}
+			afterID = memberSlice[len(memberSlice)-1].User.ID
+		}
+		_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+			Title:       "Claims Successfully Created!",
+			Description: "All claims should now be created in: <#" + claimMap["channel_id"].(string) + ">",
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+
 	case "user":
 		err := ClaimOutput(s, claimMap, "Custom Claim")
 		if err != nil {
