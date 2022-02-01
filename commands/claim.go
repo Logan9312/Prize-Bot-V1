@@ -208,6 +208,11 @@ func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	if i.Member.Permissions&(1<<3) != 8 {
+		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+		return
+	}
+
 	claimSetup := map[string]any{}
 	auctionSetup := map[string]any{}
 
@@ -215,13 +220,13 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
+		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/claim setup` to fix. Error: %s", result.Error.Error()))
 		fmt.Println(result.Error)
 		return
 	}
 	result = database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
+		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/auction setup` to fix. Error: %s", result.Error.Error()))
 		fmt.Println(result.Error)
 		return
 	}
@@ -657,9 +662,9 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			URL: "https://i.imgur.com/9wo7diC.png",
 		},
 		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
+			/*discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
-					/*discordgo.Button{
+					discordgo.Button{
 						Label: "Re-Open",
 						Style: discordgo.SuccessButton,
 						Emoji: discordgo.ComponentEmoji{
@@ -667,14 +672,14 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						},
 						Disabled: true,
 						CustomID: fmt.Sprintf("reopen_ticket:%s", claimMap["winner"]),
-					},*/
+					},
 				},
-			},
+			},*/
 		},
 	})
 
 	if err != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
+		h.ErrorResponse(s, i, err.Error())
 		return
 	}
 
