@@ -27,6 +27,15 @@ func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
 	return options
 }
 
+func ParseSubSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
+	var options map[string]interface{} = make(map[string]interface{})
+	for _, option := range i.ApplicationCommandData().Options[0].Options[0].Options {
+		options[option.Name] = option.Value
+	}
+
+	return options
+}
+
 func ParseTime(inputDuration string) (time.Duration, error) {
 	if strings.HasSuffix(strings.ToLower(inputDuration), "d") {
 		inputDuration = strings.TrimSuffix(strings.ToLower(inputDuration), "d")

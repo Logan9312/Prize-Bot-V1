@@ -143,5 +143,10 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 	}
+}
 
+func GuildHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) {
+	for _, v := range g.Members {
+		fmt.Println(v.User.Username)
+	}
 }

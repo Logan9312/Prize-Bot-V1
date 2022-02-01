@@ -139,7 +139,7 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 			Components: r.Components,
 			Embeds:     embed,
 			Flags:      64,
-			Files: r.Files,
+			Files:      r.Files,
 		},
 	})
 }
@@ -281,6 +281,56 @@ func PremiumResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 							},
 							URL:      "https://discord.gg/RxP2z5NGtj",
 							Disabled: true,
+						},
+					},
+				},
+			},
+			Embeds: embed,
+			Flags:  64,
+		},
+	})
+}
+
+func ExperimentalResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
+
+	r.Fields = append(r.Fields, &discordgo.MessageEmbedField{
+		Name:   "**Experimental Feature!**",
+		Value:  "This feature is highly experimental, and for that reason may not function perfectly as intended. Often problems with this command are more frequent in large servers.",
+		Inline: false,
+	})
+
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       r.Title,
+			Description: r.Description,
+			Color:       0xff6700,
+			Footer:      &discordgo.MessageEmbedFooter{},
+			Image:       r.Image,
+			Thumbnail:   r.Thumbnail,
+			Video:       &discordgo.MessageEmbedVideo{},
+			Author:      &discordgo.MessageEmbedAuthor{},
+			Fields:      r.Fields,
+		},
+	}
+
+	embed = append(embed, r.Embeds...)
+
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: r.Content,
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label: "Support Server",
+							Style: discordgo.LinkButton,
+							Emoji: discordgo.ComponentEmoji{
+								Name:     "logo",
+								ID:       "889025400120950804",
+								Animated: false,
+							},
+							URL:      "https://discord.gg/RxP2z5NGtj",
 						},
 					},
 				},

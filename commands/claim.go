@@ -47,21 +47,47 @@ var ClaimCommand = discordgo.ApplicationCommand{
 			Choices:      []*discordgo.ApplicationCommandOptionChoice{},
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
 			Name:        "create",
-			Description: "Create a claimable prize for someone.",
+			Description: "Create a claimable prize.",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type:        discordgo.ApplicationCommandOptionUser,
-					Name:        "winner",
-					Description: "The user who will receive the prize.",
-					Required:    true,
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Name:        "user",
+					Description: "Create a claimable prize for someone.",
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionUser,
+							Name:        "winner",
+							Description: "The user who will receive the prize.",
+							Required:    true,
+						},
+						{
+							Type:        discordgo.ApplicationCommandOptionString,
+							Name:        "item",
+							Description: "The prize you are giving",
+							Required:    true,
+						},
+					},
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "item",
-					Description: "The user who will receive the prize.",
-					Required:    true,
+					Type:        discordgo.ApplicationCommandOptionSubCommand,
+					Name:        "role",
+					Description: "Create a claimable prize for a role.",
+					Options: []*discordgo.ApplicationCommandOption{
+						{
+							Type:        discordgo.ApplicationCommandOptionRole,
+							Name:        "role",
+							Description: "The role of users who will receive the prize.",
+							Required:    true,
+						},
+						{
+							Type:        discordgo.ApplicationCommandOptionString,
+							Name:        "item",
+							Description: "The prize you are giving",
+							Required:    true,
+						},
+					},
 				},
 			},
 		},
@@ -216,17 +242,17 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimSetup := map[string]any{}
 	auctionSetup := map[string]any{}
 
-	claimMap := h.ParseSubCommand(i)
+	claimMap := h.ParseSubSubCommand(i)
 
-	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
+	result := database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/claim setup` to fix. Error: %s", result.Error.Error()))
+		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/auction setup` to fix. Error: %s", result.Error.Error()))
 		fmt.Println(result.Error)
 		return
 	}
-	result = database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
+	result = database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/auction setup` to fix. Error: %s", result.Error.Error()))
+		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/claim setup` to fix. Error: %s", result.Error.Error()))
 		fmt.Println(result.Error)
 		return
 	}
@@ -234,24 +260,54 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimMap["log_channel"] = auctionSetup["log_channel"]
 	claimMap["host"] = i.Member.User.ID
 
-	err := ClaimOutput(s, claimMap, "Custom Claim")
-	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		fmt.Println(err)
-		return
-	}
+	switch i.ApplicationCommandData().Options[0].Options[0].Name {
+	case "role":
 
-	h.SuccessResponse(s, i, h.PresetResponse{
-		Content:     "",
-		Title:       "Claim Successfully Created!",
-		Description: "Check out <#" + claimMap["channel_id"].(string) + "> to see the claim",
-		Fields:      []*discordgo.MessageEmbedField{},
-		Thumbnail:   &discordgo.MessageEmbedThumbnail{},
-		Image:       &discordgo.MessageEmbedImage{},
-		Components:  []discordgo.MessageComponent{},
-		Embeds:      []*discordgo.MessageEmbed{},
-		Files:       []*discordgo.File{},
-	})
+		guild, err := s.State.Guild(i.GuildID)
+		if err != nil {
+			h.ErrorResponse(s, i, err.Error())
+			return
+		}
+		
+		fmt.Println("Printing members: ")
+
+		for _, v := range guild.Members {
+			fmt.Println(v.User.Username)
+			for _, role := range v.Roles {
+				if role == claimMap["role"] {
+					claimMap["winner"] = v.User.ID
+					err = ClaimOutput(s, claimMap, "Custom Claim")
+					if err != nil {
+						h.ErrorResponse(s, i, err.Error())
+						fmt.Println(err)
+						return
+					}
+				}
+			}
+		}
+
+		err = h.ExperimentalResponse(s, i, h.PresetResponse{
+			Title:       "Claims Successfully Created!",
+			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claim",
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+	case "user":
+		err := ClaimOutput(s, claimMap, "Custom Claim")
+		if err != nil {
+			h.ErrorResponse(s, i, err.Error())
+			fmt.Println(err)
+			return
+		}
+		err = h.SuccessResponse(s, i, h.PresetResponse{
+			Title:       "Claim Successfully Created!",
+			Description: "Check out <#" + claimMap["channel_id"].(string) + "> to see the claim",
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 
 }
 

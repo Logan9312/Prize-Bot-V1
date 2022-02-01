@@ -472,6 +472,8 @@ func GiveawayEnd(s *discordgo.Session, messageID string) {
 		fmt.Println(err)
 	}
 
+	//err = ClaimOutput(s, giveawayMap, "Giveaway")
+
 	message, err := h.PresetMessageSend(s, giveawayInfo.ChannelID, h.PresetResponse{
 		Content: winnerTags,
 		Components: []discordgo.MessageComponent{
