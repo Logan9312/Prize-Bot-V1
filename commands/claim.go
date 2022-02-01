@@ -650,11 +650,6 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != claimMap["host"] {
-		h.ErrorResponse(s, i, fmt.Sprintf("User must have administrator permissions or be the host (%s) to run this command", fmt.Sprint(claimMap["host"])))
-		return
-	}
-
 	claimSetup := map[string]interface{}{}
 
 	result = database.DB.Model(database.ClaimSetup{}).First(claimSetup, i.GuildID)
@@ -804,6 +799,11 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[1])
 	if result.Error != nil {
 		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
+
+	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != claimMap["host"] {
+		h.ErrorResponse(s, i, fmt.Sprintf("User must have administrator permissions or be the host (%s) to run this command", fmt.Sprint(claimMap["host"])))
 		return
 	}
 
