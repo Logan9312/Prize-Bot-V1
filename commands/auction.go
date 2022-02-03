@@ -1180,7 +1180,8 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		}
 
 		auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".") + " BUYOUT!"
-
+		auctionMap["end_time"] = time.Now()
+		
 		database.DB.Model(database.Auction{
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
