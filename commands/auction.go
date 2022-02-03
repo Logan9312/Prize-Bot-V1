@@ -1179,11 +1179,52 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			auctionMap["bid_history"] = ""
 		}
 
-		auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".")
+		auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".") + " BUYOUT!"
 
 		database.DB.Model(database.Auction{
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
+
+		updateAuction, err := s.ChannelMessage(auctionMap["channel_id"].(string), auctionMap["message_id"].(string))
+		if err != nil {
+			return response, err
+		}
+
+		bidHistory := auctionMap["bid_history"].(string)
+		if len(bidHistory) > 4095 {
+			bidHistory = bidHistory[len(bidHistory)-4095:]
+		}
+
+		m, err := AuctionFormat(s, auctionMap)
+		if err != nil {
+			return response, err
+		}
+
+		updateAuction.Embeds[0].Fields = m.Fields
+		updateAuction.Embeds[0].Description = m.Description
+
+		if len(updateAuction.Embeds) != 2 {
+			updateAuction.Embeds = append(updateAuction.Embeds, &discordgo.MessageEmbed{
+				Title:       "**Bid History**",
+				Description: bidHistory,
+				Color:       0x8073ff,
+				Image: &discordgo.MessageEmbedImage{
+					URL: "https://i.imgur.com/9wo7diC.png",
+				},
+			})
+		} else {
+			updateAuction.Embeds[1].Description = bidHistory
+		}
+
+		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Components: updateAuction.Components,
+			Embeds:     updateAuction.Embeds,
+			ID:         auctionMap["message_id"].(string),
+			Channel:    auctionMap["channel_id"].(string),
+		})
+		if err != nil {
+			return response, err
+		}
 
 		response = h.PresetResponse{
 			Title:       "Success!",
@@ -1191,6 +1232,8 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		}
 
 		AuctionEnd(auctionMap)
+
+		Content = "Bid has successfully been placed"
 
 		return response, nil
 	case bidData.Bid >= auctionMap["bid"].(float64):
@@ -1241,6 +1284,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		if err != nil {
 			return response, err
 		}
+
 		updateAuction.Embeds[0].Fields = m.Fields
 		updateAuction.Embeds[0].Description = m.Description
 
