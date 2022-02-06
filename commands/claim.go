@@ -522,6 +522,10 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
 
+	if claimSetup["disable_claiming"] == true {
+		h.ErrorResponse(s, i, "Claiming has been disabled. A server administrator must use `/claim setup disable_claiming:` to re-enable.")
+		return
+	}
 	if claimSetup["category"] == nil {
 		h.ErrorResponse(s, i, "The server admins have not set a claiming channel. Please use the command `/claim setup category:` to set it.")
 		return
