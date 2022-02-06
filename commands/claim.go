@@ -42,11 +42,11 @@ var ClaimCommand = discordgo.ApplicationCommand{
 					Name:        "instructions",
 					Description: "Leave instructions for whoever opens the ticket.",
 				},
-				{
+				/*{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "disable_claiming",
 					Description: "Disables the claiming system, only leaves a record of prizes.",
-				},
+				},*/
 			},
 			Autocomplete: false,
 			Choices:      []*discordgo.ApplicationCommandOptionChoice{},

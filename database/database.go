@@ -81,7 +81,7 @@ type ClaimSetup struct {
 	Instructions    string
 	LogChannel      string
 	Expiration      string
-	DisableClaiming bool
+	//DisableClaiming bool
 }
 
 type Claim struct {
