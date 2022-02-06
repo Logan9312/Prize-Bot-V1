@@ -276,6 +276,7 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	claimMap["log_channel"] = auctionSetup["log_channel"]
 	claimMap["host"] = i.Member.User.ID
+	claimMap["guild_id"] = i.GuildID
 
 	switch i.ApplicationCommandData().Options[0].Options[0].Name {
 	case "role":
