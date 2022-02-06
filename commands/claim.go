@@ -516,7 +516,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimSetup := map[string]interface{}{}
 
 	result := database.DB.Model(database.Claim{}).First(&claimMap, i.Message.ID)
-	if result.Error == nil {
+	if result.Error != nil {
 		h.ErrorResponse(s, i, result.Error.Error())
 		return
 	}
