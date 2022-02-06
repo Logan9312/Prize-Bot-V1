@@ -507,7 +507,11 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimMap := map[string]interface{}{}
 	claimSetup := map[string]interface{}{}
 
-	database.DB.Model(database.Claim{}).First(&claimMap, i.Message.ID)
+	result := database.DB.Model(database.Claim{}).First(&claimMap, i.Message.ID)
+	if result.Error == nil {
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
 	database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
 
 	if claimSetup["category"] == nil {
@@ -531,7 +535,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	//Add permissions for the opener to see the channels. Plus add support role.
 	channel, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
-		Name: "🎁│" + i.Member.User.Username,
+		Name: "🎁│" + i.Member.User.Username + i.Member.User.Discriminator,
 		Type: 0,
 		PermissionOverwrites: []*discordgo.PermissionOverwrite{
 			{
@@ -567,6 +571,12 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Value: claimMap["item"].(string),
 		},
 	}
+	if claimSetup["description"] != nil && claimSetup["description"] != "" {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:  "__**DESCRIPTION**__",
+			Value: claimSetup["description"].(string),
+		})
+	}
 
 	if claimSetup["instructions"] != nil && claimSetup["instructions"] != "" {
 		fields = append(fields, &discordgo.MessageEmbedField{
@@ -586,12 +596,18 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Value: "• **Complete**: Click when you have successfully claimed your prize.\n• **Cancel** (Admin only): Close the ticket without claiming.",
 	})
 
+	thumbnail := &discordgo.MessageEmbedThumbnail{}
+
+	if i.Message.Embeds[0].Thumbnail != nil {
+		thumbnail = i.Message.Embeds[0].Thumbnail
+	}
+
 	h.SuccessMessage(s, channel.ID, h.PresetResponse{
 		Content:     i.Member.Mention(),
 		Title:       "Ticket!",
 		Description: "This is where you claim your prize.",
 		Fields:      fields,
-		Thumbnail:   i.Message.Embeds[0].Thumbnail,
+		Thumbnail:   thumbnail,
 		Image:       &discordgo.MessageEmbedImage{},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -672,21 +688,23 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		issues += "Original message not found: " + err.Error()
 	}
 
-	//0x14f7b2 0x50c878
-	message.Embeds[0].Color = 0x00c940
+	if message.Embeds != nil {
+		//0x14f7b2 0x50c878
+		message.Embeds[0].Color = 0x00c940
 
-	_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		Content:         &message.Content,
-		Components:      []discordgo.MessageComponent{},
-		Embeds:          message.Embeds,
-		AllowedMentions: &discordgo.MessageAllowedMentions{},
-		ID:              customID[2],
-		Channel:         customID[1],
-	})
-	if err != nil {
-		h.ErrorResponse(s, i, "There was an issue editing the old log embed: "+err.Error())
-		fmt.Println("There was an issue editing the old log embed: " + err.Error())
-		return
+		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Content:         &message.Content,
+			Components:      []discordgo.MessageComponent{},
+			Embeds:          message.Embeds,
+			AllowedMentions: &discordgo.MessageAllowedMentions{},
+			ID:              customID[2],
+			Channel:         customID[1],
+		})
+		if err != nil {
+			h.ErrorResponse(s, i, "There was an issue editing the old log embed: "+err.Error())
+			fmt.Println("There was an issue editing the old log embed: " + err.Error())
+			return
+		}
 	}
 
 	fields := []*discordgo.MessageEmbedField{
