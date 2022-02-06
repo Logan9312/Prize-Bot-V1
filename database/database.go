@@ -75,12 +75,13 @@ type AuctionQueue struct {
 
 //Make sure to remove LogChannel and ClaimMessage from auction log
 type ClaimSetup struct {
-	GuildID      string `gorm:"primaryKey"`
-	Category     string
-	StaffRole    string
-	Instructions string
-	LogChannel   string
-	Expiration   string
+	GuildID         string `gorm:"primaryKey"`
+	Category        string
+	StaffRole       string
+	Instructions    string
+	LogChannel      string
+	Expiration      string
+	DisableClaiming bool
 }
 
 type Claim struct {

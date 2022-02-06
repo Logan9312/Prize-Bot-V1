@@ -42,6 +42,11 @@ var ClaimCommand = discordgo.ApplicationCommand{
 					Name:        "instructions",
 					Description: "Leave instructions for whoever opens the ticket.",
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "disable_claiming",
+					Description: "Disables the claiming system, only leaves a record of prizes.",
+				},
 			},
 			Autocomplete: false,
 			Choices:      []*discordgo.ApplicationCommandOptionChoice{},
@@ -349,11 +354,12 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	mentionUser := ""
 	finalBid := ""
 	claimMap["cost"] = claimMap["bid"]
+	claimSetup := map[string]interface{}{}
 
-	/*result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, claimMap["guild_id"])
+	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, claimMap["guild_id"])
 	if result.Error != nil {
 		return fmt.Errorf("Error Fetching Claim Setup database. Try running `/claim setup` to make sure everything is set properly. Error message: " + result.Error.Error())
-	}*/
+	}
 
 	if claimMap["formatted_price"] != nil {
 		finalBid = claimMap["formatted_price"].(string)
@@ -395,19 +401,21 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	user, err := Session.User(fmt.Sprint(claimMap["winner"]))
 	if err != nil {
 		user = &discordgo.User{}
-		user.Username = claimMap["winner"].(string)
+		user.Username = fmt.Sprintf("<@%s>", claimMap["winner"].(string))
 	} else {
 		mentionUser = user.Mention()
 		user.Username = fmt.Sprintf("%s (%s#%s)", user.Mention(), user.Username, user.Discriminator)
-		buttons = append(buttons, discordgo.Button{
-			Label: "Claim!",
-			Style: 3,
-			Emoji: discordgo.ComponentEmoji{
-				Name: "cryopod",
-				ID:   "889307390690885692",
-			},
-			CustomID: "claim_prize:" + claimMap["winner"].(string),
-		})
+		if claimSetup["disable_claiming"] != true {
+			buttons = append(buttons, discordgo.Button{
+				Label: "Claim!",
+				Style: 3,
+				Emoji: discordgo.ComponentEmoji{
+					Name: "cryopod",
+					ID:   "889307390690885692",
+				},
+				CustomID: "claim_prize:" + claimMap["winner"].(string),
+			})
+		}
 	}
 
 	fields := []*discordgo.MessageEmbedField{
@@ -473,7 +481,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	claimMap["message_id"] = message.ID
 	claimMap["channel_id"] = message.ChannelID
 
-	result := database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url"}).Create(claimMap)
+	result = database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url"}).Create(claimMap)
 	if result.Error != nil {
 		return result.Error
 	}
