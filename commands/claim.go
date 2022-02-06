@@ -42,11 +42,11 @@ var ClaimCommand = discordgo.ApplicationCommand{
 					Name:        "instructions",
 					Description: "Leave instructions for whoever opens the ticket.",
 				},
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "disable_claiming",
 					Description: "Disables the claiming system, only leaves a record of prizes.",
-				},*/
+				},
 			},
 			Autocomplete: false,
 			Choices:      []*discordgo.ApplicationCommandOptionChoice{},
@@ -356,7 +356,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	claimMap["cost"] = claimMap["bid"]
 	claimSetup := map[string]interface{}{}
 
-	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, claimMap["guild_id"])
+	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, claimMap["guild_id"].(string))
 	if result.Error != nil {
 		return fmt.Errorf("Error Fetching Claim Setup database. Try running `/claim setup` to make sure everything is set properly. Error message: " + result.Error.Error())
 	}

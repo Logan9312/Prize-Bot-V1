@@ -81,7 +81,7 @@ type ClaimSetup struct {
 	Instructions    string
 	LogChannel      string
 	Expiration      string
-	//DisableClaiming bool
+	DisableClaiming bool
 }
 
 type Claim struct {
@@ -97,6 +97,7 @@ type Claim struct {
 	ImageURL   string
 	TicketID   string
 }
+
 
 type Giveaway struct {
 	MessageID    string `gorm:"primaryKey"`
