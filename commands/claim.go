@@ -616,7 +616,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	h.SuccessMessage(s, channel.ID, h.PresetResponse{
-		Content:     i.Member.Mention(),
+		Content:     fmt.Sprintf("<@%s> %s",claimMap["host"].(string),i.Member.Mention()),
 		Title:       "Ticket!",
 		Description: "This is where you claim your prize.",
 		Fields:      fields,
