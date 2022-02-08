@@ -111,7 +111,6 @@ func Timers(s *discordgo.Session) {
 	Auctions := []map[string]interface{}{}
 	AuctionQueue := []map[string]interface{}{}
 	Giveaways := []map[string]interface{}{}
-	Claims := []map[string]interface{}{}
 
 	fmt.Println("Beginning Startup Timers")
 
@@ -128,11 +127,6 @@ func Timers(s *discordgo.Session) {
 	database.DB.Model([]database.Giveaway{}).Find(&Giveaways)
 	for _, v := range Giveaways {
 		go GiveawayEndTimer(v, s)
-	}
-
-	database.DB.Model([]database.Claim{}).Find(&Claims)
-	for _, v := range Claims {
-		ClaimSetGuildID(v, s)
 	}
 }
 
@@ -169,21 +163,4 @@ func GiveawayEndTimer(v map[string]interface{}, s *discordgo.Session) {
 		time.Sleep(time.Until(v["end_time"].(time.Time)))
 		commands.GiveawayEnd(commands.Session, v["message_id"].(string))
 	}
-}
-
-func ClaimSetGuildID(v map[string]interface{}, s *discordgo.Session) {
-	if v["channel_id"] == nil {
-		v["channel_id"] = ""
-	}
-	if v["message_id"] == nil {
-		v["message_id"] = ""
-	}
-	message, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	database.DB.Model(database.Claim{
-		MessageID: v["message_id"].(string),
-	}).Update("guild_id", message.GuildID)
 }
