@@ -87,6 +87,7 @@ type ClaimSetup struct {
 type Claim struct {
 	MessageID  string `gorm:"primaryKey"`
 	ChannelID  string
+	GuildID    string
 	Item       string
 	Type       string
 	Winner     string
@@ -97,7 +98,6 @@ type Claim struct {
 	ImageURL   string
 	TicketID   string
 }
-
 
 type Giveaway struct {
 	MessageID    string `gorm:"primaryKey"`
