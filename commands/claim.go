@@ -947,11 +947,13 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if v["description"] == nil {
 			v["description"] = "No description."
 		}
+		if v["item"] != nil{
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   v["item"].(string),
 			Value:  v["description"].(string),
 			Inline: false,
 		})
+	}
 	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
