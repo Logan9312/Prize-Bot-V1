@@ -108,6 +108,19 @@ var ClaimCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "inventory",
+			Description: "Displays a user's unclaimed prizes",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "The user who you want to display.",
+					Required:    true,
+				},
+			},
+		},
 	},
 }
 
@@ -117,6 +130,8 @@ func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ClaimSetup(s, i)
 	case "create":
 		ClaimCreate(s, i)
+	case "inventory":
+		ClaimInventory(s, i)
 	}
 }
 
@@ -376,7 +391,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	}
 
 	buttons := []discordgo.MessageComponent{
-		discordgo.Button{
+		/*discordgo.Button{
 			Label: "Support",
 			Style: discordgo.LinkButton,
 			Emoji: discordgo.ComponentEmoji{
@@ -385,7 +400,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 				Animated: false,
 			},
 			URL: "https://discord.gg/RxP2z5NGtj",
-		},
+		},*/
 	}
 
 	if claimMap["bid_history"] != nil {
@@ -402,7 +417,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	user, err := Session.User(fmt.Sprint(claimMap["winner"]))
 	if err != nil {
 		user = &discordgo.User{}
-		user.Username = fmt.Sprintf("<@%s>", claimMap["winner"].(string))
+		user.Username = claimMap["winner"].(string)
 	} else {
 		mentionUser = user.Mention()
 		user.Username = fmt.Sprintf("%s (%s#%s)", user.Mention(), user.Username, user.Discriminator)
@@ -616,7 +631,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	h.SuccessMessage(s, channel.ID, h.PresetResponse{
-		Content:     fmt.Sprintf("<@%s> %s",claimMap["host"].(string),i.Member.Mention()),
+		Content:     fmt.Sprintf("<@%s> %s", claimMap["host"].(string), i.Member.Mention()),
 		Title:       "Ticket!",
 		Description: "This is where you claim your prize.",
 		Fields:      fields,
@@ -909,6 +924,62 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		h.ErrorResponse(s, i, err.Error())
 		return
 	}
+
+}
+
+func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	options := h.ParseSubCommand(i)
+	claimSlice := []map[string]interface{}{}
+	fields := []*discordgo.MessageEmbedField{}
+
+	result := database.DB.Model(database.Claim{}).Where(map[string]interface{}{
+		"winner": options["user"],
+	}).Limit(25).Find(&claimSlice)
+	if result.Error != nil {
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
+
+	for _, v := range claimSlice {
+		if v["description"] == nil {
+			v["description"] = "No description."
+		}
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:   v["item"].(string),
+			Value:  v["description"].(string),
+			Inline: false,
+		})
+	}
+
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title:  "**Inventory**",
+		Fields: fields,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: i.Member.User.AvatarURL(""),
+		},
+		Image: &discordgo.MessageEmbedImage{},
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label:    "▶",
+						Style:    0,
+						Disabled: false,
+						Emoji: discordgo.ComponentEmoji{
+							Name:     "",
+							ID:       "",
+							Animated: false,
+						},
+						URL:      "",
+						CustomID: "inventory_right:",
+					},
+				},
+			},
+		},
+		Embeds: []*discordgo.MessageEmbed{},
+		Files:  []*discordgo.File{},
+	})
 
 }
 
