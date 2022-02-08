@@ -496,8 +496,9 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	claimMap["message_id"] = message.ID
 	claimMap["channel_id"] = message.ChannelID
+	claimMap["guild_id"] = message.GuildID
 
-	result = database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url"}).Create(claimMap)
+	result = database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url"}).Create(claimMap)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -934,7 +935,8 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	fields := []*discordgo.MessageEmbedField{}
 
 	result := database.DB.Model(database.Claim{}).Where(map[string]interface{}{
-		"winner": options["user"],
+		"winner":   options["user"],
+		"guild_id": options["guild_id"],
 	}).Limit(25).Find(&claimSlice)
 	if result.Error != nil {
 		h.ErrorResponse(s, i, result.Error.Error())
