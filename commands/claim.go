@@ -414,15 +414,9 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		})
 	}
 
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: buttons,
-		},
-	}
 
-	if len(buttons) == 0 {
-		components = []discordgo.MessageComponent{}
-	}
+
+
 
 	user, err := Session.User(fmt.Sprint(claimMap["winner"]))
 	if err != nil {
@@ -442,6 +436,16 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 				CustomID: "claim_prize:" + claimMap["winner"].(string),
 			})
 		}
+	}
+
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: buttons,
+		},
+	}
+	
+	if len(buttons) == 0 {
+		components = []discordgo.MessageComponent{}
 	}
 
 	fields := []*discordgo.MessageEmbedField{
