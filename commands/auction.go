@@ -1133,13 +1133,10 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	if result.Error != nil {
 		return response, result.Error
 	}
-
-	auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
-	auctionMap["snipe_range"] = auctionSetup["snipe_range"]
-
-	if auctionMap["snipe_range"] != nil && auctionMap["snipe_extension"] != nil {
-		if time.Until(auctionMap["end_time"].(time.Time)) < auctionMap["snipe_range"].(time.Duration) && auctionMap["snipe_extension"] != 0 {
-			auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(auctionMap["snipe_extension"].(time.Duration))
+	
+	if auctionSetup["snipe_range"] != nil && auctionSetup["snipe_extension"] != nil {
+		if time.Until(auctionMap["end_time"].(time.Time)) < auctionSetup["snipe_range"].(time.Duration) && auctionSetup["snipe_extension"] != 0 {
+			auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(auctionSetup["snipe_extension"].(time.Duration))
 			responseFields = []*discordgo.MessageEmbedField{
 				{
 					Name:   "**Anti-Snipe Activated!**",
@@ -1149,9 +1146,6 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 			}
 		}
 	}
-
-	delete(auctionMap, "snipe_range")
-	delete(auctionMap, "snipe_extension")
 
 	switch {
 	case auctionMap["end_time"].(time.Time).Before(time.Now()):
@@ -1270,6 +1264,9 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		database.DB.Model(database.Auction{
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)
+
+		auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
+		auctionMap["snipe_range"] = auctionSetup["snipe_range"]
 
 		updateAuction, err := s.ChannelMessage(auctionMap["channel_id"].(string), auctionMap["message_id"].(string))
 		if err != nil {

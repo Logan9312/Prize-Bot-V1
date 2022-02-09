@@ -361,7 +361,6 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(err)
 		}
 	}
-
 }
 
 //Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
@@ -443,7 +442,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 			Components: buttons,
 		},
 	}
-	
+
 	if len(buttons) == 0 {
 		components = []discordgo.MessageComponent{}
 	}
