@@ -414,6 +414,16 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		})
 	}
 
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: buttons,
+		},
+	}
+
+	if len(buttons) == 0 {
+		components = []discordgo.MessageComponent{}
+	}
+
 	user, err := Session.User(fmt.Sprint(claimMap["winner"]))
 	if err != nil {
 		user = &discordgo.User{}
@@ -483,11 +493,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		Image: &discordgo.MessageEmbedImage{
 			URL: "https://i.imgur.com/9wo7diC.png",
 		},
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: buttons,
-			},
-		},
+		Components: components,
 	})
 
 	if err != nil {
@@ -947,13 +953,13 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if v["description"] == nil {
 			v["description"] = "No description."
 		}
-		if v["item"] != nil{
-		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:   v["item"].(string),
-			Value:  v["description"].(string),
-			Inline: false,
-		})
-	}
+		if v["item"] != nil {
+			fields = append(fields, &discordgo.MessageEmbedField{
+				Name:   v["item"].(string),
+				Value:  v["description"].(string),
+				Inline: false,
+			})
+		}
 	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
