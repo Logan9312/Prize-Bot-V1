@@ -413,10 +413,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		})
 	}
 
-
-
-
-
 	user, err := Session.User(fmt.Sprint(claimMap["winner"]))
 	if err != nil {
 		user = &discordgo.User{}
@@ -553,8 +549,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	if claimSetup["category"] == nil {
-		h.ErrorResponse(s, i, "The server admins have not set a claiming channel. Please use the command `/claim setup category:` to set it.")
-		return
+		claimSetup["category"] = ""
 	}
 	if claimMap["item"] == nil {
 		h.ErrorResponse(s, i, "No item to claim saved in database. Contact support server for help.")

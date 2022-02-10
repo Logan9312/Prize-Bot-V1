@@ -754,10 +754,9 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if auctionMap["image"] != nil {
-		fmt.Println(auctionMap["image"])
 		auctionMap["image_url"] = i.ApplicationCommandData().Resolved.Attachments[auctionMap["image"].(string)].URL
 	}
-	
+
 	endTimeDuration, err := h.ParseTime(strings.ToLower(auctionMap["duration"].(string)))
 	if err != nil {
 		fmt.Println(err)
