@@ -1,8 +1,8 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/FedorLap2006/discordgo v0.22.1-0.20220210004113-86c1f8e9af7a h1:PEV35Zf0zBKVW/Dz3+tGdYGDfPfVgeGJf05ZzFVllzs=
+github.com/FedorLap2006/discordgo v0.22.1-0.20220210004113-86c1f8e9af7a/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
-github.com/bwmarrin/discordgo v0.23.3-0.20211117035633-fd6228c0d536 h1:KLvbHLidkxOGTmdiTmii0DOJ0BDSeOCUrXuvf/9CNr0=
-github.com/bwmarrin/discordgo v0.23.3-0.20211117035633-fd6228c0d536/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
 github.com/caarlos0/env v3.5.0+incompatible h1:Yy0UN8o9Wtr/jGHZDpCBLpNrzcFLLM2yixi/rBrKyJs=
 github.com/caarlos0/env v3.5.0+incompatible/go.mod h1:tdCsowwCzMLdkqRYDlHpZCp2UooDD3MspDBjZ2AD02Y=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=

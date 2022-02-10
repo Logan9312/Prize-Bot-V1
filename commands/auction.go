@@ -191,9 +191,9 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					},
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "image_url",
-					Description: "Must be a link",
+					Type:        11,
+					Name:        "image",
+					Description: "Attach an image to your auction",
 					Required:    false,
 				},
 				{
@@ -753,6 +753,11 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	}
 
+	if auctionMap["image"] != nil {
+		fmt.Println(auctionMap["image"])
+		auctionMap["image_url"] = i.ApplicationCommandData().Resolved.Attachments[auctionMap["image"].(string)].URL
+	}
+	
 	endTimeDuration, err := h.ParseTime(strings.ToLower(auctionMap["duration"].(string)))
 	if err != nil {
 		fmt.Println(err)
@@ -1133,7 +1138,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	if result.Error != nil {
 		return response, result.Error
 	}
-	
+
 	if auctionSetup["snipe_range"] != nil && auctionSetup["snipe_extension"] != nil {
 		if time.Until(auctionMap["end_time"].(time.Time)) < auctionSetup["snipe_range"].(time.Duration) && auctionSetup["snipe_extension"] != 0 {
 			auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(auctionSetup["snipe_extension"].(time.Duration))
@@ -1175,7 +1180,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 
 		auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidAmount), "0"), ".") + " BUYOUT!"
 		auctionMap["end_time"] = time.Now()
-		
+
 		database.DB.Model(database.Auction{
 			ChannelID: bidData.ChannelID,
 		}).Updates(auctionMap)

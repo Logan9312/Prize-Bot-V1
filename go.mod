@@ -29,4 +29,4 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 )
 
-//replace github.com/bwmarrin/discordgo => github.com/FedorLap2006/discordgo v0.22.1-0.20211027194205-0a1b2fb6073c
+replace github.com/bwmarrin/discordgo => github.com/FedorLap2006/discordgo v0.22.1-0.20220210004113-86c1f8e9af7a
