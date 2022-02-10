@@ -178,7 +178,7 @@ func ClaimSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		//Need to see if it's still set after it says not set because of empty string
 		switch {
-		case setOptions[v.Name] == nil:
+		case setOptions[v.Name] == nil || setOptions[v.Name] == "":
 			setOptions[v.Name] = "Not Set"
 		case strings.Contains(v.Name, "role"):
 			setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
