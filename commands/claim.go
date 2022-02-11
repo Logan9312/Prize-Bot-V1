@@ -373,7 +373,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, claimMap["guild_id"].(string))
 	if result.Error != nil {
-		return fmt.Errorf("Error Fetching Claim Setup database. Try running `/claim setup` to make sure everything is set properly. Error message: " + result.Error.Error())
+		fmt.Println("Claim Setup DB Err", result.Error.Error())
 	}
 
 	if claimMap["formatted_price"] != nil {
