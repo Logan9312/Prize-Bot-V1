@@ -85,18 +85,19 @@ type ClaimSetup struct {
 }
 
 type Claim struct {
-	MessageID  string `gorm:"primaryKey"`
-	ChannelID  string
-	GuildID    string
-	Item       string
-	Type       string
-	Winner     string
-	Cost       float64
-	Host       string
-	BidHistory string
-	Note       string
-	ImageURL   string
-	TicketID   string
+	MessageID   string `gorm:"primaryKey"`
+	ChannelID   string
+	GuildID     string
+	Item        string
+	Type        string
+	Winner      string
+	Cost        float64
+	Host        string
+	BidHistory  string
+	Note        string
+	ImageURL    string
+	TicketID    string
+	Description string
 }
 
 type Giveaway struct {
