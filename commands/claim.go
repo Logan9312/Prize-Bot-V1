@@ -960,12 +960,19 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			})
 		}
 	}
+	userAvatar := ""
+	user, err := s.User(options["user"].(string))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		userAvatar = user.AvatarURL("")
+	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:  "**Inventory**",
 		Fields: fields,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: i.Member.User.AvatarURL(""),
+			URL: userAvatar,
 		},
 		Image: &discordgo.MessageEmbedImage{},
 		Components: []discordgo.MessageComponent{
