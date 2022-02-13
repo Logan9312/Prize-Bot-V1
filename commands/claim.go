@@ -938,10 +938,10 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimSlice := []map[string]interface{}{}
 	fields := []*discordgo.MessageEmbedField{}
 
-	result := database.DB.Model(database.Claim{}).Where(map[string]interface{}{
+	result := database.DB.Where(map[string]interface{}{
 		"winner":   options["user"],
 		"guild_id": options["guild_id"],
-	}).Limit(25).Find(&claimSlice)
+	}).Model(database.Claim{}).Limit(25).Find(&claimSlice)
 	if result.Error != nil {
 		h.ErrorResponse(s, i, result.Error.Error())
 		return
