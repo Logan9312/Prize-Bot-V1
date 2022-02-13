@@ -499,11 +499,8 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return err
 	}
 
-	fmt.Println(claimMap["guild_id"])
-	fmt.Println(message.GuildID)
-
 	claimMap["message_id"] = message.ID
-	claimMap["channel_id"] = message.ChannelID
+	claimMap["channel_id"] = claimMap["log_channel"].(string)
 
 	result = database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url"}).Create(claimMap)
 	if result.Error != nil {

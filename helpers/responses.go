@@ -232,6 +232,8 @@ func SuccessMessage(s *discordgo.Session, channelID string, r PresetResponse) (*
 	})
 }
 
+
+
 func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) (*discordgo.Message, error) {
 	return s.InteractionResponseEdit(s.State.User.ID, i.Interaction, &discordgo.WebhookEdit{
 		Content:    r.Content,
