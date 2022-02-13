@@ -567,8 +567,8 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	//Add permissions for the opener to see the channels. Plus add support role.
 	channel, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
-		Name: "🎁│" + i.Member.User.Username + i.Member.User.Discriminator,
-		Type: 0,
+		Name:     "🎁│" + i.Member.User.Username + i.Member.User.Discriminator,
+		Type:     0,
 		ParentID: claimSetup["category"].(string),
 	})
 	if err != nil {
@@ -577,13 +577,13 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	err = s.ChannelPermissionSet(channel.ID, i.Member.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel | discordgo.PermissionSendMessages, 0)
+	err = s.ChannelPermissionSet(channel.ID, i.Member.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
 	if err != nil {
 		fmt.Println(err)
 		h.ErrorResponse(s, i, err.Error())
 		return
 	}
-	err = s.ChannelPermissionSet(channel.ID, claimMap["host"].(string), discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel | discordgo.PermissionSendMessages, 0)
+	err = s.ChannelPermissionSet(channel.ID, claimMap["host"].(string), discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
 	if err != nil {
 		fmt.Println(err)
 		h.ErrorResponse(s, i, err.Error())
@@ -605,7 +605,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if claimMap["description"] != nil && claimMap["description"] != "" {
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  "__**DESCRIPTION**__",
-			Value: claimSetup["description"].(string),
+			Value: claimMap["description"].(string),
 		})
 	}
 
