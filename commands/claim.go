@@ -569,28 +569,27 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	channel, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
 		Name: "🎁│" + i.Member.User.Username + i.Member.User.Discriminator,
 		Type: 0,
-		PermissionOverwrites: []*discordgo.PermissionOverwrite{
-			{
-				ID:    i.Member.User.ID,
-				Type:  discordgo.PermissionOverwriteTypeMember,
-				Deny:  0,
-				Allow: discordgo.PermissionViewChannel | discordgo.PermissionSendMessages,
-			},
-			{
-				ID:    claimMap["host"].(string),
-				Type:  discordgo.PermissionOverwriteTypeMember,
-				Deny:  0,
-				Allow: discordgo.PermissionViewChannel | discordgo.PermissionSendMessages,
-			},
-			{
-				ID:    i.GuildID,
-				Type:  discordgo.PermissionOverwriteTypeRole,
-				Deny:  discordgo.PermissionViewChannel,
-				Allow: 0,
-			},
-		},
 		ParentID: claimSetup["category"].(string),
 	})
+	if err != nil {
+		fmt.Println(err)
+		h.ErrorResponse(s, i, err.Error())
+		return
+	}
+
+	err = s.ChannelPermissionSet(channel.ID, i.Member.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel | discordgo.PermissionSendMessages, 0)
+	if err != nil {
+		fmt.Println(err)
+		h.ErrorResponse(s, i, err.Error())
+		return
+	}
+	err = s.ChannelPermissionSet(channel.ID, claimMap["host"].(string), discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel | discordgo.PermissionSendMessages, 0)
+	if err != nil {
+		fmt.Println(err)
+		h.ErrorResponse(s, i, err.Error())
+		return
+	}
+	err = s.ChannelPermissionSet(channel.ID, i.GuildID, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionViewChannel)
 	if err != nil {
 		fmt.Println(err)
 		h.ErrorResponse(s, i, err.Error())
