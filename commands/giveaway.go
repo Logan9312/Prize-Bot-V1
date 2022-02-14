@@ -397,6 +397,24 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		Inline: false,
 	})
 
+	fm.Components = []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Reroll",
+					Style:    1,
+					Disabled: false,
+					Emoji: discordgo.ComponentEmoji{
+						Name:     "🔄",
+						ID:       messageID,
+						Animated: false,
+					},
+					CustomID: "reroll_giveaway",
+				},
+			},
+		},
+	}
+
 	_, err = h.SuccessMessageEdit(s, giveawayMap["channel_id"].(string), messageID, fm)
 	if err != nil {
 		return err
