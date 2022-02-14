@@ -227,6 +227,8 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	giveawayMap["guild_id"] = i.GuildID
 	giveawayMap["host"] = i.Member.User.ID
+	giveawayMap["channel_id"] = giveawayMap["channel"]
+	delete(giveawayMap, "channel")
 
 	if giveawayMap["channel_id"] == nil {
 		giveawayMap["channel_id"] = i.ChannelID
@@ -272,8 +274,6 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		h.ErrorResponse(s, i, err.Error())
 		return
 	}
-
-	delete(giveawayMap, "channel")
 
 	result = database.DB.Model(database.Giveaway{}).Create(giveawayMap)
 	if result.Error != nil {
