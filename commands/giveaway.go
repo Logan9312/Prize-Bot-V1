@@ -486,7 +486,7 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	giveawayInfo := database.Giveaway{
-		MessageID: i.Message.ChannelID,
+		MessageID: i.Message.ID,
 	}
 
 	result := database.DB.First(&giveawayInfo)
