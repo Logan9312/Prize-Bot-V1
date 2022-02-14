@@ -27,7 +27,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "profile":
 			c.Profile(s, i)
 		case "giveaway":
-			c.Giveaway(s, i)
+			h.ErrorResponse(s, i, "Due to a new giveaway system coming extremely soon, new giveaways cannot be created at this time. I'm sorry for the inconvenience.")
+			//c.Giveaway(s, i)
 		case "claim":
 			c.Claim(s, i)
 		case "privacy_policy":
