@@ -19,7 +19,6 @@ type AuctionSetup struct {
 	AlertRole      string
 	Currency       string
 	LogChannel     string
-	Claiming       string
 	HostRole       string
 	SnipeExtension time.Duration
 	SnipeRange     time.Duration
@@ -101,25 +100,22 @@ type Claim struct {
 }
 
 type Giveaway struct {
-	MessageID    string `gorm:"primaryKey"`
-	ChannelID    string
-	GuildID      string
-	Item         string
-	EndTime      time.Time
-	Description  string
-	Host         string
-	Winners      float64
-	ImageURL     string
-	Entries      string
-	Finished     bool
-	WinnerOutput string
+	MessageID   string `gorm:"primaryKey"`
+	ChannelID   string
+	GuildID     string
+	Item        string
+	EndTime     time.Time
+	Description string
+	Host        string
+	Winners     float64
+	ImageURL    string
 }
 
 type GiveawaySetup struct {
-	GuildID   string `gorm:"primaryKey"`
-	HostRole  string
-	AlertRole string
-	Claiming  string
+	GuildID    string `gorm:"primaryKey"`
+	HostRole   string
+	AlertRole  string
+	LogChannel string
 }
 
 type UserProfile struct {

@@ -28,30 +28,26 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Name:        "alert_role",
 					Description: "Set a role to get pinged whenever an auction starts.",
 				},
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "log_channel",
-					Description: "Sets the channel where auctions will send outputs when they end",
+					Description: "Sets the channel where giveaway will send outputs when they end",
 					Required:    false,
 					ChannelTypes: []discordgo.ChannelType{
 						0,
+						5,
 					},
-				},*/
+				},
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "host_role",
 					Description: "Set a role that can host auctions.",
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "claiming",
-					Description: "Set the message that will appear when someone tries to claim an auction prize",
-				},
-				{
+				/*{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "auto_enter",
 					Description: "Anyone with this role will be automatically entered.",
-				},
+				},*/
 			},
 		},
 		{
@@ -95,9 +91,9 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Required:    false,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
+					Type:        11,
 					Name:        "image",
-					Description: "Must be a link",
+					Description: "Attach an image to your giveaway",
 					Required:    false,
 				},
 			},
@@ -139,7 +135,12 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		content += fmt.Sprintf("• %s has been successfully set.\n", strings.Title(strings.ReplaceAll(key, "_", " ")))
 	}
 
-	database.DB.Model(&info).Updates(options)
+	result = database.DB.Model(&info).Updates(options)
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
 
 	//Now check what options are set
 	setOptions := map[string]interface{}{}
@@ -198,22 +199,18 @@ func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	GiveawaySetup := database.GiveawaySetup{
-		GuildID: i.GuildID,
-	}
-	database.DB.First(&GiveawaySetup, i.GuildID)
-
-	options := h.ParseSubCommand(i)
-
-	item := options["item"].(string)
-	winners := options["winners"].(float64)
-	channel := i.ChannelID
-	duration := options["duration"].(string)
 	canHost := false
 
-	if GiveawaySetup.HostRole != "" {
+	GiveawaySetup := map[string]interface{}{}
+
+	result := database.DB.Model(database.GiveawaySetup{}).First(&GiveawaySetup, i.GuildID)
+	if result.Error != nil {
+		fmt.Println("Error fetching Giveaway Setup DB")
+	}
+
+	if GiveawaySetup["host_role"] != "" && GiveawaySetup["host_role"] != nil {
 		for _, v := range i.Member.Roles {
-			if v == GiveawaySetup.HostRole {
+			if v == GiveawaySetup["host_role"].(string) {
 				canHost = true
 			}
 		}
@@ -221,116 +218,79 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			canHost = true
 		}
 		if !canHost {
-			h.ErrorResponse(s, i, "User must be administrator or have the role <@&"+GiveawaySetup.HostRole+"> to host giveaways.")
+			h.ErrorResponse(s, i, "User must be administrator or have the role <@&"+GiveawaySetup["host_role"].(string)+"> to host giveaways.")
 			return
 		}
 	}
 
-	if winners <= 0 {
-		h.ErrorResponse(s, i, "Must have 1 or more winners. Winners entered: "+fmt.Sprint(winners))
-		fmt.Println("Must have 1 or more winners. Winners entered: ", winners)
+	giveawayMap := h.ParseSubCommand(i)
+
+	giveawayMap["guild_id"] = i.GuildID
+	giveawayMap["host"] = i.Member.User.ID
+
+	if giveawayMap["channel_id"] == nil {
+		giveawayMap["channel_id"] = i.ChannelID
+	}
+
+	endTimeDuration, err := h.ParseTime(strings.ToLower(giveawayMap["duration"].(string)))
+	if err != nil {
+		h.ErrorResponse(s, i, err.Error())
+		return
+	}
+	if giveawayMap["image"] != nil {
+		giveawayMap["image_url"] = i.ApplicationCommandData().Resolved.Attachments[giveawayMap["image"].(string)].URL
+	}
+
+	delete(giveawayMap, "duration")
+	delete(giveawayMap, "image")
+
+	if giveawayMap["winners"].(float64) < 1 {
+		h.ErrorResponse(s, i, "Must have 1 or more winners.")
 		return
 	}
 
-	if options["channel"] != nil {
-		channel = options["channel"].(string)
-	}
+	giveawayMap["end_time"] = time.Now().Add(endTimeDuration)
 
-	var imageURL string
-	if options["image"] != nil {
-		imageURL = options["image"].(string)
-	}
-
-	if options["auto_enter"] != nil {
-		s.GuildMembers(i.GuildID, "", 1000)
-	}
-
-	description := fmt.Sprintf("**%s** Winners!\n", fmt.Sprint(winners))
-	if options["description"] != nil {
-		description += options["description"].(string)
-	}
-	guild, err := s.Guild(i.GuildID)
+	formattedMessage, err := AuctionFormat(s, giveawayMap, "Giveaway")
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	endTimeDuration, err := h.ParseTime(duration)
-	if err != nil {
-		fmt.Println(err)
 		h.ErrorResponse(s, i, err.Error())
 		return
 	}
 
-	endTime := time.Now().Add(endTimeDuration)
-
-	content := ""
-	if GiveawaySetup.AlertRole != "" {
-		content = fmt.Sprintf("<@&%s>", GiveawaySetup.AlertRole)
-	}
-
-	message, err := h.PresetMessageSend(s, channel, h.PresetResponse{
-		Content:     content,
-		Title:       "__**" + item + "**__",
-		Description: fmt.Sprintf("<@%s> has hosted a giveaway! To enter, press the button below!", i.Member.User.ID),
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "__**Details:**__",
-				Value:  description,
-				Inline: false,
-			},
-			{
-				Name:   "**End Time**",
-				Value:  fmt.Sprintf("<t:%d:R>", endTime.Unix()),
-				Inline: false,
-			},
-		},
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: guild.IconURL(),
-		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: imageURL,
-		},
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label: "Enter!",
-						Style: discordgo.PrimaryButton,
-						Emoji: discordgo.ComponentEmoji{
-							Name:     "meeting",
-							ID:       "759178932892729344",
-							Animated: true,
-						},
-						CustomID: "enter_giveaway",
-					},
-				},
-			},
-		},
-	})
+	message, err := h.PresetMessageSend(s, giveawayMap["channel_id"].(string), formattedMessage)
 
 	if err != nil {
-		fmt.Println(err)
+		h.ErrorResponse(s, i, err.Error())
 		return
 	}
 
-	database.DB.Create(&database.Giveaway{
-		MessageID:   message.ID,
-		ChannelID:   channel,
-		GuildID:     i.GuildID,
-		Item:        item,
-		EndTime:     endTime,
-		Description: description,
-		Host:        i.Member.User.ID,
-		Winners:     winners,
-	})
+	giveawayMap["message_id"] = message.ID
+
+	err = s.MessageReactionAdd(giveawayMap["channel_id"].(string), message.ID, "🎁")
+
+	if err != nil {
+		h.ErrorResponse(s, i, err.Error())
+		return
+	}
+
+	delete(giveawayMap, "channel")
+
+	result = database.DB.Model(database.Giveaway{}).Create(giveawayMap)
+	if result.Error != nil {
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Giveaway Started!**",
-		Description: fmt.Sprintf("Giveaway has started in <#%s>", channel),
+		Description: fmt.Sprintf("Giveaway has started in <#%s>", giveawayMap["channel_id"]),
 	})
 
 	time.Sleep(endTimeDuration)
-	GiveawayEnd(s, message.ID)
+	err = GiveawayEnd(s, message.ID)
+	if err != nil {
+		h.ErrorMessage(s, giveawayMap["channel_id"].(string), err.Error())
+	}
 }
 
 func GiveawayAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -362,237 +322,138 @@ func GiveawayAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 }
 
-func GiveawayEnter(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func GiveawayEnd(s *discordgo.Session, messageID string) error {
 
-	giveawayInfo := database.Giveaway{
-		MessageID: i.Message.ID,
-	}
-	database.DB.First(&giveawayInfo, i.Message.ID)
+	giveawayMap := map[string]interface{}{}
+	giveawaySetup := map[string]interface{}{}
 
-	for _, v := range strings.Split(giveawayInfo.Entries, " ") {
-		if v == i.Member.User.ID {
-			h.ErrorResponse(s, i, "You have already entered this giveaway!")
-			fmt.Println("User has already entered giveaway.")
-			return
-		}
-	}
-	if giveawayInfo.Entries == "" {
-		giveawayInfo.Entries = i.Member.User.ID
-	} else {
-		giveawayInfo.Entries += fmt.Sprintf(" %s", i.Member.User.ID)
+	result := database.DB.Model(database.Giveaway{}).First(&giveawayMap, messageID)
+	if result.Error != nil {
+		return result.Error
 	}
 
-	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
+	result = database.DB.Model(database.GiveawaySetup{}).First(&giveawaySetup, giveawayMap["guild_id"].(string))
+	if result.Error != nil {
+		fmt.Println("Error fetching giveaway setups", result.Error)
+	}
 
-	fmt.Println(strings.Split(giveawayInfo.Entries, " "))
+	fm, err := AuctionFormat(s, giveawayMap, "Giveaway")
+	if err != nil {
+		return err
+	}
 
-	if len(i.Message.Embeds[0].Fields) == 3 {
-		i.Message.Embeds[0].Fields[2].Value = fmt.Sprint(len(strings.Split(giveawayInfo.Entries, " ")))
-	} else {
-		i.Message.Embeds[0].Fields = append(i.Message.Embeds[0].Fields, &discordgo.MessageEmbedField{
-			Name:   "**Number of Entries**",
-			Value:  fmt.Sprint(len(strings.Split(giveawayInfo.Entries, " "))),
+	if giveawaySetup["log_channel"] == nil {
+		giveawaySetup["log_channel"] = giveawayMap["channel_id"]
+		fm.Fields = append(fm.Fields, &discordgo.MessageEmbedField{
+			Name:   "⚙ **Please Note:**",
+			Value:  "No logging channel was set, so the giveaway end output defaulted to the current channel. To fix this for future giveaways please run `/claim setup log_channel`",
 			Inline: false,
 		})
 	}
 
-	messageEdit := discordgo.NewMessageEdit(i.ChannelID, i.Message.ID)
+	entrants := []string{}
+	afterID := ""
+	for {
 
-	messageEdit.Embeds = i.Message.Embeds
-	messageEdit.Components = i.Message.Components
+		users, err := s.MessageReactions(giveawayMap["channel_id"].(string), messageID, "🎁", 0, "", afterID)
+		if err != nil {
+			return err
+		}
 
-	_, err := s.ChannelMessageEditComplex(messageEdit)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		h.ErrorResponse(s, i, err.Error())
-		return
-	}
-
-	h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "**Successful Entry!**",
-		Description: "You have successfully been entered into the giveaway.",
-	})
-}
-
-func GiveawayEnd(s *discordgo.Session, messageID string) {
-
-	winnerTags, winnerList, giveawayInfo, err := GiveawayRoll(s, messageID)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	m, err := s.ChannelMessage(giveawayInfo.ChannelID, messageID)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	updateWinner := false
-
-	for num, v := range m.Embeds[0].Fields {
-		if v.Name == "**Giveaway Has Ended!**" {
-			updateWinner = true
-			m.Embeds[0].Fields[num] = &discordgo.MessageEmbedField{
-				Name:   "**Giveaway Has Ended!**",
-				Value:  "**Winners:**\n" + winnerList,
-				Inline: false,
+		for _, v := range users {
+			if v.ID != s.State.User.ID {
+				entrants = append(entrants, v.ID)
 			}
 		}
+
+		if len(users) < 100 {
+			break
+		}
+		afterID = users[len(users)-1].ID
 	}
 
-	if !updateWinner {
-		m.Embeds[0].Fields = append(m.Embeds[0].Fields, &discordgo.MessageEmbedField{
-			Name:   "**Giveaway Has Ended!**",
-			Value:  "**Winners:**\n" + winnerList,
-			Inline: false,
-		})
-	}
-
-	_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		Content: &m.Content,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label:    "Reroll",
-						Style:    1,
-						CustomID: "reroll_giveaway",
-					},
-				},
-			},
-		},
-		Embeds:  m.Embeds,
-		ID:      messageID,
-		Channel: m.ChannelID,
-	})
+	winnerList, err := GiveawayRoll(entrants, giveawayMap)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
-	//err = ClaimOutput(s, giveawayMap, "Giveaway")
+	formattedWinnerList := ""
 
-	message, err := h.PresetMessageSend(s, giveawayInfo.ChannelID, h.PresetResponse{
-		Content: winnerTags,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label: "Claim!",
-						Style: 3,
-						Emoji: discordgo.ComponentEmoji{
-							Name: "cryopod",
-							ID:   "889307390690885692",
-						},
-						CustomID: "claim_giveaway",
-					},
-				},
-			},
-		},
-		Title:       "Giveaway Completed!",
-		Description: "You have 24 hours to reroll the winners if you would like.",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "**Giveaway Host**",
-				Value:  fmt.Sprintf("This Giveaway was hosted by: <@!%s>", giveawayInfo.Host),
-				Inline: true,
-			},
-			{
-				Name:   "**Item Won**",
-				Value:  giveawayInfo.Item,
-				Inline: false,
-			},
-			{
-				Name:   "**Winners:**",
-				Value:  winnerList,
-				Inline: false,
-			},
-		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: giveawayInfo.ImageURL,
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	giveawayInfo.Finished = true
-	if giveawayInfo.WinnerOutput != "" {
-		err = s.ChannelMessageDelete(m.ChannelID, giveawayInfo.WinnerOutput)
+	for _, v := range winnerList {
+		user, err := s.User(v)
 		if err != nil {
-			fmt.Println(err)
+			return err
+		}
+		formattedWinnerList += fmt.Sprintf("• %s (%s#%s)\n", user.Mention(), user.Username, user.Discriminator)
+	}
+
+	if len(entrants) < int(giveawayMap["winners"].(float64)) {
+		formattedWinnerList += fmt.Sprintf("• Only %d users entered out of a maximum of %d winners.\n", len(entrants), int(giveawayMap["winners"].(float64)))
+	}
+
+	fm.Fields = append(fm.Fields, &discordgo.MessageEmbedField{
+		Name:   "**Giveaway Complete! Winners:**",
+		Value:  formattedWinnerList,
+		Inline: false,
+	})
+
+	_, err = h.SuccessMessageEdit(s, giveawayMap["channel_id"].(string), messageID, fm)
+	if err != nil {
+		return err
+	}
+
+	giveawayMap["log_channel"] = giveawaySetup["log_channel"]
+
+	for _, v := range winnerList {
+		giveawayMap["winner"] = v
+		err = ClaimOutput(s, giveawayMap, "Giveaway")
+		if err != nil {
+			h.ErrorMessage(s, giveawayMap["channel_id"].(string), err.Error())
 		}
 	}
-	giveawayInfo.WinnerOutput = message.ID
-	database.DB.Model(&giveawayInfo).Updates(giveawayInfo)
 
 	time.Sleep(24 * time.Hour)
 	database.DB.Delete(database.Giveaway{}, messageID)
+
+	return nil
 }
 
-func GiveawayRoll(s *discordgo.Session, messageID string) (string, string, database.Giveaway, error) {
+func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]string, error) {
 
-	var winnerList string
-	var winnerTags string
-	giveawayInfo := database.Giveaway{
-		MessageID: messageID,
+	winnerList := []string{}
+
+	if len(entries) == 0 {
+		return winnerList, fmt.Errorf("No entries found.")
 	}
-	database.DB.First(&giveawayInfo, messageID)
 
-	for n := float64(0); n < giveawayInfo.Winners; {
+	for n := float64(0); n < giveawayMap["winners"].(float64); {
 
-		entryString := strings.Split(giveawayInfo.Entries, " ")
-
-		if len(entryString) == 0 || giveawayInfo.Entries == "" {
-			winnerList += "• Not enough entrants!"
-			fmt.Println("Not enough Entrants")
+		if len(entries) == 0 {
 			break
 		}
 
-		result, err := random.Int(random.Reader, big.NewInt(int64(len(entryString))))
+		bigInt, err := random.Int(random.Reader, big.NewInt(int64(len(entries))))
 		if err != nil {
 			fmt.Println("Random Error: ", err)
-			return "", "", database.Giveaway{}, err
+			return winnerList, err
 		}
 
-		winnerID := entryString[result.Int64()]
+		winnerID := entries[bigInt.Int64()]
 
-		user, err := s.User(winnerID)
-		if err != nil {
-			fmt.Println("User Error:", err)
-			return "", "", database.Giveaway{}, err
+		entries[bigInt.Int64()] = entries[len(entries)-1]
+
+		if len(entries) >= 2 {
+			entries = entries[0 : len(entries)-2]
+		} else {
+			entries = []string{}
 		}
 
-		winner := fmt.Sprintf("<@%s> (%s#%s)", user.ID, user.Username, user.Discriminator)
-
-		winnerList += fmt.Sprintf("• %s\n", winner)
-		winnerTags += fmt.Sprintf("<@%s>, ", winnerID)
-
-		giveawayInfo.Entries = strings.Trim(strings.ReplaceAll(" "+giveawayInfo.Entries, " "+winnerID, ""), " ")
+		winnerList = append(winnerList, winnerID)
 
 		n++
 	}
 
-	return winnerTags, winnerList, giveawayInfo, nil
-}
-
-func ClaimGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var GiveawaySetup database.GiveawaySetup
-	database.DB.First(&GiveawaySetup, i.GuildID)
-
-	if GiveawaySetup.Claiming == "" {
-		GiveawaySetup.Claiming = "The discord owner has not set a claiming message. Common ways to claim include: Opening a ticket or contacting the auction host. \nTo customize this message, use the command: `/giveaway setup claiming:`."
-	}
-
-	err := h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "Claim Prize",
-		Description: GiveawaySetup.Claiming,
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
+	return winnerList, nil
 }
 
 func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -601,14 +462,23 @@ func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		MessageID: i.Message.ChannelID,
 	}
 
-	database.DB.First(&giveawayInfo)
+	result := database.DB.First(&giveawayInfo)
+	if result.Error != nil {
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != giveawayInfo.Host {
 		h.ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
 		return
 	}
 
-	GiveawayEnd(s, i.Message.ID)
+	err := GiveawayEnd(s, i.Message.ID)
+	if err != nil {
+		h.ErrorResponse(s, i, err.Error())
+		return
+	}
+
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Reroll Successful!*",
 		Description: "New winners have been selected.",

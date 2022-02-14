@@ -27,8 +27,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "profile":
 			c.Profile(s, i)
 		case "giveaway":
-			h.ErrorResponse(s, i, "Due to a new giveaway system coming extremely soon, new giveaways cannot be created at this time. I'm sorry for the inconvenience.")
-			//c.Giveaway(s, i)
+			c.Giveaway(s, i)
 		case "claim":
 			c.Claim(s, i)
 		case "privacy_policy":
@@ -51,10 +50,6 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.DeleteAuctionQueue(s, i)
 		case "delete_auction_channel":
 			c.DeleteAuctionChannel(s, i)
-		case "enter_giveaway":
-			c.GiveawayEnter(s, i)
-		case "claim_giveaway":
-			c.ClaimGiveawayButton(s, i)
 		case "reroll_giveaway":
 			c.RerollGiveawayButton(s, i)
 		case "clear_auction_setup":
@@ -143,11 +138,5 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 			}
 		}
-	}
-}
-
-func GuildHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) {
-	for _, v := range g.Members {
-		fmt.Println(v.User.Username)
 	}
 }
