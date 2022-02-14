@@ -252,6 +252,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	giveawayMap["end_time"] = time.Now().Add(endTimeDuration)
+	giveawayMap["alert_role"] = GiveawaySetup["alert_role"]
 
 	formattedMessage, err := AuctionFormat(s, giveawayMap, "Giveaway")
 	if err != nil {
@@ -266,6 +267,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	delete(GiveawaySetup, "alert_role")
 	giveawayMap["message_id"] = message.ID
 
 	err = s.MessageReactionAdd(giveawayMap["channel_id"].(string), message.ID, "🎁")
