@@ -109,6 +109,7 @@ type Giveaway struct {
 	Host        string
 	Winners     float64
 	ImageURL    string
+	Finished    bool
 }
 
 type GiveawaySetup struct {
