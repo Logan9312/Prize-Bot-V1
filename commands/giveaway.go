@@ -406,7 +406,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 					Disabled: false,
 					Emoji: discordgo.ComponentEmoji{
 						Name:     "🔄",
-						ID:       messageID,
+						ID:       "",
 						Animated: false,
 					},
 					CustomID: "reroll_giveaway",
