@@ -163,7 +163,7 @@ func AuctionStartTimer(v map[string]interface{}, s *discordgo.Session) {
 func GiveawayEndTimer(v map[string]interface{}, s *discordgo.Session) {
 	fmt.Println("Giveaway Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
 	if v["end_time"].(time.Time).Before(time.Now()) {
-		if v["finished"].(bool) {
+		if v["finished"] == true {
 			time.Sleep(time.Until(v["end_time"].(time.Time).Add(24 * time.Hour)))
 			database.DB.Delete(database.Giveaway{}, v["message_id"].(string))
 		} else {
