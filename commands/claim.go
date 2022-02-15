@@ -137,7 +137,6 @@ var ClaimCommand = discordgo.ApplicationCommand{
 					Required: true,
 				},
 			},
-			
 		},
 	},
 }
@@ -525,6 +524,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	claimMap["message_id"] = message.ID
 	claimMap["channel_id"] = claimMap["log_channel"].(string)
+	claimMap["type"] = claimType
 
 	result = database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "Description"}).Create(claimMap)
 	if result.Error != nil {
@@ -977,6 +977,9 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	for _, v := range claimMap {
+		for key, value := range v {
+			fmt.Println(key, value)
+		}
 		v["log_channel"] = options["channel"]
 		if v["type"] == nil {
 			v["type"] = "unknown"
@@ -987,6 +990,7 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				err = ClaimOutput(s, v, v["type"].(string))
 				if err != nil {
 					h.FollowUpErrorResponse(s, i, err.Error())
+					fmt.Println(err)
 				}
 			}
 		}
