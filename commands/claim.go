@@ -121,6 +121,11 @@ var ClaimCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "refresh",
+			Description: "Resends all claim messages. Will not delete old ones",
+		},
 	},
 }
 
@@ -132,6 +137,8 @@ func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ClaimCreate(s, i)
 	case "inventory":
 		ClaimInventory(s, i)
+	case "refresh":
+		claimRefresh(s, i)
 	}
 }
 
@@ -515,7 +522,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 }
 
 func ClaimTicket(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
 }
 
 func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -932,6 +938,39 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+}
+
+func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	if i.Member.Permissions&(1<<3) != 8 {
+		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
+		return
+	}
+
+	claimMap := []map[string]interface{}{}
+	result := database.DB.Model([]database.Claim{}).Where(map[string]interface{}{
+		"guild_id": i.GuildID,
+	}).First(&claimMap)
+	if result.Error != nil {
+		h.ErrorResponse(s, i, result.Error.Error())
+		return
+	}
+
+	for _, v := range claimMap {
+		if v["type"] == nil {
+			v["type"] = "unknown"
+		}
+		if v["channel_id"] != nil {
+			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
+			if err != nil {
+				err = ClaimOutput(s, v, v["type"].(string))
+				if err != nil {
+					h.FollowUpErrorResponse(s, i, err.Error())
+				}
+			}
+		}
+
+	}
 }
 
 func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
