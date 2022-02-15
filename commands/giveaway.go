@@ -267,7 +267,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	delete(GiveawaySetup, "alert_role")
+	delete(giveawayMap, "alert_role")
 	giveawayMap["message_id"] = message.ID
 
 	err = s.MessageReactionAdd(giveawayMap["channel_id"].(string), message.ID, "🎁")
