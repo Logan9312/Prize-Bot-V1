@@ -523,8 +523,8 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return err
 	}
 
-	if claimMap["message_id"] != nil {
-		primaryKey = claimMap["message_id"].(string)
+	if claimMap["old_id"] != nil {
+		primaryKey = claimMap["old_id"].(string)
 	} else {
 		primaryKey = message.ID
 	}
@@ -1008,6 +1008,7 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
+			v["old_id"] = v["message_id"]
 			if err != nil {
 				fmt.Println("normal message ID", v["message_id"])
 				err = ClaimOutput(s, v, v["type"].(string))

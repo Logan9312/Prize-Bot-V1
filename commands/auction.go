@@ -1456,7 +1456,7 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 
 	err = ClaimOutput(Session, auctionMap, "Auction")
 	if err != nil {
-		return err
+		return fmt.Errorf("Claim Output Error: " + err.Error())
 	}
 
 	if message != nil {
