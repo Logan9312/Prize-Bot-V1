@@ -134,9 +134,10 @@ var ClaimCommand = discordgo.ApplicationCommand{
 						0,
 						5,
 					},
+					Required: true,
 				},
 			},
-			Required: true,
+			
 		},
 	},
 }
