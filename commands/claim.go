@@ -996,9 +996,8 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
-			fmt.Println(err)
-			fmt.Println(v["item"])
 			if err != nil {
+				fmt.Println(err)
 				err = ClaimOutput(s, v, v["type"].(string))
 				if err != nil {
 					h.FollowUpErrorResponse(s, i, err.Error())
