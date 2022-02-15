@@ -504,6 +504,12 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return fmt.Errorf("No logging channel set.")
 	}
 
+	result = database.DB.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Model(database.Claim{}).Create(map[string]interface{}{
+		"message_id": claimMap["message_id"],
+	})
+
 	message, err := h.SuccessMessage(Session, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
 		//Add in the type of prize
@@ -525,12 +531,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	claimMap["message_id"] = message.ID
 	claimMap["channel_id"] = claimMap["log_channel"].(string)
 	claimMap["type"] = claimType
-
-	result = database.DB.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Model(database.Claim{}).Create(map[string]interface{}{
-		"message_id": message.ID,
-	})
 
 	if result.Error != nil {
 		return err
@@ -988,6 +988,8 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	var restored int
+
 	for _, v := range claimMap {
 		v["log_channel"] = options["channel"]
 		if v["type"] == nil {
@@ -997,8 +999,8 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
 			if err != nil {
-				fmt.Println(err)
 				err = ClaimOutput(s, v, v["type"].(string))
+				restored ++
 				if err != nil {
 					h.FollowUpErrorResponse(s, i, err.Error())
 					fmt.Println(err)
@@ -1006,6 +1008,11 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 		}
 	}
+
+	h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+		Title:       "Claim Refresh Complete",
+		Description: fmt.Sprintf("%d claims have been restored to %s", restored, options["channel"]),
+	})
 }
 
 func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
