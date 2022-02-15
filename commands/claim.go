@@ -968,7 +968,7 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	claimMap := []map[string]interface{}{}
-	result := database.DB.Find(&claimMap, map[string]interface{}{
+	result := database.DB.Model([]database.Claim{}).Find(&claimMap, map[string]interface{}{
 		"guild_id": i.GuildID,
 	})
 	if result.Error != nil {
