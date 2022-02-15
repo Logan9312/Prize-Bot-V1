@@ -526,7 +526,19 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	claimMap["channel_id"] = claimMap["log_channel"].(string)
 	claimMap["type"] = claimType
 
-	result = database.DB.Model(database.Claim{}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "Description"}).Create(claimMap)
+	result = database.DB.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Model(database.Claim{}).Create(map[string]interface{}{
+		"message_id": message.ID,
+	})
+
+	if result.Error != nil {
+		return err
+	}
+
+	result = database.DB.Model(database.Claim{
+		MessageID: message.ID,
+	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "Description"}).Updates(claimMap)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -982,7 +994,6 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			v["type"] = "unknown"
 		}
 
-		database.DB.Model(database.Claim{}).Delete(v)
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
 			fmt.Println(err)
