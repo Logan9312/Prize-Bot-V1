@@ -392,6 +392,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	mentionUser := ""
 	finalBid := ""
+	primaryKey := ""
 	claimMap["cost"] = claimMap["bid"]
 	claimSetup := map[string]interface{}{}
 
@@ -504,14 +505,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return fmt.Errorf("No logging channel set.")
 	}
 
-	fmt.Println("output message ID", claimMap["message_id"])
-
-	result = database.DB.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Model(database.Claim{}).Create(map[string]interface{}{
-		"message_id": claimMap["message_id"],
-	})
-
 	message, err := h.SuccessMessage(Session, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
 		//Add in the type of prize
@@ -530,16 +523,31 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return err
 	}
 
-	claimMap["message_id"] = message.ID
+	if claimMap["message_id"] != nil {
+		primaryKey = claimMap["message_id"].(string)
+	} else {
+		primaryKey = message.ID
+	}
+
 	claimMap["channel_id"] = claimMap["log_channel"].(string)
 	claimMap["type"] = claimType
+	claimMap["message_id"] = message.ID
 
 	if result.Error != nil {
 		return err
 	}
 
+	result = database.DB.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Model(database.Claim{}).Create(map[string]interface{}{
+		"message_id": primaryKey,
+	})
+	if result.Error != nil {
+		return result.Error
+	}
+
 	result = database.DB.Model(database.Claim{
-		MessageID: message.ID,
+		MessageID: primaryKey,
 	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "Description"}).Updates(claimMap)
 	if result.Error != nil {
 		return result.Error
