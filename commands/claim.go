@@ -125,6 +125,18 @@ var ClaimCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "refresh",
 			Description: "Resends all claim messages. Will not delete old ones",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "channel",
+					Description: "The output channel for the claims..",
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+						5,
+					},
+				},
+			},
+			Required: true,
 		},
 	},
 }
@@ -942,6 +954,8 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
+	options := h.ParseSubCommand(i)
+
 	if i.Member.Permissions&(1<<3) != 8 {
 		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
 		return
@@ -962,6 +976,7 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	for _, v := range claimMap {
+		v["log_channel"] = options["channel"]
 		if v["type"] == nil {
 			v["type"] = "unknown"
 		}
@@ -974,7 +989,6 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				}
 			}
 		}
-
 	}
 }
 
