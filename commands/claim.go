@@ -947,12 +947,17 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "Claim Refresh",
+		Description: "Starting to refresh your missing claims.",
+	})
+
 	claimMap := []map[string]interface{}{}
 	result := database.DB.Model([]database.Claim{}).Where(map[string]interface{}{
 		"guild_id": i.GuildID,
 	}).First(&claimMap)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
+		h.FollowUpErrorResponse(s, i, result.Error.Error())
 		return
 	}
 
