@@ -981,9 +981,12 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if v["type"] == nil {
 			v["type"] = "unknown"
 		}
+
+		database.DB.Model(database.Claim{}).Delete(v)
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
 			fmt.Println(err)
+			fmt.Println(v["item"])
 			if err != nil {
 				err = ClaimOutput(s, v, v["type"].(string))
 				if err != nil {
