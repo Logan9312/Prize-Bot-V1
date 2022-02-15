@@ -46,7 +46,7 @@ func BotConnect(token, environment, botName string) {
 		fmt.Println("discordgo.New error:" + err.Error())
 	}
 
-	defer s.ChannelMessageSend("937519464671490118", "Bot has finished restarting")
+	defer s.ChannelMessageSend("915768620511035412", "Bot has finished restarting")
 
 	commands.Session = s
 
@@ -72,7 +72,7 @@ func BotConnect(token, environment, botName string) {
 		}).Create(map[string]interface{}{
 			"GuildID":     "915767892467920967",
 			"category":    "915768615742103625",
-			"log_channel": "937519464671490118",
+			"log_channel": "943175605858496602",
 		})
 	}
 
@@ -134,7 +134,7 @@ func Timers(s *discordgo.Session) {
 	for _, v := range Claims {
 		if v["item"] == nil {
 			database.DB.Delete(database.Claim{
-				MessageID:  v["message_id"].(string),
+				MessageID: v["message_id"].(string),
 			})
 		}
 	}
