@@ -977,15 +977,13 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	for _, v := range claimMap {
-		for key, value := range v {
-			fmt.Println(key, value)
-		}
 		v["log_channel"] = options["channel"]
 		if v["type"] == nil {
 			v["type"] = "unknown"
 		}
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
+			fmt.Println(err)
 			if err != nil {
 				err = ClaimOutput(s, v, v["type"].(string))
 				if err != nil {
