@@ -292,6 +292,11 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimMap["log_channel"] = auctionSetup["log_channel"]
 	claimMap["host"] = i.Member.User.ID
 	claimMap["guild_id"] = i.GuildID
+	if claimMap["log_channel"] == nil {
+		h.ErrorResponse(s, i, "No Log Channel has been set. Use `/auction setup log_channel:` to set a logging channel for claims.")
+		fmt.Println(result.Error)
+		return
+	}
 
 	switch i.ApplicationCommandData().Options[0].Options[0].Name {
 	case "role":
@@ -483,8 +488,8 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	message, err := h.SuccessMessage(Session, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
 		//Add in the type of prize
-		Title:       fmt.Sprintf("%s Prize: __**%s**__", claimType, claimMap["item"]),
-		Fields:      fields,
+		Title:  fmt.Sprintf("%s Prize: __**%s**__", claimType, claimMap["item"]),
+		Fields: fields,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: claimMap["image_url"].(string),
 		},

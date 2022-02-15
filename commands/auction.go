@@ -1452,6 +1452,7 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 	}
 
 	auctionMap["log_channel"] = AuctionSetup.LogChannel
+	delChannel := auctionMap["channel_id"].(string)
 
 	err = ClaimOutput(Session, auctionMap, "Auction")
 	if err != nil {
@@ -1488,12 +1489,12 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 
 	time.Sleep(30 * time.Second)
 
-	_, err = Session.ChannelDelete(auctionMap["channel_id"].(string))
+	_, err = Session.ChannelDelete(delChannel)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	result = database.DB.Delete(database.Auction{}, auctionMap["channel_id"].(string))
+	result = database.DB.Delete(database.Auction{}, delChannel)
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 	}
