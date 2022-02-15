@@ -504,6 +504,8 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return fmt.Errorf("No logging channel set.")
 	}
 
+	fmt.Println("output message ID", claimMap["message_id"])
+
 	result = database.DB.Clauses(clause.OnConflict{
 		DoNothing: true,
 	}).Model(database.Claim{}).Create(map[string]interface{}{
@@ -999,8 +1001,9 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if v["channel_id"] != nil {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
 			if err != nil {
+				fmt.Println("normal message ID", v["message_id"])
 				err = ClaimOutput(s, v, v["type"].(string))
-				restored ++
+				restored++
 				if err != nil {
 					h.FollowUpErrorResponse(s, i, err.Error())
 					fmt.Println(err)
@@ -1011,7 +1014,7 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	h.FollowUpSuccessResponse(s, i, h.PresetResponse{
 		Title:       "Claim Refresh Complete",
-		Description: fmt.Sprintf("%d claims have been restored to %s", restored, options["channel"]),
+		Description: fmt.Sprintf("%d claim(s) have been restored to <#%s>", restored, options["channel"]),
 	})
 }
 
