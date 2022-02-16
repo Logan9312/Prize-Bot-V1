@@ -279,7 +279,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	result = database.DB.Model(database.Giveaway{}).Create(giveawayMap)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
+		h.ErrorMessage(s, i.ChannelID, "**Giveaway was not saved in database. Please contact support so I can fix this issue as your giveaway will not function properly. The error is: "+result.Error.Error())
 		return
 	}
 
