@@ -1154,11 +1154,11 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, bidData.ChannelID)
 	if result.Error != nil {
-		return response, result.Error
+		return response, fmt.Errorf("Error fetching auction data from the database. Error Message: " + result.Error.Error())
 	}
 	result = database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, bidData.GuildID)
 	if result.Error != nil {
-		return response, result.Error
+		fmt.Println(result.Error)
 	}
 
 	if auctionSetup["snipe_range"] != nil && auctionSetup["snipe_extension"] != nil {
