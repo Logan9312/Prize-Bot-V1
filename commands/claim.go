@@ -764,7 +764,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		issues += "Original message not found: " + err.Error()
 	}
 
-	if message.Embeds != nil {
+	if message.Embeds[0] != nil {
 		//0x14f7b2 0x50c878
 		message.Embeds[0].Color = 0x00c940
 
@@ -876,7 +876,6 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		h.ErrorMessage(s, i.ChannelID, "Ticket could not be closed: "+err.Error())
 		fmt.Println("Ticket could not be closed: " + err.Error())
 	}
-
 }
 
 func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
