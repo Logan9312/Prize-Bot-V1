@@ -781,6 +781,17 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println("There was an issue editing the old log embed: " + err.Error())
 			return
 		}
+	} else {
+		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+			Content:         &message.Content,
+			Components:      []discordgo.MessageComponent{},
+			ID:              customID[2],
+			Channel:         customID[1],
+		})
+		if err != nil {
+			fmt.Println(err)
+			issues += "Original message buttons could not be removed due to an error. Error: " + err.Error()
+		}
 	}
 
 	fields := []*discordgo.MessageEmbedField{
