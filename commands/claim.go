@@ -74,6 +74,16 @@ var ClaimCommand = discordgo.ApplicationCommand{
 							Required:    true,
 						},
 						{
+							Type:        discordgo.ApplicationCommandOptionChannel,
+							Name:        "log_channel",
+							Description: "The output channel for the prizes.",
+							ChannelTypes: []discordgo.ChannelType{
+								0,
+								5,
+							},
+							Required: true,
+						},
+						{
 							Type:        discordgo.ApplicationCommandOptionString,
 							Name:        "description",
 							Description: "Set a custom item description",
@@ -291,24 +301,17 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	claimSetup := map[string]any{}
-	auctionSetup := map[string]any{}
 
 	claimMap := h.ParseSubSubCommand(i)
 
-	result := database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
-	if result.Error != nil {
-		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/auction setup` to fix. Error: %s", result.Error.Error()))
-		fmt.Println(result.Error)
-		return
-	}
-	result = database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
+	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
 	if result.Error != nil {
 		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/claim setup` to fix. Error: %s", result.Error.Error()))
 		fmt.Println(result.Error)
 		return
 	}
 
-	claimMap["log_channel"] = auctionSetup["log_channel"]
+	claimMap["channel_id"] = claimMap["log_channel"]
 	claimMap["host"] = i.Member.User.ID
 	claimMap["guild_id"] = i.GuildID
 	if claimMap["log_channel"] == nil {
@@ -764,7 +767,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		issues += "Original message not found: " + err.Error()
 	}
 
-	if message.Embeds != nil && len(message.Embeds) > 0{
+	if message.Embeds != nil && len(message.Embeds) > 0 {
 		//0x14f7b2 0x50c878
 		message.Embeds[0].Color = 0x00c940
 
@@ -783,10 +786,10 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 	} else {
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-			Content:         &message.Content,
-			Components:      []discordgo.MessageComponent{},
-			ID:              customID[2],
-			Channel:         customID[1],
+			Content:    &message.Content,
+			Components: []discordgo.MessageComponent{},
+			ID:         customID[2],
+			Channel:    customID[1],
 		})
 		if err != nil {
 			fmt.Println(err)
