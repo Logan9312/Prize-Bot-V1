@@ -109,6 +109,16 @@ var ClaimCommand = discordgo.ApplicationCommand{
 							Required:    true,
 						},
 						{
+							Type:        discordgo.ApplicationCommandOptionChannel,
+							Name:        "log_channel",
+							Description: "The output channel for the prizes.",
+							ChannelTypes: []discordgo.ChannelType{
+								0,
+								5,
+							},
+							Required: true,
+						},
+						{
 							Type:        discordgo.ApplicationCommandOptionString,
 							Name:        "description",
 							Description: "Set a custom item description",
