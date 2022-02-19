@@ -311,7 +311,6 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	claimMap["channel_id"] = claimMap["log_channel"]
 	claimMap["host"] = i.Member.User.ID
 	claimMap["guild_id"] = i.GuildID
 	if claimMap["log_channel"] == nil {
@@ -365,14 +364,23 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 			afterID = memberSlice[len(memberSlice)-1].User.ID
 		}
-		_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
-			Title:       "Claims Successfully Created!",
-			Description: "All claims should now be created in: <#" + claimMap["channel_id"].(string) + ">",
-		})
-		if err != nil {
-			fmt.Println(err)
+		if claimMap["channel_id"] != nil {
+			_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+				Title:       "Claims Successfully Created!",
+				Description: "All claims should now be created in: <#" + claimMap["channel_id"].(string) + ">",
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+				Title:       "Claims Create Complete!",
+				Description: "No channel ID recognized. It's possible the role you used had no users to give a claim to.",
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
-
 	case "user":
 		err := ClaimOutput(s, claimMap, "Custom Claim")
 		if err != nil {
