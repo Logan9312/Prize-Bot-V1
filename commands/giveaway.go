@@ -90,12 +90,12 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Description: "Description of the giveaway item.",
 					Required:    false,
 				},
-				{
+				/*{
 					Type:        11,
 					Name:        "image",
 					Description: "Attach an image to your giveaway",
 					Required:    false,
-				},
+				},*/
 			},
 		},
 	},
