@@ -1022,6 +1022,18 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(result.Error)
 		}
 
+		editedOptions := ""
+
+		for key, value := range options {
+			if key == "bid" {
+				editedOptions += fmt.Sprintf(" - %s set to: %s\n", key, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", value), "0"), "."))
+			} else {
+				editedOptions += fmt.Sprintf(" - %s set to: %s\n", key, fmt.Sprint(value))
+			}
+		}
+
+		options["bid_history"] = auctionMap["bid_history"].(string) + "\n-> Auction edited by " + i.Member.User.Username + ": \n" + editedOptions
+
 		result := database.DB.Model(database.Auction{
 			ChannelID: i.ChannelID,
 		}).Updates(options)
