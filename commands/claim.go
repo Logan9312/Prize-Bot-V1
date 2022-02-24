@@ -785,7 +785,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		issues += "Original message not found: " + err.Error()
 	}
 
-	if message.Embeds != nil && len(message.Embeds) > 0 {
+	if message != nil && message.Embeds != nil && len(message.Embeds) > 0 {
 		//0x14f7b2 0x50c878
 		message.Embeds[0].Color = 0x00c940
 
