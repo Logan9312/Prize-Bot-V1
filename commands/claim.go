@@ -528,9 +528,8 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	message, err := h.SuccessMessage(Session, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
-		//Add in the type of prize
-		Title:  fmt.Sprintf("%s Prize: __**%s**__", claimType, claimMap["item"]),
-		Fields: fields,
+		Title:   fmt.Sprintf("%s Prize: __**%s**__", claimType, claimMap["item"]),
+		Fields:  fields,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: claimMap["image_url"].(string),
 		},
@@ -565,7 +564,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	result = database.DB.Model(database.Claim{
 		MessageID: primaryKey,
-	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "Description"}).Updates(claimMap)
+	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "description"}).Updates(claimMap)
 	if result.Error != nil {
 		return result.Error
 	}
