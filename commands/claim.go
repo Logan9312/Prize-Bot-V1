@@ -554,10 +554,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	claimMap["type"] = claimType
 	claimMap["message_id"] = message.ID
 
-	if result.Error != nil {
-		return err
-	}
-
 	result = database.DB.Clauses(clause.OnConflict{
 		DoNothing: true,
 	}).Model(database.Claim{}).Create(map[string]interface{}{
