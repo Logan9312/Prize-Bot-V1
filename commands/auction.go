@@ -185,12 +185,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 						4,
 					},
 				},
-				/*{
+				{
 					Type:        11,
 					Name:        "image",
 					Description: "Attach an image to your auction",
 					Required:    false,
-				},*/
+				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "schedule",
