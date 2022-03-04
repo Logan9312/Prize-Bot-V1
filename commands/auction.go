@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -185,12 +186,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 						4,
 					},
 				},
-				{
+				/*{
 					Type:        11,
 					Name:        "image",
 					Description: "Attach an image to your auction",
 					Required:    false,
-				},
+				},*/
 				{
 					Type:         discordgo.ApplicationCommandOptionString,
 					Name:         "schedule",
@@ -331,8 +332,8 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "image_url",
-					Description: "Edit the image link",
+					Name:        "image",
+					Description: "Edit the image",
 					Required:    false,
 					//Autocomplete: true,
 				},
@@ -447,7 +448,8 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 
-	input = strings.Trim(input, "dhms")
+	re := regexp.MustCompile(`[0-9]+\.?[0-9]*`)
+	input = re.FindString(input)
 
 	_, err := strconv.ParseFloat(input, 64)
 	if err != nil {
