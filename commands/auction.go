@@ -662,11 +662,14 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 			Value:  description,
 			Inline: true,
 		},
-		{
+	}
+
+	if auctionMap["end_time"] != nil {
+		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**End Time**__",
 			Value:  fmt.Sprintf("<t:%d:R>", auctionMap["end_time"].(time.Time).Unix()),
 			Inline: true,
-		},
+		})
 	}
 
 	if auctionMap["bid"] != nil {
@@ -742,6 +745,20 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 							ID:   "835685528917114891",
 						},
 						Disabled: false,
+					},
+				},
+			},
+		}
+	}
+
+	if prizeType == "Shop" {
+		components = []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label:    "Purchase",
+						Style:    discordgo.SuccessButton,
+						CustomID: "additem",
 					},
 				},
 			},
