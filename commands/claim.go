@@ -670,7 +670,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	if claimMap["cost"] != nil && claimMap["cost"] != "" {
+	if claimMap["cost"] != nil {
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  "__**COST**__",
 			Value: fmt.Sprint(claimMap["cost"].(float64)),
