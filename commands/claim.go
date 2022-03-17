@@ -804,7 +804,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println("There was an issue editing the old log embed: " + err.Error())
 			return
 		}
-	} else {
+	} else if message != nil {
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Content:    &message.Content,
 			Components: []discordgo.MessageComponent{},
