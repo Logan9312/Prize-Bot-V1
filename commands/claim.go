@@ -697,7 +697,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	thumbnail := &discordgo.MessageEmbedThumbnail{}
 
-	if i.Message.Embeds[0].Thumbnail != nil {
+	if len(i.Message.Embeds) > 0 &&i.Message.Embeds[0].Thumbnail != nil {
 		thumbnail = i.Message.Embeds[0].Thumbnail
 	}
 
