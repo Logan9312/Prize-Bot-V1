@@ -1073,7 +1073,9 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if auctionMap["bid"] != nil && auctionMap["winner"] != nil {
 			member, err := s.GuildMember(i.GuildID, auctionMap["winner"].(string))
 			if err != nil {
-				fmt.Println(result.Error)
+				fmt.Println(err)
+				h.ErrorResponse(s, i, err.Error())
+				return
 			}
 			username := member.Nick
 			if username == "" {
