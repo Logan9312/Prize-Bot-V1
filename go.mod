@@ -6,6 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.23.3-0.20220216202327-6015eed9333e
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/mux v1.8.0
+	github.com/stripe/stripe-go/v72 v72.91.0
 	gorm.io/driver/postgres v1.2.1
 	gorm.io/driver/sqlite v1.2.3
 	gorm.io/gorm v1.22.2
