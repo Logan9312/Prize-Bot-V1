@@ -10,12 +10,17 @@ import (
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/subscriptions"
 )
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.Type {
 	case 2:
+		if i.Member == nil {
+			h.ErrorResponse(s, i, "Commands cannot be run in a DM. Please contact support if you're not currently in a DM with the bot.")
+			return
+		}
 		fmt.Println(i.ApplicationCommandData().Name, "is being run by:", i.Member.User.Username)
 		switch i.ApplicationCommandData().Name {
 		case "help":
@@ -28,12 +33,16 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.Profile(s, i)
 		case "giveaway":
 			c.Giveaway(s, i)
+		case "shop":
+			c.Shop(s, i)
 		case "claim":
 			c.Claim(s, i)
 		case "privacy_policy":
 			c.Privacy(s, i)
 		case "dev":
 			c.Dev(s, i)
+		case "premium":
+			subscriptions.Premium(s, i)
 		default:
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
@@ -66,6 +75,8 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			c.CompleteButton(s, i)
 		case "reopen_ticket":
 			c.ReopenTicket(s, i)
+		case "additem":
+			c.AddItem(s, i)
 		default:
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
