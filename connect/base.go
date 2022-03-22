@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
+	"gitlab.com/logan9312/discord-auction-bot/subscriptions"
 )
 
 type slashCommands struct {
@@ -23,6 +24,8 @@ var botCommands = slashCommands{
 		&commands.PrivacyCommand,
 		&commands.DevCommand,
 		&commands.ClaimCommand,
+		&commands.ShopCommand,
+		&subscriptions.PremiumCommand,
 	},
 	prod: []*discordgo.ApplicationCommand{
 		&commands.HelpCommand,

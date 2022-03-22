@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/caarlos0/env"
+	"github.com/stripe/stripe-go/v72"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/routers"
@@ -17,6 +18,7 @@ type Environment struct {
 	Migrate      bool   `env:"MIGRATE"`
 	Host         string `env:"DB_HOST"`
 	Password     string `env:"DB_PASSWORD"`
+	StripeToken  string `env:"STRIPE_TOKEN"`
 }
 
 func main() {
@@ -27,6 +29,8 @@ func main() {
 		fmt.Println(err)
 		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
 	}
+
+	stripe.Key = environment.StripeToken
 
 	//Connects database
 	database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)

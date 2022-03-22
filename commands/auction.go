@@ -922,11 +922,13 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) error {
 
-	result := database.DB.Delete(database.AuctionQueue{}, auctionMap["id"])
-	if result.Error != nil {
-		fmt.Println(result.Error)
-	}
+	if auctionMap["id"] != nil {
 
+		result := database.DB.Delete(database.AuctionQueue{}, auctionMap["id"])
+		if result.Error != nil {
+			fmt.Println(result.Error)
+		}
+	}
 	delete(auctionMap, "start_time")
 	delete(auctionMap, "id")
 
@@ -961,7 +963,7 @@ func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) erro
 	auctionMap["message_id"] = message.ID
 	delete(auctionMap, "category")
 
-	result = database.DB.Model(database.Auction{}).Create(auctionMap)
+	result := database.DB.Model(database.Auction{}).Create(auctionMap)
 	if result.Error != nil {
 		return result.Error
 	}

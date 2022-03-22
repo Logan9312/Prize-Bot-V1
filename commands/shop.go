@@ -1,6 +1,11 @@
 package commands
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"fmt"
+
+	"github.com/bwmarrin/discordgo"
+	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+)
 
 var ShopCommand = discordgo.ApplicationCommand{
 	Name:        "shop",
@@ -15,10 +20,10 @@ var ShopCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "sell",
 			Description: "Select an item to sell",
-			Options:     []*discordgo.ApplicationCommandOption{
+			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "Item",
+					Name:        "item",
 					Description: "The item you wish to sell",
 					Required:    false,
 					Choices:     []*discordgo.ApplicationCommandOptionChoice{},
@@ -29,4 +34,41 @@ var ShopCommand = discordgo.ApplicationCommand{
 	},
 }
 
+func Shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	switch i.ApplicationCommandData().Options[0].Name {
+	case "sell":
+		ShopCreate(s, i)
+	}
+}
 
+func ShopCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	shopMap := h.ParseSubCommand(i)
+
+	shopMap["guild_id"] = i.GuildID
+	shopMap["host"] = i.Member.User.ID
+
+	response, err := AuctionFormat(s, shopMap, "Shop")
+	if err != nil {
+		fmt.Println(err)
+	}
+	h.SuccessResponse(s, i, response)
+}
+
+func AddItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	err := h.SuccessResponse(s, i, h.PresetResponse{
+		Content:     "",
+		Title:       "",
+		Description: "",
+		Fields:      []*discordgo.MessageEmbedField{},
+		Thumbnail:   &discordgo.MessageEmbedThumbnail{},
+		Image:       &discordgo.MessageEmbedImage{},
+		Components:  []discordgo.MessageComponent{},
+		Embeds:      []*discordgo.MessageEmbed{},
+		Files:       []*discordgo.File{},
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+}
