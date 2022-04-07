@@ -119,6 +119,13 @@ type GiveawaySetup struct {
 	LogChannel string
 }
 
+type ShopSetup struct {
+	GuildID    string `gorm:"primaryKey"`
+	HostRole   string
+	AlertRole  string
+	LogChannel string
+}
+
 type UserProfile struct {
 	UserID  string `gorm:"primaryKey;autoIncrement:false"`
 	GuildID string `gorm:"primaryKey;autoIncrement:false"`

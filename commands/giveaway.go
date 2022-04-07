@@ -11,7 +11,6 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 var GiveawayCommand = discordgo.ApplicationCommand{
@@ -23,31 +22,7 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 			Name:        "setup",
 			Description: "Setup giveaways",
 			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionRole,
-					Name:        "alert_role",
-					Description: "Set a role to get pinged whenever an auction starts.",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "log_channel",
-					Description: "Sets the channel where giveaway will send outputs when they end",
-					Required:    false,
-					ChannelTypes: []discordgo.ChannelType{
-						0,
-						5,
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionRole,
-					Name:        "host_role",
-					Description: "Set a role that can host auctions.",
-				},
-				/*{
-					Type:        discordgo.ApplicationCommandOptionRole,
-					Name:        "auto_enter",
-					Description: "Anyone with this role will be automatically entered.",
-				},*/
+
 			},
 		},
 		{
@@ -80,7 +55,7 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Description: "The channel where the giveaway will take place",
 					Required:    false,
 					ChannelTypes: []discordgo.ChannelType{
-						0,
+						discordgo.ChannelTypeGuildText,
 						5,
 					},
 				},
@@ -103,97 +78,8 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 
 func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
-	case "setup":
-		GiveawaySetup(s, i)
 	case "create":
 		GiveawayCreate(s, i)
-	}
-}
-
-func GiveawaySetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	var err error
-
-	options := h.ParseSubCommand(i)
-	content := ""
-
-	info := database.GiveawaySetup{
-		GuildID: i.GuildID,
-	}
-
-	result := database.DB.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Create(&info)
-
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
-	}
-
-	for key := range options {
-		content += fmt.Sprintf("• %s has been successfully set.\n", strings.Title(strings.ReplaceAll(key, "_", " ")))
-	}
-
-	result = database.DB.Model(&info).Updates(options)
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
-	}
-
-	//Now check what options are set
-	setOptions := map[string]interface{}{}
-
-	database.DB.Model(database.GiveawaySetup{}).First(&setOptions, i.GuildID)
-
-	responseFields := []*discordgo.MessageEmbedField{}
-
-	for _, v := range GiveawayCommand.Options[0].Options {
-		switch {
-		case setOptions[v.Name] == "", setOptions[v.Name] == 0, setOptions[v.Name] == nil:
-			setOptions[v.Name] = "Not Set"
-		case strings.Contains(v.Name, "role"):
-			setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
-		case strings.Contains(v.Name, "channel"):
-			setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
-		}
-		responseFields = append(responseFields, &discordgo.MessageEmbedField{
-			Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-			Value: setOptions[v.Name].(string),
-		})
-	}
-
-	menuOptions := []discordgo.SelectMenuOption{}
-
-	for _, v := range GiveawayCommand.Options[0].Options {
-		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
-			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
-			Value:       v.Name,
-			Description: v.Description,
-		})
-	}
-
-	err = h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "Giveaway Setup",
-		Description: content,
-		Fields:      responseFields,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						CustomID:    "clear_giveaway_setup",
-						Placeholder: "Clear Setup Options",
-						MinValues:   1,
-						MaxValues:   len(GiveawayCommand.Options[0].Options),
-						Options:     menuOptions,
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
 	}
 }
 

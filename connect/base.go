@@ -16,7 +16,6 @@ type slashCommands struct {
 
 var botCommands = slashCommands{
 	local: []*discordgo.ApplicationCommand{
-		&commands.HelpCommand,
 		&commands.ProfileCommand,
 		&commands.AuctionCommand,
 		&commands.BidCommand,
@@ -26,9 +25,9 @@ var botCommands = slashCommands{
 		&commands.ClaimCommand,
 		&commands.ShopCommand,
 		&subscriptions.PremiumCommand,
+		&commands.SettingsCommand,
 	},
 	prod: []*discordgo.ApplicationCommand{
-		&commands.HelpCommand,
 		&commands.AuctionCommand,
 		&commands.BidCommand,
 		&commands.GiveawayCommand,

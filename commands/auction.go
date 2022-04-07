@@ -14,7 +14,6 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 var Session *discordgo.Session
@@ -23,79 +22,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	Name:        "auction",
 	Description: "Put an item up for auction!",
 	Options: []*discordgo.ApplicationCommandOption{
-		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "setup",
-			Description: "Setup auctions on your server",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "category",
-					Description: "Sets the category to create auctions in.",
-					ChannelTypes: []discordgo.ChannelType{
-						4,
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency",
-					Description: "Sets the auction currency",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency_side",
-					Description: "Left/Right currency",
-					//Autocomplete: true,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "Left",
-							Value: "left",
-						},
-						{
-							Name:  "Right",
-							Value: "right",
-						},
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "integer_only",
-					Description: "Only allow integer bids (no decimals).",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "log_channel",
-					Description: "Sets the channel where auctions will send outputs when they end",
-					Required:    false,
-					ChannelTypes: []discordgo.ChannelType{
-						0,
-						5,
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionRole,
-					Name:        "alert_role",
-					Description: "Set a role to get pinged whenever an auction starts.",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionRole,
-					Name:        "host_role",
-					Description: "Set a role that can host auctions.",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "snipe_extension",
-					Description: "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
-					//Autocomplete: true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "snipe_range",
-					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
-					//Autocomplete: true,
-				},
-			},
-		},
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "create",
@@ -114,11 +40,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "duration",
-					Description: "Time that auction will run for. (Example: 24h, or 1d)",
-					Required:    true,
-					//Autocomplete: true,
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "duration",
+					Description:  "Time that auction will run for. (Example: 24h, or 1d)",
+					Required:     true,
+					Autocomplete: true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -186,12 +112,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 						4,
 					},
 				},
-				/*{
+				{
 					Type:        11,
 					Name:        "image",
 					Description: "Attach an image to your auction",
 					Required:    false,
-				},*/
+				},
 				{
 					Type:         discordgo.ApplicationCommandOptionString,
 					Name:         "schedule",
@@ -339,11 +265,6 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
-		/*{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "help",
-			Description: "auction info",
-		},*/
 	},
 }
 
@@ -364,8 +285,6 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "help":
 		AuctionHelp(s, i)
-	case "setup":
-		AuctionSetup(s, i)
 	case "create":
 		AuctionPlanner(s, i)
 	case "bid":
@@ -480,133 +399,6 @@ func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 
 func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	h.ErrorResponse(s, i, "Help command has not been setup yet")
-}
-
-func AuctionSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	var err error
-
-	options := h.ParseSubCommand(i)
-	content := ""
-
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
-
-	info := map[string]interface{}{
-		"guild_id": i.GuildID,
-	}
-
-	result := database.DB.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Model(database.AuctionSetup{}).Create(&info)
-
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
-	}
-
-	for key := range options {
-		content += fmt.Sprintf("• %s has been successfully set.\n", strings.Title(strings.ReplaceAll(key, "_", " ")))
-
-		switch key {
-		case "snipe_extension", "snipe_range":
-			options[key], err = h.ParseTime(options[key].(string))
-		}
-		if err != nil {
-			fmt.Println(err)
-			h.ErrorResponse(s, i, err.Error())
-			return
-		}
-
-	}
-
-	result = database.DB.Model(database.AuctionSetup{
-		GuildID: i.GuildID,
-	}).Updates(options)
-
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
-	}
-
-	//Now check what options are set
-	setOptions := map[string]interface{}{}
-
-	database.DB.Model(database.AuctionSetup{}).First(&setOptions, i.GuildID)
-
-	antiSnipeDescription := "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
-
-	responseFields := []*discordgo.MessageEmbedField{}
-
-	for _, v := range AuctionCommand.Options[0].Options {
-		if !strings.Contains(v.Name, "snipe") {
-			switch {
-			case setOptions[v.Name] == nil || setOptions[v.Name] == "":
-				setOptions[v.Name] = "Not Set"
-			case strings.Contains(v.Name, "role"):
-				setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
-			case strings.Contains(v.Name, "channel"):
-				setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
-			case strings.Contains(v.Name, "category"):
-				category, err := s.Channel(setOptions[v.Name].(string))
-				if err != nil {
-					fmt.Println("Category Error:", err)
-					setOptions[v.Name] = "Error Displaying Category: " + err.Error()
-				} else {
-					setOptions[v.Name] = category.Name
-				}
-			}
-			responseFields = append(responseFields, &discordgo.MessageEmbedField{
-				Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-				Value: fmt.Sprint(setOptions[v.Name]),
-			})
-		}
-	}
-
-	if setOptions["snipe_range"] != nil && setOptions["snipe_extension"] != nil {
-		antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", setOptions["snipe_range"].(time.Duration).String(), setOptions["snipe_extension"].(time.Duration).String())
-	}
-
-	responseFields = append(responseFields, &discordgo.MessageEmbedField{
-		Name:  "**Anti Snipe**",
-		Value: antiSnipeDescription,
-	})
-
-	menuOptions := []discordgo.SelectMenuOption{}
-
-	for _, v := range AuctionCommand.Options[0].Options {
-		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
-			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
-			Value:       v.Name,
-			Description: v.Description,
-		})
-	}
-
-	err = h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "Auction Setup",
-		Description: content,
-		Fields:      responseFields,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						CustomID:    "clear_auction_setup",
-						Placeholder: "Clear Setup Options",
-						MinValues:   1,
-						MaxValues:   len(AuctionCommand.Options[0].Options),
-						Options:     menuOptions,
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
 }
 
 func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, prizeType string) (h.PresetResponse, error) {
@@ -1011,7 +803,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if options["queue_number"] != nil {
 
-		//Need to fix this since the databaser covers all guilds.
+		//Need to fix this since the database covers all guilds.
 		guildQueue := []database.AuctionQueue{}
 
 		result := database.DB.Where(map[string]interface{}{"guild_id": i.GuildID}).Find(&guildQueue)

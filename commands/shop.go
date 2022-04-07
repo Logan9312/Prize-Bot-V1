@@ -13,11 +13,6 @@ var ShopCommand = discordgo.ApplicationCommand{
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "setup",
-			Description: "Setup shop settings on your server",
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "sell",
 			Description: "Select an item to sell",
 			Options: []*discordgo.ApplicationCommandOption{

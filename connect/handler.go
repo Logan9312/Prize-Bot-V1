@@ -13,79 +13,66 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/subscriptions"
 )
 
+var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	"auction":        c.Auction,
+	"bid":            c.AuctionBid,
+	"profile":        c.Profile,
+	"giveaway":       c.Giveaway,
+	"shop":           c.Shop,
+	"claim":          c.Claim,
+	"privacy_policy": c.Privacy,
+	"dev":            c.Dev,
+	"premium":        subscriptions.Premium,
+	"settings":       c.Settings,
+}
+
+var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	"endauction":             c.AuctionEndButton,
+	"claim_prize":            c.ClaimPrizeButton,
+	"clear_auction":          c.ClearAuctionButton,
+	"delete_auction_queue":   c.DeleteAuctionQueue,
+	"delete_auction_channel": c.DeleteAuctionChannel,
+	"reroll_giveaway":        c.RerollGiveawayButton,
+	"clear_auction_setup":    c.AuctionSetupClearButton,
+	"clear_giveaway_setup":   c.GiveawaySetupClearButton,
+	"clear_claim_setup":      c.ClaimSetupClearButton,
+	"claim_cancel":           c.CancelButton,
+	"claim_complete":         c.CompleteButton,
+	"reopen_ticket":          c.ReopenTicket,
+	"additem":                c.AddItem,
+}
+
+var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	"auction":  c.AuctionAutoComplete,
+	"giveaway": c.GiveawayAutoComplete,
+}
+
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.Type {
-	case 2:
+	case discordgo.InteractionApplicationCommand:
 		if i.Member == nil {
 			h.ErrorResponse(s, i, "Commands cannot be run in a DM. Please contact support if you're not currently in a DM with the bot.")
 			return
 		}
 		fmt.Println(i.ApplicationCommandData().Name, "is being run by:", i.Member.User.Username)
-		switch i.ApplicationCommandData().Name {
-		case "help":
-			c.Help(s, i, botCommands.prod)
-		case "auction":
-			c.Auction(s, i)
-		case "bid":
-			c.AuctionBid(s, i)
-		case "profile":
-			c.Profile(s, i)
-		case "giveaway":
-			c.Giveaway(s, i)
-		case "shop":
-			c.Shop(s, i)
-		case "claim":
-			c.Claim(s, i)
-		case "privacy_policy":
-			c.Privacy(s, i)
-		case "dev":
-			c.Dev(s, i)
-		case "premium":
-			subscriptions.Premium(s, i)
-		default:
+		if f, ok := commandMap[i.ApplicationCommandData().Name]; ok {
+			f(s, i)
+		} else {
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
-	case 3:
+	case discordgo.InteractionMessageComponent:
 		fmt.Println(i.MessageComponentData().CustomID)
-		switch strings.Split(i.MessageComponentData().CustomID, ":")[0] {
-		case "endauction":
-			c.AuctionEndButton(s, i)
-		case "claim_prize":
-			c.ClaimPrizeButton(s, i)
-		case "clearauction":
-			c.ClearAuctionButton(s, i)
-		case "delete_auction_queue":
-			c.DeleteAuctionQueue(s, i)
-		case "delete_auction_channel":
-			c.DeleteAuctionChannel(s, i)
-		case "reroll_giveaway":
-			c.RerollGiveawayButton(s, i)
-		case "clear_auction_setup":
-			c.AuctionSetupClearButton(s, i)
-		case "clear_giveaway_setup":
-			c.GiveawaySetupClearButton(s, i)
-		case "clear_claim_setup":
-			c.ClaimSetupClearButton(s, i)
-		case "bid_history":
-			c.AuctionBidHistory(s, i)
-		case "claim_cancel":
-			c.CancelButton(s, i)
-		case "claim_complete":
-			c.CompleteButton(s, i)
-		case "reopen_ticket":
-			c.ReopenTicket(s, i)
-		case "additem":
-			c.AddItem(s, i)
-		default:
-			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
+		if f, ok := buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]; ok {
+			f(s, i)
+		} else {
+			h.ErrorResponse(s, i, "Button response has not been set properly, please contact Logan to fix")
 		}
-	case 4:
-		switch i.ApplicationCommandData().Name {
-		case "auction":
-			c.AuctionAutoComplete(s, i)
-		case "giveaway":
-			c.GiveawayAutoComplete(s, i)
+	case discordgo.InteractionApplicationCommandAutocomplete:
+		if f, ok := autoCompleteMap[i.ApplicationCommandData().Name]; ok {
+			f(s, i)
+		} else {
+			h.ErrorResponse(s, i, "AutoComplete response has not been set properly, please contact Logan to fix")
 		}
 	}
 }

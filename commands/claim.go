@@ -16,42 +16,6 @@ var ClaimCommand = discordgo.ApplicationCommand{
 	Description: "Put an item up for auction!",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "setup",
-			Description: "Setup the claiming system for your prizes.",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "category",
-					Description: "The category to claim prizes in.",
-					ChannelTypes: []discordgo.ChannelType{
-						4,
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "log_channel",
-					Description: "The output channel for completed tickets.",
-					ChannelTypes: []discordgo.ChannelType{
-						0,
-						5,
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "instructions",
-					Description: "Leave instructions for whoever opens the ticket.",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "disable_claiming",
-					Description: "Disables the claiming system, only leaves a record of prizes.",
-				},
-			},
-			Autocomplete: false,
-			Choices:      []*discordgo.ApplicationCommandOptionChoice{},
-		},
-		{
 			Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
 			Name:        "create",
 			Description: "Create a claimable prize.",
@@ -163,110 +127,12 @@ var ClaimCommand = discordgo.ApplicationCommand{
 
 func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Options[0].Name {
-	case "setup":
-		ClaimSetup(s, i)
 	case "create":
 		ClaimCreate(s, i)
 	case "inventory":
 		ClaimInventory(s, i)
 	case "refresh":
 		claimRefresh(s, i)
-	}
-}
-
-func ClaimSetup(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
-
-	options := h.ParseSubCommand(i)
-
-	claimSetup := map[string]interface{}{
-		"guild_id": i.GuildID,
-	}
-
-	result := database.DB.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Model(database.ClaimSetup{}).Create(&claimSetup)
-	if result.Error != nil {
-		fmt.Println(result.Error)
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
-	}
-
-	result = database.DB.Model(database.ClaimSetup{
-		GuildID: i.GuildID,
-	}).Updates(options)
-
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
-	}
-
-	//Now check what options are set
-	setOptions := map[string]interface{}{}
-
-	database.DB.Model(database.ClaimSetup{}).First(&setOptions, i.GuildID)
-
-	responseFields := []*discordgo.MessageEmbedField{}
-
-	for _, v := range ClaimCommand.Options[0].Options {
-
-		//Need to see if it's still set after it says not set because of empty string
-		switch {
-		case setOptions[v.Name] == nil || setOptions[v.Name] == "":
-			setOptions[v.Name] = "Not Set"
-		case strings.Contains(v.Name, "role"):
-			setOptions[v.Name] = fmt.Sprintf("<@&%s>", setOptions[v.Name])
-		case strings.Contains(v.Name, "channel"):
-			setOptions[v.Name] = fmt.Sprintf("<#%s>", setOptions[v.Name])
-		case strings.Contains(v.Name, "category"):
-			category, err := s.Channel(setOptions[v.Name].(string))
-			if err != nil {
-				fmt.Println("Category Error:", err)
-				setOptions[v.Name] = "Error Displaying Category: " + err.Error()
-			} else {
-				setOptions[v.Name] = category.Name
-			}
-		}
-		responseFields = append(responseFields, &discordgo.MessageEmbedField{
-			Name:  fmt.Sprintf("**%s**", strings.Title(strings.ReplaceAll(v.Name, "_", " "))),
-			Value: fmt.Sprint(setOptions[v.Name]),
-		})
-	}
-
-	menuOptions := []discordgo.SelectMenuOption{}
-
-	for _, v := range ClaimCommand.Options[0].Options {
-		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
-			Label:       strings.Title(strings.ReplaceAll(v.Name, "_", " ")),
-			Value:       v.Name,
-			Description: v.Description,
-		})
-	}
-
-	err := h.SuccessResponse(s, i, h.PresetResponse{
-		Title:  "Claim Setup",
-		Fields: responseFields,
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						CustomID:    "clear_claim_setup",
-						Placeholder: "Clear Setup Options",
-						MinValues:   1,
-						MaxValues:   len(ClaimCommand.Options[0].Options),
-						Options:     menuOptions,
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		fmt.Println(err)
 	}
 }
 
@@ -566,7 +432,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		MessageID: primaryKey,
 	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "description"}).Updates(claimMap)
 	if result.Error != nil {
-		return result.Error
+		return fmt.Errorf("CRITICAL ERROR " + result.Error.Error())
 	}
 
 	return err
@@ -697,7 +563,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	thumbnail := &discordgo.MessageEmbedThumbnail{}
 
-	if len(i.Message.Embeds) > 0 &&i.Message.Embeds[0].Thumbnail != nil {
+	if len(i.Message.Embeds) > 0 && i.Message.Embeds[0].Thumbnail != nil {
 		thumbnail = i.Message.Embeds[0].Thumbnail
 	}
 
