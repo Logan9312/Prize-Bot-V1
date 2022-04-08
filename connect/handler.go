@@ -40,6 +40,7 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"claim_complete":         c.CompleteButton,
 	"reopen_ticket":          c.ReopenTicket,
 	"additem":                c.AddItem,
+	"bid_history":            c.AuctionBidHistory,
 }
 
 var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
