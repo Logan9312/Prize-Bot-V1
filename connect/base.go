@@ -115,12 +115,22 @@ func Timers(s *discordgo.Session) {
 	AuctionQueue := []map[string]interface{}{}
 	Giveaways := []map[string]interface{}{}
 	Claims := []map[string]interface{}{}
+	AuctionSetup := []map[string]interface{}{}
 
 	fmt.Println("Beginning Startup Timers")
 
 	database.DB.Model([]database.Auction{}).Find(&Auctions)
 	for _, v := range Auctions {
 		go AuctionEndTimer(v, s)
+	}
+
+	database.DB.Model([]database.AuctionSetup{}).Find(&AuctionSetup)
+	for _, v := range AuctionSetup {
+		database.DB.Model(database.CurrencySetup{}).Create(map[string]interface{}{
+			"guild_id": v["guild_id"],
+			"currency": v["currency"],
+			"side":     v["side"],
+		})
 	}
 
 	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
