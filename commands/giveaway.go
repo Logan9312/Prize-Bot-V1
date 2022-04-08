@@ -47,7 +47,7 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Name:        "duration",
 					Description: "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
 					Required:    true,
-					//Autocomplete: true,
+					Autocomplete: true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
@@ -65,12 +65,12 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Description: "Description of the giveaway item.",
 					Required:    false,
 				},
-				/*{
+				{
 					Type:        11,
 					Name:        "image",
 					Description: "Attach an image to your giveaway",
 					Required:    false,
-				},*/
+				},
 			},
 		},
 	},
