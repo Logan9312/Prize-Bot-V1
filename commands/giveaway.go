@@ -19,14 +19,6 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "setup",
-			Description: "Setup giveaways",
-			Options: []*discordgo.ApplicationCommandOption{
-
-			},
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "create",
 			Description: "Start a giveaway!",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -43,10 +35,10 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "duration",
-					Description: "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
-					Required:    true,
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "duration",
+					Description:  "The amount of time that the giveaway will run for. (Example: 1d, 12h, etc.)",
+					Required:     true,
 					Autocomplete: true,
 				},
 				{
