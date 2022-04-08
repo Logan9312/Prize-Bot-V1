@@ -129,7 +129,7 @@ func Timers(s *discordgo.Session) {
 		database.DB.Model(database.CurrencySetup{}).Create(map[string]interface{}{
 			"guild_id": v["guild_id"],
 			"currency": v["currency"],
-			"side":     v["side"],
+			"side":     v["currency_side"],
 		})
 	}
 
