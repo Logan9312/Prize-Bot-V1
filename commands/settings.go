@@ -63,32 +63,6 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					},
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency",
-					Description: "Sets the auction currency",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency_side",
-					Description: "Left/Right currency",
-					//Autocomplete: true,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "Left",
-							Value: "left",
-						},
-						{
-							Name:  "Right",
-							Value: "right",
-						},
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "integer_only",
-					Description: "Only allow integer bids (no decimals).",
-				},
-				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "log_channel",
 					Description: "Sets the channel where auctions will send outputs when they end",
@@ -100,24 +74,29 @@ var SettingsCommand = discordgo.ApplicationCommand{
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
-					Name:        "alert_role",
-					Description: "Set a role to get pinged whenever an auction starts.",
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "host_role",
 					Description: "Set a role that can host auctions.",
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "snipe_extension",
-					Description: "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "alert_role",
+					Description: "Set a role to get pinged whenever an auction starts.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
+				},
+				{
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "snipe_extension",
+					Description:  "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
 					Autocomplete: true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "snipe_range",
-					Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "snipe_range",
+					Description:  "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
 					Autocomplete: true,
 				},
 			},
@@ -162,6 +141,33 @@ var SettingsCommand = discordgo.ApplicationCommand{
 			Description: "Edit your shop settings",
 			Options: []*discordgo.ApplicationCommandOption{},
 		},*/
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "currency",
+			Description: "Edit your currency settings",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency",
+					Description: "Sets the auction currency",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "side",
+					Description: "Left/Right currency",
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
+			},
+		},
 	},
 }
 

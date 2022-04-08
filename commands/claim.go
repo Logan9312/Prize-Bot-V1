@@ -159,7 +159,7 @@ func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Cleared Auction Settings**",
-		Description: "You have successfully cleared the following settings. Run `/auction setup` to see your changes.",
+		Description: "You have successfully cleared the following settings. Run `/settings auction` to see your changes.",
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "**Cleared Settings**",
@@ -190,7 +190,7 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	claimMap["host"] = i.Member.User.ID
 	claimMap["guild_id"] = i.GuildID
 	if claimMap["log_channel"] == nil {
-		h.ErrorResponse(s, i, "No Log Channel has been set. Use `/auction setup log_channel:` to set a logging channel for claims.")
+		h.ErrorResponse(s, i, "No Log Channel has been set. Use `/settings auction log_channel:` to set a logging channel for claims.")
 		fmt.Println(result.Error)
 		return
 	}
@@ -707,7 +707,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if claimMap["bid"] != nil {
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   "**Price**",
-			Value:  PriceFormat(map[string]interface{}{}, claimMap["bid"].(float64)),
+			Value:  PriceFormat(claimMap["bid"].(float64), i.GuildID),
 			Inline: false,
 		})
 	}

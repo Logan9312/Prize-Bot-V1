@@ -131,6 +131,13 @@ func Timers(s *discordgo.Session) {
 			"currency": v["currency"],
 			"side":     v["currency_side"],
 		})
+		database.DB.Model(database.CurrencySetup{
+			GuildID: v["guild_id"].(string),
+		}).Updates(map[string]interface{}{
+			"guild_id": v["guild_id"],
+			"currency": v["currency"],
+			"side":     v["currency_side"],
+		})
 	}
 
 	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
