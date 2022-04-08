@@ -29,7 +29,7 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 	"endauction":             c.AuctionEndButton,
 	"claim_prize":            c.ClaimPrizeButton,
-	"clear_auction":          c.ClearAuctionButton,
+	"clearauction":           c.ClearAuctionButton,
 	"delete_auction_queue":   c.DeleteAuctionQueue,
 	"delete_auction_channel": c.DeleteAuctionChannel,
 	"reroll_giveaway":        c.RerollGiveawayButton,
