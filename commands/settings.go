@@ -208,18 +208,18 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		commandData = *SettingsCommand.Options[2]
 		customID = "clear_giveaway_setup"
-	case "shop":
-		model = &database.ShopSetup{
-			GuildID: i.GuildID,
-		}
-		commandData = *SettingsCommand.Options[3]
-		customID = "clear_shop_setup"
 	case "currency":
 		model = &database.CurrencySetup{
 			GuildID: i.GuildID,
 		}
-		commandData = *SettingsCommand.Options[4]
+		commandData = *SettingsCommand.Options[3]
 		customID = "clear_currency_setup"
+	case "shop":
+		model = &database.ShopSetup{
+			GuildID: i.GuildID,
+		}
+		commandData = *SettingsCommand.Options[4]
+		customID = "clear_shop_setup"
 	default:
 		h.ErrorResponse(s, i, fmt.Sprintf("Unknown settings type: %s", i.ApplicationCommandData().Options[0].Name))
 		return
