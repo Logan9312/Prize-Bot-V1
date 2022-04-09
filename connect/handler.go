@@ -36,6 +36,7 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"clear_auction_setup":    c.AuctionSetupClearButton,
 	"clear_giveaway_setup":   c.GiveawaySetupClearButton,
 	"clear_claim_setup":      c.ClaimSetupClearButton,
+	"clear_currency_setup":   c.CurrencySetupClearButton,
 	"claim_cancel":           c.CancelButton,
 	"claim_complete":         c.CompleteButton,
 	"reopen_ticket":          c.ReopenTicket,
