@@ -810,10 +810,12 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	}
 
-	if auctionMap["image"] != nil {
-		auctionMap["image_url"] = i.ApplicationCommandData().Resolved.Attachments[auctionMap["image"].(string)].URL
+	if options["image"] != nil {
+		auctionMap["image_url"] = i.ApplicationCommandData().Resolved.Attachments[options["image"].(string)].URL
 	}
 
+	//wtf Am I doing here lmao
+	delete(options, "image")
 	delete(auctionMap, "image")
 
 	if options["queue_number"] != nil {
