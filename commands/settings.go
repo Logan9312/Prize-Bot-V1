@@ -291,17 +291,18 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 	}
 
-	if options["snipe_range"] != nil && options["snipe_extension"] != nil {
-		antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", options["snipe_range"].(time.Duration).String(), options["snipe_extension"].(time.Duration).String())
-	} else {
-		antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
+	if i.ApplicationCommandData().Options[0].Name == "auctions" {
+		if options["snipe_range"] != nil && options["snipe_extension"] != nil {
+			antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", options["snipe_range"].(time.Duration).String(), options["snipe_extension"].(time.Duration).String())
+		} else {
+			antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
+		}
+
+		responseFields = append(responseFields, &discordgo.MessageEmbedField{
+			Name:  "**Anti Snipe**",
+			Value: antiSnipeDescription,
+		})
 	}
-
-	responseFields = append(responseFields, &discordgo.MessageEmbedField{
-		Name:  "**Anti Snipe**",
-		Value: antiSnipeDescription,
-	})
-
 	err = h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       fmt.Sprintf("%s Setup", strings.Title(i.ApplicationCommandData().Name)),
 		Description: content,
