@@ -575,8 +575,17 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	auctionMap := h.ParseSubCommand(i)
 	auctionSetup := map[string]interface{}{}
+	currencyMap := map[string]interface{}{}
 
 	database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, i.GuildID)
+
+	result := database.DB.Model(database.CurrencySetup{}).First(&currencyMap, i.GuildID)
+	if result.Error != nil {
+		fmt.Println("Error getting currency setup: " + result.Error.Error())
+	}
+
+	auctionMap["currency"] = currencyMap["currency"]
+
 	auctionMap["guild_id"] = i.GuildID
 	auctionMap["host"] = i.Member.User.ID
 
