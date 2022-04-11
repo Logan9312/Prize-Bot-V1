@@ -29,7 +29,7 @@ func PriceFormat(price float64, guildID string) string {
 	if currencyMap["currency"] == nil {
 		return priceString
 	} else {
-		if currencyMap["currency_side"] == "right" {
+		if currencyMap["side"] == "right" {
 			return fmt.Sprintf("%s %s", priceString, currencyMap["currency"])
 		} else {
 			return fmt.Sprintf("%s %s", currencyMap["currency"], priceString)
