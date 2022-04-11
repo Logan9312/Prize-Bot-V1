@@ -52,7 +52,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set a custom item description",
 					Required:    false,
 				},
-				{
+				/*{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "currency",
 					Description: "A one time currency to use for this auction.",
@@ -73,7 +73,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 							Value: "right",
 						},
 					},
-				},
+				},*/
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "integer_only",
@@ -200,7 +200,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Required:    false,
 					//Autocomplete: true,
 				},
-				{
+				/*{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "currency",
 					Description: "Change the currency",
@@ -222,7 +222,7 @@ var AuctionCommand = discordgo.ApplicationCommand{
 							Value: "right",
 						},
 					},
-				},
+				},*/
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "integer_only",

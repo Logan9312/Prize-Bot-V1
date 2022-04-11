@@ -61,7 +61,7 @@ func PremiumSession(userID string) (*stripe.CheckoutSession, error) {
 			},
 		},
 	}
-	params.AddMetadata("user_id", userID)
+	params.SubscriptionData.AddMetadata("discord_id", userID)
 
 	return session.New(params)
 }
