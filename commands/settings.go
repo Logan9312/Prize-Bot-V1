@@ -100,6 +100,15 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Description:  "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
 					Autocomplete: true,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "channel_override",
+					Description: "EXPERIMENTAL: Override the channel where auctions are created.",
+					ChannelTypes: []discordgo.ChannelType{
+						discordgo.ChannelTypeGuildText,
+						discordgo.ChannelTypeGuildNews,
+					},
+				},
 			},
 		},
 		{
@@ -136,12 +145,6 @@ var SettingsCommand = discordgo.ApplicationCommand{
 				},*/
 			},
 		},
-		/*{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "shop",
-			Description: "Edit your shop settings",
-			Options: []*discordgo.ApplicationCommandOption{},
-		},*/
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "currency",
@@ -169,6 +172,12 @@ var SettingsCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
+		/*{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "shop",
+			Description: "Edit your shop settings",
+			Options: []*discordgo.ApplicationCommandOption{},
+		},*/
 	},
 }
 

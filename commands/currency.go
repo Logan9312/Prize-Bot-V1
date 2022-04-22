@@ -16,6 +16,10 @@ var CurrencyCommand = &discordgo.ApplicationCommand{
 	},
 }
 
+func Currency() {
+
+}
+
 func PriceFormat(price float64, guildID string) string {
 
 	currencyMap := map[string]interface{}{}

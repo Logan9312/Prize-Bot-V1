@@ -370,6 +370,10 @@ func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 	re := regexp.MustCompile(`[0-9]+\.?[0-9]*`)
 	input = re.FindString(input)
 
+	if input == "" {
+		return []*discordgo.ApplicationCommandOptionChoice{}
+	}
+
 	_, err := strconv.ParseFloat(input, 64)
 	if err != nil {
 		fmt.Println(err)
@@ -585,6 +589,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	auctionMap["currency"] = currencyMap["currency"]
+	auctionMap["channel_override"] = auctionSetup["channel_override"]
 
 	auctionMap["guild_id"] = i.GuildID
 	auctionMap["host"] = i.Member.User.ID
@@ -746,24 +751,34 @@ func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) erro
 		auctionMap["category"] = ""
 	}
 
-	channel, err := s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
-		Name:     "💸│" + auctionMap["item"].(string),
-		Type:     0,
-		ParentID: auctionMap["category"].(string),
-	})
-	if err != nil {
-		return err
-	}
+	if auctionMap["channel_override"] != nil {
+		auctionMap["channel_id"] = auctionMap["channel_override"]
+		message, err := h.SuccessMessage(s, auctionMap["channel_override"].(string), auctionMessage)
+		if err != nil {
+			return err
+		}
+		auctionMap["message_id"] = message.ID
+	} else {
 
-	message, err := h.SuccessMessage(s, channel.ID, auctionMessage)
-	if err != nil {
-		return err
-	}
+		channel, err := s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
+			Name:     "💸│" + auctionMap["item"].(string),
+			Type:     0,
+			ParentID: auctionMap["category"].(string),
+		})
+		if err != nil {
+			return err
+		}
 
-	auctionMap["channel_id"] = message.ChannelID
-	auctionMap["message_id"] = message.ID
+		message, err := h.SuccessMessage(s, channel.ID, auctionMessage)
+		if err != nil {
+			return err
+		}
+
+		auctionMap["channel_id"] = message.ChannelID
+		auctionMap["message_id"] = message.ID
+
+	}
 	delete(auctionMap, "category")
-
 	result := database.DB.Model(database.Auction{}).Create(auctionMap)
 	if result.Error != nil {
 		return result.Error
@@ -1331,11 +1346,12 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 		Session.ChannelMessageEditComplex(message)
 	}
 
-	time.Sleep(30 * time.Second)
-
-	_, err = Session.ChannelDelete(delChannel)
-	if err != nil {
-		fmt.Println(err)
+	if auctionMap["channel_override"] == nil {
+		time.Sleep(30 * time.Second)
+		_, err = Session.ChannelDelete(delChannel)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	result = database.DB.Delete(database.Auction{}, delChannel)

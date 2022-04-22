@@ -14,62 +14,65 @@ type DevSetup struct {
 }
 
 type AuctionSetup struct {
-	GuildID        string `gorm:"primaryKey"`
-	Category       string
-	AlertRole      string
-	Currency       string
-	LogChannel     string
-	HostRole       string
-	SnipeExtension time.Duration
-	SnipeRange     time.Duration
-	CurrencySide   string
-	IntegerOnly    bool
+	GuildID         string `gorm:"primaryKey"`
+	Category        string
+	AlertRole       string
+	Currency        string
+	LogChannel      string
+	HostRole        string
+	SnipeExtension  time.Duration
+	SnipeRange      time.Duration
+	CurrencySide    string
+	IntegerOnly     bool
+	ChannelOverride string
 }
 
 type Auction struct {
-	ChannelID    string `gorm:"primaryKey"`
-	Bid          float64
-	MessageID    string
-	EndTime      time.Time
-	Winner       string
-	GuildID      string
-	Item         string
-	Host         string
-	Currency     string
-	IncrementMin float64
-	IncrementMax float64
-	Description  string
-	ImageURL     string
-	TargetPrice  float64
-	Buyout       float64
-	CurrencySide string
-	IntegerOnly  bool
-	BidHistory   string
-	Note         string
+	ChannelID       string `gorm:"primaryKey"`
+	Bid             float64
+	MessageID       string
+	EndTime         time.Time
+	Winner          string
+	GuildID         string
+	Item            string
+	Host            string
+	Currency        string
+	IncrementMin    float64
+	IncrementMax    float64
+	Description     string
+	ImageURL        string
+	TargetPrice     float64
+	Buyout          float64
+	CurrencySide    string
+	IntegerOnly     bool
+	BidHistory      string
+	Note            string
+	ChannelOverride string
 }
 
 type AuctionQueue struct {
-	ID             int `gorm:"primaryKey"`
-	Bid            float64
-	StartTime      time.Time
-	EndTime        time.Time
-	GuildID        string
-	Item           string
-	Host           string
-	Currency       string
-	IncrementMin   float64
-	IncrementMax   float64
-	Description    string
-	ImageURL       string
-	Category       string
-	TargetPrice    float64
-	Buyout         float64
-	CurrencySide   string
-	IntegerOnly    bool
-	SnipeExtension time.Duration
-	SnipeRange     time.Duration
-	AlertRole      string
-	Note           string
+	ID              int `gorm:"primaryKey"`
+	Bid             float64
+	StartTime       time.Time
+	EndTime         time.Time
+	GuildID         string
+	Item            string
+	Host            string
+	Currency        string
+	IncrementMin    float64
+	IncrementMax    float64
+	Description     string
+	ImageURL        string
+	Category        string
+	TargetPrice     float64
+	Buyout          float64
+	CurrencySide    string
+	IntegerOnly     bool
+	SnipeExtension  time.Duration
+	SnipeRange      time.Duration
+	AlertRole       string
+	Note            string
+	ChannelOverride string
 }
 
 //Make sure to remove LogChannel and ClaimMessage from auction log
