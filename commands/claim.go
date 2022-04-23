@@ -708,7 +708,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if claimMap["bid"] != nil {
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   "**Price**",
-			Value:  PriceFormat(claimMap["bid"].(float64), i.GuildID),
+			Value:  PriceFormat(claimMap["bid"].(float64), i.GuildID, claimMap["currency"]),
 			Inline: false,
 		})
 	}

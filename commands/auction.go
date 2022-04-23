@@ -52,28 +52,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Set a custom item description",
 					Required:    false,
 				},
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "currency",
 					Description: "A one time currency to use for this auction.",
 					Required:    false,
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency_side",
-					Description: "Left/Right currency",
-					//Autocomplete: true,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "Left",
-							Value: "left",
-						},
-						{
-							Name:  "Right",
-							Value: "right",
-						},
-					},
-				},*/
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "integer_only",
@@ -429,11 +413,11 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 	}
 
 	if auctionMap["increment_min"] != nil {
-		description += fmt.Sprintf("**Minimum Bid:** + %s above previous.\n", PriceFormat(auctionMap["increment_min"].(float64), auctionMap["guild_id"].(string)))
+		description += fmt.Sprintf("**Minimum Bid:** + %s above previous.\n", PriceFormat(auctionMap["increment_min"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 	}
 
 	if auctionMap["increment_max"] != nil {
-		description += fmt.Sprintf("**Maximum Bid:** + %s above previous.\n", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string)))
+		description += fmt.Sprintf("**Maximum Bid:** + %s above previous.\n", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 	}
 
 	if auctionMap["target_price"] != nil {
@@ -449,7 +433,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 	}
 
 	if auctionMap["buyout"] != nil {
-		description += fmt.Sprintf("**Buyout Price:** %s.\n", PriceFormat(auctionMap["buyout"].(float64), auctionMap["guild_id"].(string)))
+		description += fmt.Sprintf("**Buyout Price:** %s.\n", PriceFormat(auctionMap["buyout"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 	}
 
 	auctionfields := []*discordgo.MessageEmbedField{
@@ -472,13 +456,13 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 		if auctionMap["winner"] != nil {
 			auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 				Name:   "__**Current Highest Bid:**__",
-				Value:  PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string)),
+				Value:  PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]),
 				Inline: true,
 			})
 		} else {
 			auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 				Name:   "__**Starting Bid:**__",
-				Value:  PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string)),
+				Value:  PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]),
 				Inline: true,
 			})
 		}
@@ -588,7 +572,9 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println("Error getting currency setup: " + result.Error.Error())
 	}
 
-	auctionMap["currency"] = currencyMap["currency"]
+	if auctionMap["currency"] == nil {
+		auctionMap["currency"] = currencyMap["currency"]
+	}
 	auctionMap["channel_override"] = auctionSetup["channel_override"]
 
 	auctionMap["guild_id"] = i.GuildID
@@ -1120,11 +1106,11 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	case bidData.Bid >= auctionMap["bid"].(float64):
 		switch {
 		case auctionMap["increment_min"] != nil && bidData.Bid-auctionMap["bid"].(float64) < auctionMap["increment_min"].(float64):
-			return response, fmt.Errorf("Bid must be higher than the previous bid by: %s\n\u200b", PriceFormat(auctionMap["increment_min"].(float64), auctionMap["guild_id"].(string)))
+			return response, fmt.Errorf("Bid must be higher than the previous bid by: %s\n\u200b", PriceFormat(auctionMap["increment_min"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 		case auctionMap["increment_max"] != nil && bidData.Bid-auctionMap["bid"].(float64) > auctionMap["increment_max"].(float64):
-			return response, fmt.Errorf("Bid must be no more than %s higher than the previous bid. \n\u200b", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string)))
+			return response, fmt.Errorf("Bid must be no more than %s higher than the previous bid. \n\u200b", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 		case auctionMap["winner"] != nil && bidData.Bid <= auctionMap["bid"].(float64):
-			return response, fmt.Errorf("You must bid higher than: %s", PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string)))
+			return response, fmt.Errorf("You must bid higher than: %s", PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 		}
 
 		auctionMap["bid"] = bidData.Bid
@@ -1196,7 +1182,7 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 		}
 		Content = "Bid has successfully been placed"
 	default:
-		return response, fmt.Errorf("You must bid higher than: " + PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string)))
+		return response, fmt.Errorf("You must bid higher than: " + PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 	}
 
 	response = h.PresetResponse{
@@ -1298,15 +1284,15 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 	}
 
 	if auctionMap["target_price"] != nil && auctionMap["target_price"].(float64) > auctionMap["bid"].(float64) {
-		auctionMap["target_message"] = fmt.Sprintf("The host had set a target price of %s that has not been reached.", PriceFormat(auctionMap["target_price"].(float64), auctionMap["guild_id"].(string)))
+		auctionMap["target_message"] = fmt.Sprintf("The host had set a target price of %s that has not been reached.", PriceFormat(auctionMap["target_price"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 		auctionMap["winner"] = nil
 	}
 
-	auctionMap["formatted_price"] = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string)))
+	auctionMap["formatted_price"] = fmt.Sprintf("%s\n\u200b", PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 
 	if auctionMap["buyout"] != nil && auctionMap["buyout"].(float64) != 0 {
 		if auctionMap["bid"].(float64) >= auctionMap["buyout"].(float64) {
-			auctionMap["buyout_message"] = fmt.Sprintf("%s\n\u200bBUYOUT!", PriceFormat(auctionMap["buyout"].(float64), auctionMap["guild_id"].(string)))
+			auctionMap["buyout_message"] = fmt.Sprintf("%s\n\u200bBUYOUT!", PriceFormat(auctionMap["buyout"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 		}
 	}
 
@@ -1383,7 +1369,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s. %s**", fmt.Sprint(len(fields)+1), v.Item),
-			Value: fmt.Sprintf("**Start time:** <t:%d:R>\n**End Time:** <t:%d>\n**Starting Price:** %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), PriceFormat(v.Bid, v.GuildID)),
+			Value: fmt.Sprintf("**Start time:** <t:%d:R>\n**End Time:** <t:%d>\n**Starting Price:** %s\n\u200b", v.StartTime.Unix(), v.EndTime.Unix(), PriceFormat(v.Bid, v.GuildID, v.Currency)),
 		})
 		selectOptions = append(selectOptions, discordgo.SelectMenuOption{
 			Label:       v.Item,

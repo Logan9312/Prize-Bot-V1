@@ -20,7 +20,7 @@ func Currency() {
 
 }
 
-func PriceFormat(price float64, guildID string) string {
+func PriceFormat(price float64, guildID string, override interface{}) string {
 
 	currencyMap := map[string]interface{}{}
 	priceString := strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", price), "0"), ".")
@@ -28,6 +28,10 @@ func PriceFormat(price float64, guildID string) string {
 	result := database.DB.Model(database.CurrencySetup{}).First(&currencyMap, guildID)
 	if result.Error != nil {
 		fmt.Println("Error getting currency setup: " + result.Error.Error())
+	}
+
+	if override != nil {
+		currencyMap["currency"] = override
 	}
 
 	if currencyMap["currency"] == nil {
