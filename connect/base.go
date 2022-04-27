@@ -11,7 +11,7 @@ import (
 )
 
 type slashCommands struct {
-	local, prod []*discordgo.ApplicationCommand
+	local, prod, dev []*discordgo.ApplicationCommand
 }
 
 var botCommands = slashCommands{
@@ -32,9 +32,11 @@ var botCommands = slashCommands{
 		&commands.BidCommand,
 		&commands.GiveawayCommand,
 		&commands.PrivacyCommand,
-		&commands.DevCommand,
 		&commands.ClaimCommand,
 		&commands.SettingsCommand,
+	},
+	dev: []*discordgo.ApplicationCommand{
+		&commands.DevCommand,
 	},
 }
 
@@ -85,6 +87,12 @@ func BotConnect(token, environment, botName string) {
 		if err != nil {
 			fmt.Println("Bulk Overwrite Error:", err)
 		}
+	}
+
+	//Builds dev commands
+	_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", botCommands.dev)
+	if err != nil {
+		fmt.Println("Bulk Overwrite Error:", err)
 	}
 
 	s.AddHandler(CommandHandler)
