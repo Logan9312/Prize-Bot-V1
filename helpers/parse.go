@@ -49,3 +49,7 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 
 	return time.ParseDuration(strings.ToLower(inputDuration))
 }
+
+func Ptr[T any](v T) *T {
+	return &v
+  }

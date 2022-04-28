@@ -82,7 +82,7 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 func FollowUpErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) (*discordgo.Message, error) {
 	_, file, line, _ := runtime.Caller(1)
 	fmt.Println(file, line, errorText)
-	return s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
+	return s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
 		TTS:   false,
 		Files: []*discordgo.File{},
 		Components: []discordgo.MessageComponent{
@@ -201,7 +201,7 @@ func FollowUpSuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreat
 
 	embed = append(embed, r.Embeds...)
 
-	return s.FollowupMessageCreate(s.State.User.ID, i.Interaction, true, &discordgo.WebhookParams{
+	return s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
 		Content:         r.Content,
 		Username:        "",
 		AvatarURL:       "",
@@ -247,13 +247,13 @@ func SuccessMessageEdit(s *discordgo.Session, channelID, messageID string, r Pre
 				Fields:      r.Fields,
 			},
 		},
-		ID:              messageID,
-		Channel:         channelID,
+		ID:      messageID,
+		Channel: channelID,
 	})
 }
 
 func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) (*discordgo.Message, error) {
-	return s.InteractionResponseEdit(s.State.User.ID, i.Interaction, &discordgo.WebhookEdit{
+	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 		Content:    r.Content,
 		Components: r.Components,
 		Embeds: []*discordgo.MessageEmbed{
@@ -270,7 +270,7 @@ func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pr
 }
 
 func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) (*discordgo.Message, error) {
-	return s.InteractionResponseEdit(s.State.User.ID, i.Interaction, &discordgo.WebhookEdit{
+	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{

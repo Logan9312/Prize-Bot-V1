@@ -3,6 +3,8 @@ github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030I
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/bwmarrin/discordgo v0.23.3-0.20220216202327-6015eed9333e h1:P7ba3v4TFTuN7eSJiegQBTWJVB560/nz5VkLUOLRuhI=
 github.com/bwmarrin/discordgo v0.23.3-0.20220216202327-6015eed9333e/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
+github.com/bwmarrin/discordgo v0.25.1-0.20220428212307-9e0783c37f5d h1:nVlTHwLhz76BpOgYyqeD76we+c8d+M48FQTi6aKtnHQ=
+github.com/bwmarrin/discordgo v0.25.1-0.20220428212307-9e0783c37f5d/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
 github.com/caarlos0/env v3.5.0+incompatible h1:Yy0UN8o9Wtr/jGHZDpCBLpNrzcFLLM2yixi/rBrKyJs=
 github.com/caarlos0/env v3.5.0+incompatible/go.mod h1:tdCsowwCzMLdkqRYDlHpZCp2UooDD3MspDBjZ2AD02Y=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=

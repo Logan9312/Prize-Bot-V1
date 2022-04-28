@@ -1384,7 +1384,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				discordgo.SelectMenu{
 					CustomID:    "delete_auction_queue",
 					Placeholder: "💣 Remove auction from queue",
-					MinValues:   0,
+					MinValues:   h.Ptr(0),
 					MaxValues:   len(AuctionQueue),
 					Options:     selectOptions,
 				},
