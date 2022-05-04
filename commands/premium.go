@@ -202,17 +202,27 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 
 func ListSubscriptions(s *discordgo.Session) {
 	params := &stripe.SubscriptionListParams{}
+	activeMap := map[string]bool{}
 	i := sub.List(params)
 	for i.Next() {
 		subscription := i.Subscription()
 		fmt.Println(subscription.Metadata)
+		fmt.Println(subscription.Status)
 		if subscription.Status == stripe.SubscriptionStatusActive {
-			err := s.GuildMemberRoleAdd("885228283573178408", subscription.Metadata["discord_id"], "918264848884854874")
+			activeMap[subscription.Metadata["guild_id"]] = true
+		} else if activeMap[subscription.Metadata["guild_id"]] != true {
+			activeMap[subscription.Metadata["guild_id"]] = false
+		}
+	}
+
+	for userID, active := range activeMap {
+		if active {
+			err := s.GuildMemberRoleAdd("885228283573178408", userID, "918264848884854874")
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
-			err := s.GuildMemberRoleRemove("885228283573178408", subscription.Metadata["discord_id"], "918264848884854874")
+			err := s.GuildMemberRoleRemove("885228283573178408", userID, "918264848884854874")
 			if err != nil {
 				fmt.Println(err)
 			}
