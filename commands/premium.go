@@ -215,6 +215,8 @@ func ListSubscriptions(s *discordgo.Session) {
 		}
 	}
 
+	fmt.Println(activeMap)
+
 	for userID, active := range activeMap {
 		if active {
 			err := s.GuildMemberRoleAdd("885228283573178408", userID, "918264848884854874")
