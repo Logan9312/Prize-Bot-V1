@@ -205,6 +205,7 @@ func ListSubscriptions(s *discordgo.Session) {
 	i := sub.List(params)
 	for i.Next() {
 		subscription := i.Subscription()
+		fmt.Println(subscription.Metadata["discord_id"])
 		if subscription.Status == stripe.SubscriptionStatusActive {
 			err := s.GuildMemberRoleAdd("885228283573178408", subscription.Metadata["discord_id"], "918264848884854874")
 			if err != nil {
