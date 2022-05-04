@@ -36,6 +36,7 @@ var PremiumCommand = discordgo.ApplicationCommand{
 }
 
 func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
 	options := h.ParseSlashCommand(i)
 	switch options["option"] {
 	case "info":
@@ -130,7 +131,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	fmt.Println("Current Subscriptions")
-	ListSubscriptions()
+	ListSubscriptions(s)
 }
 
 func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -199,12 +200,22 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 	return checkout.New(params)
 }
 
-func ListSubscriptions() {
+func ListSubscriptions(s *discordgo.Session) {
 	params := &stripe.SubscriptionListParams{}
 	i := sub.List(params)
 	for i.Next() {
-		s := i.Subscription()
-		fmt.Println("Discord User ID:", s.Metadata)
+		subscription := i.Subscription()
+		if subscription.Status == stripe.SubscriptionStatusActive {
+			err := s.GuildMemberRoleAdd("885228283573178408", subscription.Metadata["discord_id"], "918264848884854874")
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			err := s.GuildMemberRoleRemove("885228283573178408", subscription.Metadata["discord_id"], "918264848884854874")
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 }
 
