@@ -7,7 +7,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
-	"gitlab.com/logan9312/discord-auction-bot/subscriptions"
 )
 
 type slashCommands struct {
@@ -24,7 +23,7 @@ var botCommands = slashCommands{
 		&commands.DevCommand,
 		&commands.ClaimCommand,
 		&commands.ShopCommand,
-		&subscriptions.PremiumCommand,
+		&commands.PremiumCommand,
 		&commands.SettingsCommand,
 	},
 	prod: []*discordgo.ApplicationCommand{
@@ -87,12 +86,12 @@ func BotConnect(token, environment, botName string) {
 		if err != nil {
 			fmt.Println("Bulk Overwrite Error:", err)
 		}
-	}
 
-	//Builds dev commands
-	_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", botCommands.dev)
-	if err != nil {
-		fmt.Println("Bulk Overwrite Error:", err)
+		//Builds dev commands
+		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", botCommands.dev)
+		if err != nil {
+			fmt.Println("Bulk Overwrite Error:", err)
+		}
 	}
 
 	s.AddHandler(CommandHandler)

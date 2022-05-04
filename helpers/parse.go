@@ -52,4 +52,4 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 
 func Ptr[T any](v T) *T {
 	return &v
-  }
+}

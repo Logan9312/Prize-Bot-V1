@@ -8,24 +8,184 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 var SettingsCommand = discordgo.ApplicationCommand{
 	Name:                     "settings",
+	Description:              "Change any settings for your bot",
 	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
 	DMPermission:             new(bool),
-	Description:              "Change any settings for your bot",
-	Options:                  []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionSubCommand, Name: "claiming", Description: "Edit your claiming settings", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionChannel, Name: "category", Description: "The category to claim prizes in.", ChannelTypes: []discordgo.ChannelType{4}}, {Type: discordgo.ApplicationCommandOptionChannel, Name: "log_channel", Description: "The output channel for completed tickets.", ChannelTypes: []discordgo.ChannelType{0, 5}}, {Type: discordgo.ApplicationCommandOptionString, Name: "instructions", Description: "Leave instructions for whoever opens the ticket."}, {Type: discordgo.ApplicationCommandOptionBoolean, Name: "disable_claiming", Description: "Disables the claiming system, only leaves a record of prizes."}}}, {Type: discordgo.ApplicationCommandOptionSubCommand, Name: "auctions", Description: "Edit your auction settings", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionChannel, Name: "category", Description: "Sets the category to create auctions in.", ChannelTypes: []discordgo.ChannelType{4}}, {Type: discordgo.ApplicationCommandOptionChannel, Name: "log_channel", Description: "Sets the channel where auctions will send outputs when they end", Required: false, ChannelTypes: []discordgo.ChannelType{0, 5}}, {Type: discordgo.ApplicationCommandOptionRole, Name: "host_role", Description: "Set a role that can host auctions."}, {Type: discordgo.ApplicationCommandOptionRole, Name: "alert_role", Description: "Set a role to get pinged whenever an auction starts."}, {Type: discordgo.ApplicationCommandOptionBoolean, Name: "integer_only", Description: "Only allow integer bids (no decimals)."}, {Type: discordgo.ApplicationCommandOptionString, Name: "snipe_extension", Description: "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)", Autocomplete: true}, {Type: discordgo.ApplicationCommandOptionString, Name: "snipe_range", Description: "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)", Autocomplete: true}, {Type: discordgo.ApplicationCommandOptionChannel, Name: "channel_override", Description: "EXPERIMENTAL: Override the channel where auctions are created.", ChannelTypes: []discordgo.ChannelType{discordgo.ChannelTypeGuildText, discordgo.ChannelTypeGuildNews}}}}, {Type: discordgo.ApplicationCommandOptionSubCommand, Name: "giveaways", Description: "Edit your giveaway settings", ChannelTypes: []discordgo.ChannelType{}, Required: false, Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionRole, Name: "alert_role", Description: "Set a role to get pinged whenever an auction starts."}, {Type: discordgo.ApplicationCommandOptionChannel, Name: "log_channel", Description: "Sets the channel where giveaway will send outputs when they end", Required: false, ChannelTypes: []discordgo.ChannelType{0, 5}}, {Type: discordgo.ApplicationCommandOptionRole, Name: "host_role", Description: "Set a role that can host auctions."}}}, {Type: discordgo.ApplicationCommandOptionSubCommand, Name: "currency", Description: "Edit your currency settings", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionString, Name: "currency", Description: "Sets the auction currency"}, {Type: discordgo.ApplicationCommandOptionString, Name: "side", Description: "Left/Right currency", Choices: []*discordgo.ApplicationCommandOptionChoice{{Name: "Left", Value: "left"}, {Name: "Right", Value: "right"}}}}}},
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "claiming",
+			Description: "Edit your claiming settings",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "category",
+					Description: "The category to claim prizes in.",
+					ChannelTypes: []discordgo.ChannelType{
+						4,
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "log_channel",
+					Description: "The output channel for completed tickets.",
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+						5,
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "instructions",
+					Description: "Leave instructions for whoever opens the ticket.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "disable_claiming",
+					Description: "Disables the claiming system, only leaves a record of prizes.",
+				},
+			},
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "auctions",
+			Description: "Edit your auction settings",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "category",
+					Description: "Sets the category to create auctions in.",
+					ChannelTypes: []discordgo.ChannelType{
+						4,
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "log_channel",
+					Description: "Sets the channel where auctions will send outputs when they end",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+						5,
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "host_role",
+					Description: "Set a role that can host auctions.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "alert_role",
+					Description: "Set a role to get pinged whenever an auction starts.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
+				},
+				{
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "snipe_extension",
+					Description:  "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
+					Autocomplete: true,
+				},
+				{
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "snipe_range",
+					Description:  "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
+					Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "channel_override",
+					Description: "EXPERIMENTAL: Override the channel where auctions are created.",
+					ChannelTypes: []discordgo.ChannelType{
+						discordgo.ChannelTypeGuildText,
+						discordgo.ChannelTypeGuildNews,
+					},
+				},
+			},
+		},
+		{
+			Type:         discordgo.ApplicationCommandOptionSubCommand,
+			Name:         "giveaways",
+			Description:  "Edit your giveaway settings",
+			ChannelTypes: []discordgo.ChannelType{},
+			Required:     false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "alert_role",
+					Description: "Set a role to get pinged whenever an auction starts.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "log_channel",
+					Description: "Sets the channel where giveaway will send outputs when they end",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+						5,
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "host_role",
+					Description: "Set a role that can host auctions.",
+				},
+				/*{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "auto_enter",
+					Description: "Anyone with this role will be automatically entered.",
+				},*/
+			},
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "currency",
+			Description: "Edit your currency settings",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency",
+					Description: "Sets the auction currency",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "side",
+					Description: "Left/Right currency",
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
+			},
+		},
+		/*{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "shop",
+			Description: "Edit your shop settings",
+			Options: []*discordgo.ApplicationCommandOption{},
+		},*/
+	},
 }
 
 func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
 
 	options := h.ParseSubCommand(i)
 	responseFields := []*discordgo.MessageEmbedField{}
@@ -76,7 +236,8 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options["guild_id"] = i.GuildID
 
 	for key := range options {
-		content += fmt.Sprintf("• %s has been successfully set.\n", strings.Title(strings.ReplaceAll(key, "_", " ")))
+		content += fmt.Sprintf("• %s has been successfully set.\n", cases.Title(language.English).String(strings.ReplaceAll(key, "_", " ")))
+		
 
 		switch key {
 		case "snipe_extension", "snipe_range":

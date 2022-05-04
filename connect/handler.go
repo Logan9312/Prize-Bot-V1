@@ -10,7 +10,6 @@ import (
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
-	"gitlab.com/logan9312/discord-auction-bot/subscriptions"
 )
 
 var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -22,7 +21,7 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"claim":          c.Claim,
 	"privacy_policy": c.Privacy,
 	"dev":            c.Dev,
-	"premium":        subscriptions.Premium,
+	"premium":        c.Premium,
 	"settings":       c.Settings,
 }
 

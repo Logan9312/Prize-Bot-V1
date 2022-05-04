@@ -329,53 +329,20 @@ func PresetMessageSend(s *discordgo.Session, channelID string, m PresetResponse)
 	})
 }
 
-func PremiumResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
-
-	r.Fields = append(r.Fields, &discordgo.MessageEmbedField{
-		Name:   "**Free Premium Feature!**",
-		Value:  "Eventually this is gonna be a premium feature, since it's just for convenience and it took more effort to create. For now though, its free for all users!",
-		Inline: false,
-	})
-
-	embed := []*discordgo.MessageEmbed{
-		{
-			Title:       r.Title,
-			Description: r.Description,
-			Color:       0xffd700,
-			Footer:      &discordgo.MessageEmbedFooter{},
-			Image:       r.Image,
-			Thumbnail:   r.Thumbnail,
-			Video:       &discordgo.MessageEmbedVideo{},
-			Author:      &discordgo.MessageEmbedAuthor{},
-			Fields:      r.Fields,
-		},
-	}
-
-	embed = append(embed, r.Embeds...)
+func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: r.Content,
-			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label: "Coming Soon",
-							Style: discordgo.LinkButton,
-							Emoji: discordgo.ComponentEmoji{
-								Name:     "logo",
-								ID:       "889025400120950804",
-								Animated: false,
-							},
-							URL:      "https://discord.gg/RxP2z5NGtj",
-							Disabled: true,
-						},
-					},
+			Components: []discordgo.MessageComponent{},
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "__**Premium Users Only**__",
+					Description: "This function is restricted to premium users. Please check out `/premium` for more information.",
+					Color:       0xffd700,
 				},
 			},
-			Embeds: embed,
-			Flags:  64,
+			Flags: 64,
 		},
 	})
 }

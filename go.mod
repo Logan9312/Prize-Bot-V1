@@ -6,7 +6,8 @@ require (
 	github.com/bwmarrin/discordgo v0.25.1-0.20220428212307-9e0783c37f5d
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/mux v1.8.0
-	github.com/stripe/stripe-go/v72 v72.91.0
+	github.com/stripe/stripe-go/v72 v72.103.0
+	golang.org/x/text v0.3.7
 	gorm.io/driver/postgres v1.2.1
 	gorm.io/driver/sqlite v1.2.3
 	gorm.io/gorm v1.22.2
@@ -27,7 +28,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.9 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
-	golang.org/x/text v0.3.7 // indirect
 )
 
 //replace github.com/bwmarrin/discordgo => github.com/FedorLap2006/discordgo v0.22.1-0.20220210004113-86c1f8e9af7a

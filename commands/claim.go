@@ -123,6 +123,7 @@ var ClaimCommand = discordgo.ApplicationCommand{
 			},
 		},
 	},
+	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
 }
 
 func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -171,11 +172,6 @@ func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
-
 	claimSetup := map[string]any{}
 
 	claimMap := h.ParseSubSubCommand(i)
@@ -197,6 +193,10 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.ApplicationCommandData().Options[0].Options[0].Name {
 	case "role":
+		if !CheckPremiumGuild(i.GuildID) {
+			h.PremiumError(s, i)
+			return
+		}
 		err := h.ExperimentalResponse(s, i, h.PresetResponse{
 			Title:       "Claims are being created!",
 			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claims. The bot will respond here when complete, or if there is an error.",
@@ -878,11 +878,6 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	options := h.ParseSubCommand(i)
-
-	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
-	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Claim Refresh",

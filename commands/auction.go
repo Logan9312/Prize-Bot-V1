@@ -395,7 +395,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 	imageURL := ""
 
 	if auctionMap["item"] != nil && len(auctionMap["item"].(string)) > 100 {
-		return h.PresetResponse{}, fmt.Errorf("Title cannot be over 100 characters long")
+		return h.PresetResponse{}, fmt.Errorf("title cannot be over 100 characters long")
 	}
 
 	if auctionMap["image_url"] != nil {
@@ -619,6 +619,11 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if auctionMap["schedule"] != nil {
 
+		if !CheckPremiumGuild(i.GuildID) {
+			h.PremiumError(s, i)
+			return
+		}
+
 		var AuctionQueue []database.AuctionQueue
 
 		database.DB.Where(map[string]interface{}{"guild_id": i.GuildID}).Find(&AuctionQueue)
@@ -653,7 +658,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		err = h.PremiumResponse(s, i, h.PresetResponse{
+		err = h.SuccessResponse(s, i, h.PresetResponse{
 			Title: "Auction has been Scheduled!",
 			Fields: []*discordgo.MessageEmbedField{
 				{
