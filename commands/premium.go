@@ -209,9 +209,9 @@ func ListSubscriptions(s *discordgo.Session) {
 		fmt.Println(subscription.Metadata)
 		fmt.Println(subscription.Status)
 		if subscription.Status == stripe.SubscriptionStatusActive {
-			activeMap[subscription.Metadata["guild_id"]] = true
-		} else if activeMap[subscription.Metadata["guild_id"]] != true {
-			activeMap[subscription.Metadata["guild_id"]] = false
+			activeMap[subscription.Metadata["discord_id"]] = true
+		} else if activeMap[subscription.Metadata["discord_id"]] != true {
+			activeMap[subscription.Metadata["discord_id"]] = false
 		}
 	}
 
