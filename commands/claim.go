@@ -200,11 +200,6 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		err := h.ExperimentalResponse(s, i, h.PresetResponse{
 			Title:       "Claims are being created!",
 			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claims. The bot will respond here when complete, or if there is an error.",
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:  "**Free Premium Feature!**",
-					Value: "Eventually this is gonna be a premium feature, since it's just for convenience and it took more effort to create. For now though, its free for all users!"},
-			},
 		})
 		if err != nil {
 			fmt.Println(err)
