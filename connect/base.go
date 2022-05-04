@@ -33,6 +33,7 @@ var botCommands = slashCommands{
 		&commands.PrivacyCommand,
 		&commands.ClaimCommand,
 		&commands.SettingsCommand,
+		&commands.PremiumCommand,
 	},
 	dev: []*discordgo.ApplicationCommand{
 		&commands.DevCommand,
