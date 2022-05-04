@@ -219,11 +219,13 @@ func ListSubscriptions(s *discordgo.Session) {
 
 	for userID, active := range activeMap {
 		if active {
+			fmt.Println("Adding role for:", userID)
 			err := s.GuildMemberRoleAdd("885228283573178408", userID, "918264848884854874")
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
+			fmt.Println("Removing role for:", userID)
 			err := s.GuildMemberRoleRemove("885228283573178408", userID, "918264848884854874")
 			if err != nil {
 				fmt.Println(err)
