@@ -207,16 +207,12 @@ func ListSubscriptions(s *discordgo.Session) {
 	for i.Next() {
 		subscription := i.Subscription()
 		fmt.Println(subscription.Metadata)
-		fmt.Println(subscription.Status)
-		fmt.Println("Metadata:", subscription.Metadata["discord_id"])
 		if subscription.Status == stripe.SubscriptionStatusActive {
 			activeMap[subscription.Metadata["discord_id"]] = true
 		} else if activeMap[subscription.Metadata["discord_id"]] != true {
 			activeMap[subscription.Metadata["discord_id"]] = false
 		}
 	}
-
-	fmt.Println(activeMap)
 
 	for userID, active := range activeMap {
 		if active {
