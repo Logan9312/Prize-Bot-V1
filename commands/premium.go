@@ -35,18 +35,19 @@ var PremiumCommand = discordgo.ApplicationCommand{
 	DMPermission: new(bool),
 }
 
-func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSlashCommand(i)
 	switch options["option"] {
 	case "info":
-		PremiumInfo(s, i)
+		return PremiumInfo(s, i)
 	case "activate":
-		PremiumActivate(s, i)
+		return PremiumActivate(s, i)
 	}
+	return fmt.Errorf("Unknown Premium command, please contact support")
 }
 
-func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	customerID := ""
 
@@ -61,8 +62,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	pSession, err := PremiumSession(i.Member.User.ID, customerID)
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 	buttons := []discordgo.MessageComponent{
 		discordgo.Button{
@@ -78,8 +78,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			ReturnURL: stripe.String("https://aftmgaming.wordpress.com/"),
 		})
 		if err != nil {
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 		buttons = append(buttons, discordgo.Button{
 			Label: "Customer Portal",
@@ -126,22 +125,22 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	fmt.Println("Current Subscriptions")
 	ListSubscriptions(s)
+	return nil
 }
 
-func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	if CheckPremiumGuild(i.GuildID) {
 		h.SuccessResponse(s, i, h.PresetResponse{
 			Title:       "**Premium Server**",
 			Description: "Premium has already been activated for this server!",
 		})
-		return
+		return nil
 	}
 
 	params := &stripe.SubscriptionSearchParams{}
@@ -163,7 +162,7 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					Title:       "**Server Activated!**",
 					Description: "Your server has successfully been activated and should now work with premium features!",
 				})
-				return
+				return nil
 			}
 		}
 	}
@@ -171,8 +170,9 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err := h.ErrorResponse(s, i, "No valid subscription found! Please subscribe to premium first using `/premium info`")
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
+	return nil
 }
 
 func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) {
@@ -232,6 +232,10 @@ func ListSubscriptions(s *discordgo.Session) {
 }
 
 func CheckPremiumGuild(guildID string) (status bool) {
+
+	if guildID == "915767892467920967"{
+		return true
+	}
 
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['guild_id']:'%s'", guildID))

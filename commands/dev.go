@@ -21,7 +21,7 @@ var DevCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	devUsers := map[string]interface{}{
 		"280812467775471627": "Logan",
@@ -31,8 +31,7 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	guildMap := map[string]interface{}{}
 
 	if devUsers[i.Member.User.ID] == nil {
-		h.ErrorResponse(s, i, "User must be a developer to run this command")
-		return
+		return fmt.Errorf("User must be a developer to run this command")
 	}
 
 	devCreate := map[string]interface{}{
@@ -45,22 +44,19 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	result = database.DB.Model(database.DevSetup{}).First(guildMap)
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	if options["version"] != nil {
 		err := s.UpdateGameStatus(0, "Bot Version "+options["version"].(string))
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
 	}
 
@@ -70,8 +66,7 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	fields := []*discordgo.MessageEmbedField{}
@@ -91,4 +86,5 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Fields: fields,
 	})
 
+	return nil
 }

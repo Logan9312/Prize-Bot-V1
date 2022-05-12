@@ -97,6 +97,7 @@ func BotConnect(token, environment, botName string) {
 
 	s.AddHandler(CommandHandler)
 	s.AddHandler(MessageHandler)
+	s.AddHandler(GuildMemberChunkHandler)
 
 	Timers(s)
 

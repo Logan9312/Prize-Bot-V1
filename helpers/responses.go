@@ -136,10 +136,6 @@ func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Messa
 					Value: err,
 				},
 			},
-			//Footer: &discordgo.MessageEmbedFooter{
-			//	Text:    "Aftermath Auction Bot",
-			//	IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
-			//},
 		},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -186,6 +182,7 @@ func SuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pre
 		},
 	})
 }
+
 func FollowUpSuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) (*discordgo.Message, error) {
 
 	embed := []*discordgo.MessageEmbed{
@@ -213,6 +210,7 @@ func FollowUpSuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreat
 		Flags:           64,
 	})
 }
+
 func SuccessMessage(s *discordgo.Session, channelID string, r PresetResponse) (*discordgo.Message, error) {
 
 	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{

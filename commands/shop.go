@@ -29,14 +29,15 @@ var ShopCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Shop(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Shop(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "sell":
-		ShopCreate(s, i)
+		return ShopCreate(s, i)
 	}
+	return fmt.Errorf("Unknown Shop command, please contact support")
 }
 
-func ShopCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ShopCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	shopMap := h.ParseSubCommand(i)
 
 	shopMap["guild_id"] = i.GuildID
@@ -47,9 +48,10 @@ func ShopCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		fmt.Println(err)
 	}
 	h.SuccessResponse(s, i, response)
+	return nil
 }
 
-func AddItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AddItem(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	err := h.SuccessResponse(s, i, h.PresetResponse{
 		Content:     "",
@@ -66,4 +68,5 @@ func AddItem(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }

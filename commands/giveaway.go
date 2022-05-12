@@ -68,14 +68,15 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
-		GiveawayCreate(s, i)
+		return GiveawayCreate(s, i)
 	}
+	return fmt.Errorf("Unknown Giveaway command, please contact support")
 }
 
-func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	canHost := false
 
@@ -96,8 +97,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			canHost = true
 		}
 		if !canHost {
-			h.ErrorResponse(s, i, "User must be administrator or have the role <@&"+GiveawaySetup["host_role"].(string)+"> to host giveaways.")
-			return
+			return fmt.Errorf("User must be administrator or have the role <@&"+GiveawaySetup["host_role"].(string)+"> to host giveaways.")
 		}
 	}
 
@@ -114,8 +114,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	endTimeDuration, err := h.ParseTime(strings.ToLower(giveawayMap["duration"].(string)))
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 	if giveawayMap["image"] != nil {
 		giveawayMap["image_url"] = i.ApplicationCommandData().Resolved.Attachments[giveawayMap["image"].(string)].URL
@@ -125,8 +124,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	delete(giveawayMap, "image")
 
 	if giveawayMap["winners"].(float64) < 1 {
-		h.ErrorResponse(s, i, "Must have 1 or more winners.")
-		return
+		return fmt.Errorf("Must have 1 or more winners.")
 	}
 
 	giveawayMap["end_time"] = time.Now().Add(endTimeDuration)
@@ -134,15 +132,13 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	formattedMessage, err := AuctionFormat(s, giveawayMap, "Giveaway")
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	message, err := h.PresetMessageSend(s, giveawayMap["channel_id"].(string), formattedMessage)
 
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	delete(giveawayMap, "alert_role")
@@ -151,14 +147,12 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = s.MessageReactionAdd(giveawayMap["channel_id"].(string), message.ID, "🎁")
 
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	result = database.DB.Model(database.Giveaway{}).Create(giveawayMap)
 	if result.Error != nil {
-		h.ErrorMessage(s, i.ChannelID, "**Giveaway was not saved in database. Please contact support so I can fix this issue as your giveaway will not function properly. The error is: "+result.Error.Error())
-		return
+		return fmt.Errorf("Giveaway was not saved in database. Please contact support so I can fix this issue as your giveaway will not function properly. The error is: %s", result.Error.Error())
 	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
@@ -171,9 +165,10 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		h.ErrorMessage(s, giveawayMap["channel_id"].(string), err.Error())
 	}
+	return nil
 }
 
-func GiveawayAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func GiveawayAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	var choices []*discordgo.ApplicationCommandOptionChoice
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
@@ -196,10 +191,10 @@ func GiveawayAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			},
 		})
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
 	}
+	return nil
 }
 
 func GiveawayEnd(s *discordgo.Session, messageID string) error {
@@ -361,7 +356,7 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 	return winnerList, nil
 }
 
-func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	giveawayInfo := database.Giveaway{
 		MessageID: i.Message.ID,
@@ -369,28 +364,26 @@ func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 	result := database.DB.First(&giveawayInfo)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != giveawayInfo.Host {
-		h.ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
-		return
+		return fmt.Errorf("User must be host or have administrator permissions to run this command")
 	}
 
 	err := GiveawayEnd(s, i.Message.ID)
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Reroll Successful!*",
 		Description: "New winners have been selected.",
 	})
+	return nil
 }
 
-func GiveawaySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func GiveawaySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := i.MessageComponentData().Values
 
@@ -424,4 +417,5 @@ func GiveawaySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCrea
 			},
 		},
 	})
+	return nil
 }

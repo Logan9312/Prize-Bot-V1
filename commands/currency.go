@@ -12,12 +12,27 @@ var CurrencyCommand = &discordgo.ApplicationCommand{
 	Name:        "currency",
 	Description: "Shows the current currency of the bot",
 	Options: []*discordgo.ApplicationCommandOption{
-		{},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "add",
+			Description: "Add Currency to a user",
+			Options:     []*discordgo.ApplicationCommandOption{},
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "set",
+			Description: "Set the exact amount of currency for a user.",
+			Options:     []*discordgo.ApplicationCommandOption{},
+		},
 	},
 }
 
-func Currency() {
+func Currency(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	switch i.ApplicationCommandData().Options[0].Name {
+	case "":
 
+	}
+	return fmt.Errorf("Unknown Currency command, please contact support")
 }
 
 func PriceFormat(price float64, guildID string, override interface{}) string {
@@ -43,4 +58,5 @@ func PriceFormat(price float64, guildID string, override interface{}) string {
 			return fmt.Sprintf("%s %s", currencyMap["currency"], priceString)
 		}
 	}
+
 }

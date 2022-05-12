@@ -54,9 +54,14 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency",
+					Name:        "currency_override",
 					Description: "A one time currency to use for this auction.",
 					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "use_currency",
+					Description: "The winner will pay with their currency balance.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
@@ -265,22 +270,23 @@ var BidCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "help":
-		AuctionHelp(s, i)
+		return AuctionHelp(s, i)
 	case "create":
-		AuctionPlanner(s, i)
+		return AuctionPlanner(s, i)
 	case "bid":
-		AuctionBid(s, i)
+		return AuctionBid(s, i)
 	case "queue":
-		AuctionQueue(s, i)
+		return AuctionQueue(s, i)
 	case "edit":
-		AuctionEdit(s, i)
+		return AuctionEdit(s, i)
 	}
+	return fmt.Errorf("Unknown Auction command, please contact support")
 }
 
-func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	var choices []*discordgo.ApplicationCommandOptionChoice
 	var focusedData discordgo.ApplicationCommandInteractionDataOption
 	var choiceName string
@@ -345,8 +351,10 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 	if err != nil {
 		fmt.Println("Response Error:", err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
@@ -385,8 +393,9 @@ func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 	return choices
 }
 
-func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionHelp(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	h.ErrorResponse(s, i, "Help command has not been setup yet")
+	return nil
 }
 
 func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, prizeType string) (h.PresetResponse, error) {
@@ -559,7 +568,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 	}, nil
 }
 
-func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	auctionMap := h.ParseSubCommand(i)
 	auctionSetup := map[string]interface{}{}
@@ -592,9 +601,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	endTimeDuration, err := h.ParseTime(strings.ToLower(auctionMap["duration"].(string)))
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	delete(auctionMap, "duration")
@@ -612,8 +619,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			canHost = true
 		}
 		if !canHost {
-			h.ErrorResponse(s, i, "User must be administrator or have the role <@&"+auctionSetup["host_role"].(string)+"> to host auctions.")
-			return
+			return fmt.Errorf("User must be administrator or have the role <@&" + auctionSetup["host_role"].(string) + "> to host auctions.")
 		}
 	}
 
@@ -621,7 +627,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if !CheckPremiumGuild(i.GuildID) {
 			h.PremiumError(s, i)
-			return
+			return nil
 		}
 
 		var AuctionQueue []database.AuctionQueue
@@ -629,15 +635,12 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		database.DB.Where(map[string]interface{}{"guild_id": i.GuildID}).Find(&AuctionQueue)
 
 		if len(AuctionQueue) >= 25 {
-			h.ErrorResponse(s, i, "You can only schedule 25 auctions in advance.")
-			return
+			return fmt.Errorf("You can only schedule 25 auctions in advance.")
 		}
 
 		startTimeDuration, err := h.ParseTime(strings.ToLower(auctionMap["schedule"].(string)))
 		if err != nil {
-			fmt.Println(err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 
 		auctionMap["end_time"] = time.Now().Add(endTimeDuration).Add(startTimeDuration)
@@ -646,16 +649,11 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		result := database.DB.Model(database.AuctionQueue{}).Create(&auctionMap)
 		if result.Error != nil {
-			fmt.Println(result.Error)
-			h.ErrorResponse(s, i, result.Error.Error())
-			return
+			return result.Error
 		}
 		exampleMessage, err := AuctionFormat(s, auctionMap, "Auction")
 		if err != nil {
-			_, file, line, _ := runtime.Caller(0)
-			fmt.Println(file, line, err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 
 		err = h.SuccessResponse(s, i, h.PresetResponse{
@@ -686,9 +684,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		err = AuctionCreate(s, auctionMap)
 		if err != nil {
-			fmt.Println(err)
-			h.ErrorMessage(s, i.ChannelID, err.Error())
-			return
+			return err
 		}
 
 	} else {
@@ -697,9 +693,7 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		err = AuctionCreate(s, auctionMap)
 		if err != nil {
-			fmt.Println(err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 
 		err = h.SuccessResponse(s, i, h.PresetResponse{
@@ -715,6 +709,8 @@ func AuctionPlanner(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 	AuctionEnd(auctionMap)
+
+	return err
 }
 
 func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) error {
@@ -778,7 +774,7 @@ func AuctionCreate(s *discordgo.Session, auctionMap map[string]interface{}) erro
 	return nil
 }
 
-func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSubCommand(i)
 
@@ -787,14 +783,11 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
 
 	if result.Error != nil {
-		fmt.Println(result.Error)
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionMap["host"] {
-		h.ErrorResponse(s, i, "User must have be host or have administrator permissions to run this command")
-		return
+		return fmt.Errorf("User must have be host or have administrator permissions to run this command")
 	}
 
 	for key, value := range options {
@@ -803,9 +796,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "extend":
 			extraDuration, err := h.ParseTime(strings.ToLower(value.(string)))
 			if err != nil {
-				fmt.Println(err)
-				h.ErrorResponse(s, i, err.Error())
-				return
+				return err
 			}
 			options["end_time"] = auctionMap["end_time"].(time.Time).Add(extraDuration)
 			delete(options, "extend")
@@ -831,9 +822,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		result := database.DB.Where(map[string]interface{}{"guild_id": i.GuildID}).Find(&guildQueue)
 		if result.Error != nil {
-			fmt.Println(result.Error)
-			h.ErrorResponse(s, i, result.Error.Error())
-			return
+			return result.Error
 		}
 
 		queueNumber := guildQueue[int(options["queue_number"].(float64))-1].ID
@@ -845,9 +834,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}).Updates(options)
 
 		if result.Error != nil {
-			fmt.Println(result.Error)
-			h.ErrorResponse(s, i, result.Error.Error())
-			return
+			return result.Error
 		}
 
 	} else {
@@ -875,14 +862,11 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}).Updates(options)
 
 		if result.Error != nil {
-			fmt.Println(result.Error)
-			h.ErrorResponse(s, i, result.Error.Error())
-			return
+			return result.Error
 		}
 
 		if auctionMap["message_id"] == nil {
-			h.ErrorResponse(s, i, "No auction found in this channel")
-			return
+			return fmt.Errorf("No auction found in this channel")
 		}
 		if auctionMap["bid_history"] == nil {
 			auctionMap["bid_history"] = ""
@@ -890,9 +874,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if auctionMap["bid"] != nil && auctionMap["winner"] != nil {
 			member, err := s.GuildMember(i.GuildID, auctionMap["winner"].(string))
 			if err != nil {
-				fmt.Println(err)
-				h.ErrorResponse(s, i, err.Error())
-				return
+				return err
 			}
 			username := member.Nick
 			if username == "" {
@@ -905,17 +887,12 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		message, err := s.ChannelMessage(i.ChannelID, auctionMap["message_id"].(string))
 		if err != nil {
-			fmt.Println("Error fetching message", err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 
 		formattedMessage, err := AuctionFormat(s, auctionMap, "Auction")
 		if err != nil {
-			_, file, line, _ := runtime.Caller(0)
-			fmt.Println(file, line, err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 
 		message.Embeds[0] = &discordgo.MessageEmbed{
@@ -937,10 +914,7 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 
 		if err != nil {
-			_, file, line, _ := runtime.Caller(0)
-			fmt.Println(file, line, err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 
 		if options["item"] != nil {
@@ -963,11 +937,13 @@ func AuctionEdit(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Title:       "Success",
 		Description: "Auction has successfully been edited",
 	})
+
+	return nil
 }
 
-func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	options := map[string]interface{}{}
+	var options map[string]interface{}
 
 	if i.ApplicationCommandData().Name == "bid" {
 		options = h.ParseSlashCommand(i)
@@ -983,15 +959,14 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	err = h.SuccessResponse(s, i, message)
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }
 
 func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetResponse, error) {
@@ -1026,9 +1001,9 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 
 	switch {
 	case auctionMap["end_time"].(time.Time).Before(time.Now()):
-		return response, fmt.Errorf("Cannot Bid, Auction has ended")
+		return response, fmt.Errorf("cannot Bid, Auction has ended")
 	case bidData.Winner == auctionMap["winner"] && auctionMap["increment_max"] != nil:
-		return response, fmt.Errorf("Cannot out bid yourself on a capped bid auction!")
+		return response, fmt.Errorf("cannot out bid yourself on a capped bid auction")
 	case auctionMap["integer_only"] != nil && auctionMap["integer_only"].(bool) && bidData.Bid != math.Floor(bidData.Bid):
 		return response, fmt.Errorf("Your bid must be an integer for this auction! For example: " + fmt.Sprint(math.Floor(bidData.Bid)) + " instead of " + strings.TrimRight(strings.TrimRight(fmt.Sprintf("%f", bidData.Bid), "0"), "."))
 	case auctionMap["buyout"] != nil && bidData.Bid >= auctionMap["buyout"].(float64) && auctionMap["buyout"] != 0:
@@ -1198,21 +1173,18 @@ func AuctionBidFormat(s *discordgo.Session, bidData database.Auction) (h.PresetR
 	return response, nil
 }
 
-func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	claimMap := map[string]interface{}{}
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, i.Message.ID)
 
 	if result.Error != nil {
-		fmt.Println(result.Error)
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	if claimMap["bid_history"] == nil {
-		h.ErrorResponse(s, i, "No bid history found for this auction.")
-		return
+		return fmt.Errorf("No bid history found for this auction.")
 	}
 
 	bidHistory := claimMap["bid_history"].(string)
@@ -1232,6 +1204,8 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		_, file, line, _ := runtime.Caller(0)
 		fmt.Println(file, line, err)
 	}
+
+	return nil
 }
 
 func AuctionEnd(auctionMap map[string]interface{}) error {
@@ -1353,7 +1327,7 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 	return nil
 }
 
-func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	var AuctionQueueInfo []database.AuctionQueue
 	var AuctionQueue []database.AuctionQueue
@@ -1416,9 +1390,11 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	return nil
 }
 
-func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	auctionSetup := database.AuctionSetup{}
 	auctionMap := map[string]interface{}{}
@@ -1469,7 +1445,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Flags: 64,
 			},
 		})
-		return
+		return nil
 	}
 	database.DB.First(&auctionSetup, i.GuildID)
 	if result.Error != nil {
@@ -1477,14 +1453,11 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if auctionMap["log_channel"] == "" {
-		fmt.Println("Log channel has not been set for guild: " + i.GuildID)
-		h.ErrorResponse(s, i, "Auction cannot end because log channel has not been set. Please setup an auction log using `/settings auction`")
-		return
+		return fmt.Errorf("Auction cannot end because log channel has not been set. Please setup an auction log using `/settings auction`")
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionMap["host"] {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
+		return fmt.Errorf("User must have administrator permissions to run this command")
 	}
 
 	err := h.SuccessResponse(s, i, h.PresetResponse{
@@ -1507,20 +1480,21 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	err = AuctionEnd(auctionMap)
 	if err != nil {
-		h.ErrorMessage(s, i.ChannelID, err.Error())
-		return
+		return err
 	}
+	return nil
 }
 
-func DeleteAuctionChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func DeleteAuctionChannel(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	_, err := s.ChannelDelete(i.ChannelID)
 	if err != nil {
 		fmt.Println(err)
 		h.ErrorResponse(s, i, err.Error())
 	}
+	return nil
 }
 
-func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	var auctionInfo database.Auction
 
@@ -1531,9 +1505,7 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionInfo.Host {
-		h.ErrorResponse(s, i, "User must be host or have administrator permissions to run this command")
-		fmt.Println("User must be host or have administrator permissions to run this command")
-		return
+		return fmt.Errorf("User must be host or have administrator permissions to run this command")
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -1545,9 +1517,8 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		messageIDs := make([]string, 0)
 		messages, err := s.ChannelMessages(i.ChannelID, 100, "", i.Message.ID, "")
 		if err != nil {
-			fmt.Println(err)
 			h.DeferredErrorResponse(s, i, err.Error())
-			return
+			return nil
 		}
 
 		for _, v := range messages {
@@ -1562,9 +1533,8 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
 		if err != nil {
-			fmt.Println(err)
 			h.DeferredErrorResponse(s, i, err.Error())
-			return
+			return nil
 		}
 	}
 
@@ -1576,13 +1546,13 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }
 
-func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	if i.Member.Permissions&(1<<3) != 8 {
-		h.ErrorResponse(s, i, "User must have administrator permissions to run this command")
-		return
+		return fmt.Errorf("User must have administrator permissions to run this command")
 	}
 
 	IDs := i.MessageComponentData().Values
@@ -1592,9 +1562,10 @@ func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	AuctionQueue(s, i)
+	return nil
 }
 
-func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := i.MessageComponentData().Values
 	clearedMap := map[string]interface{}{}
@@ -1625,4 +1596,5 @@ func AuctionSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreat
 			},
 		},
 	})
+	return nil
 }

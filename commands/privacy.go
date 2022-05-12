@@ -10,7 +10,7 @@ var PrivacyCommand = discordgo.ApplicationCommand{
 	Description: "The privacy policy of the bot.",
 }
 
-func Privacy(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Privacy(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "__**Privacy Policy**__",
 		Description: "By using the AFTM Prize Manager bot, you agree to this policy. All collected data is stored in an RDS database on AWS to ensure safety.",
@@ -52,4 +52,5 @@ func Privacy(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	})
+	return nil
 }

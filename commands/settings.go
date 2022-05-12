@@ -185,7 +185,7 @@ var SettingsCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSubCommand(i)
 	responseFields := []*discordgo.MessageEmbedField{}
@@ -229,24 +229,20 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commandData = *SettingsCommand.Options[4]
 		customID = "clear_shop_setup"
 	default:
-		h.ErrorResponse(s, i, fmt.Sprintf("Unknown settings type: %s", i.ApplicationCommandData().Options[0].Name))
-		return
+		return fmt.Errorf("unknown settings type: %s", i.ApplicationCommandData().Options[0].Name)
 	}
 
 	options["guild_id"] = i.GuildID
 
 	for key := range options {
 		content += fmt.Sprintf("• %s has been successfully set.\n", cases.Title(language.English).String(strings.ReplaceAll(key, "_", " ")))
-		
 
 		switch key {
 		case "snipe_extension", "snipe_range":
 			options[key], err = h.ParseTime(options[key].(string))
 		}
 		if err != nil {
-			fmt.Println(err)
-			h.ErrorResponse(s, i, err.Error())
-			return
+			return err
 		}
 	}
 
@@ -254,20 +250,17 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		DoNothing: true,
 	}).Model(model).Create(options)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	result = database.DB.Model(model).Updates(options)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	result = database.DB.Model(model).First(options, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	for _, v := range commandData.Options {
@@ -333,9 +326,10 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }
 
-func CurrencySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func CurrencySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := i.MessageComponentData().Values
 	clearedMap := map[string]interface{}{}
@@ -366,4 +360,5 @@ func CurrencySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCrea
 			},
 		},
 	})
+	return nil
 }

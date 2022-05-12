@@ -12,7 +12,7 @@ import (
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
-var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
 	"auction":        c.Auction,
 	"bid":            c.AuctionBid,
 	"profile":        c.Profile,
@@ -25,7 +25,7 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"settings":       c.Settings,
 }
 
-var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
 	"endauction":             c.AuctionEndButton,
 	"claim_prize":            c.ClaimPrizeButton,
 	"clearauction":           c.ClearAuctionButton,
@@ -43,9 +43,13 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"bid_history":            c.AuctionBidHistory,
 }
 
-var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
 	"auction":  c.AuctionAutoComplete,
 	"giveaway": c.GiveawayAutoComplete,
+}
+
+var guildMembersMap = map[string]func(s *discordgo.Session, g *discordgo.GuildMembersChunk) error{
+	"claim_create": c.ClaimCreateRole,
 }
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -58,20 +62,38 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		fmt.Println(i.ApplicationCommandData().Name, "is being run by:", i.Member.User.Username)
 		if f, ok := commandMap[i.ApplicationCommandData().Name]; ok {
-			f(s, i)
+			err := f(s, i)
+			if err != nil {
+				err = h.ErrorResponse(s, i, err.Error())
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		} else {
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case discordgo.InteractionMessageComponent:
 		fmt.Println(i.MessageComponentData().CustomID)
 		if f, ok := buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]; ok {
-			f(s, i)
+			err := f(s, i)
+			if err != nil {
+				err = h.ErrorResponse(s, i, err.Error())
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		} else {
 			h.ErrorResponse(s, i, "Button response has not been set properly, please contact Logan to fix")
 		}
 	case discordgo.InteractionApplicationCommandAutocomplete:
 		if f, ok := autoCompleteMap[i.ApplicationCommandData().Name]; ok {
-			f(s, i)
+			err := f(s, i)
+			if err != nil {
+				err = h.ErrorResponse(s, i, err.Error())
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		} else {
 			h.ErrorResponse(s, i, "AutoComplete response has not been set properly, please contact Logan to fix")
 		}
@@ -137,5 +159,25 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 			}
 		}
+	}
+}
+
+func GuildMemberChunkHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) {
+	fmt.Println("Chunk Recieved")
+	fmt.Println(g.Nonce)
+	if f, ok := guildMembersMap[strings.Split(g.Nonce, ":")[0]]; ok {
+		err := f(s, g)
+		if err != nil {
+			id, err := strconv.Atoi(strings.Split(g.Nonce, ":")[1])
+			if err != nil {
+				fmt.Println(err)
+				_, err = h.FollowUpErrorResponse(s, c.ClaimCreateRolesChunk[id]["interaction"].(*discordgo.InteractionCreate), err.Error())
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		}
+	} else {
+		fmt.Println("GuildMemberChunkHandler has not been set properly.")
 	}
 }

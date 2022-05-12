@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -126,18 +127,23 @@ var ClaimCommand = discordgo.ApplicationCommand{
 	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
 }
 
-func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) {
+var ClaimCreateRolesChunk = []map[string]interface{}{}
+
+func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	fmt.Println(i.ApplicationCommandData().Options[0].Name)
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
-		ClaimCreate(s, i)
+		return ClaimCreate(s, i)
 	case "inventory":
-		ClaimInventory(s, i)
+		return ClaimInventory(s, i)
 	case "refresh":
-		claimRefresh(s, i)
+		return claimRefresh(s, i)
 	}
+
+	return fmt.Errorf("Unknown Claim command, please contact support")
 }
 
-func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := i.MessageComponentData().Values
 	clearedMap := map[string]interface{}{}
@@ -168,96 +174,45 @@ func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate)
 			},
 		},
 	})
+	return nil
 }
 
-func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
-	claimSetup := map[string]any{}
+func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	claimMap := h.ParseSubSubCommand(i)
 
-	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
-	if result.Error != nil {
-		h.ErrorResponse(s, i, fmt.Sprintf("Error fetching setup, try running `/claim setup` to fix. Error: %s", result.Error.Error()))
-		fmt.Println(result.Error)
-		return
-	}
-
 	claimMap["host"] = i.Member.User.ID
 	claimMap["guild_id"] = i.GuildID
-	if claimMap["log_channel"] == nil {
-		h.ErrorResponse(s, i, "No Log Channel has been set. Use `/settings auction log_channel:` to set a logging channel for claims.")
-		fmt.Println(result.Error)
-		return
-	}
 
 	switch i.ApplicationCommandData().Options[0].Options[0].Name {
 	case "role":
 		if !CheckPremiumGuild(i.GuildID) {
 			h.PremiumError(s, i)
-			return
+			return nil
 		}
-		err := h.ExperimentalResponse(s, i, h.PresetResponse{
+
+		claimMap["interaction"] = i
+
+		id := len(ClaimCreateRolesChunk)
+		ClaimCreateRolesChunk = append(ClaimCreateRolesChunk, claimMap)
+
+		err := s.RequestGuildMembers(i.GuildID, "", 0, "claim_create:"+fmt.Sprint(id), false)
+		if err != nil {
+			return err
+		}
+
+		err = h.ExperimentalResponse(s, i, h.PresetResponse{
 			Title:       "Claims are being created!",
-			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claims. The bot will respond here when complete, or if there is an error.",
+			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claims. This might take a while.",
 		})
 		if err != nil {
 			fmt.Println(err)
 		}
-		afterID := ""
-		for {
 
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-			})
-
-			memberSlice, err := s.GuildMembers(i.GuildID, afterID, 1000)
-
-			fmt.Println("Printing members: ")
-
-			for _, v := range memberSlice {
-				fmt.Println(v.User.Username)
-				for _, role := range v.Roles {
-					if role == claimMap["role"] {
-						claimMap["winner"] = v.User.ID
-						err = ClaimOutput(s, claimMap, "Custom Claim")
-						if err != nil {
-							h.FollowUpErrorResponse(s, i, err.Error())
-							fmt.Println(err)
-							return
-						}
-					}
-				}
-			}
-
-			if len(memberSlice) < 1000 {
-				break
-			}
-			afterID = memberSlice[len(memberSlice)-1].User.ID
-		}
-		if claimMap["channel_id"] != nil {
-			_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
-				Title:       "Claims Successfully Created!",
-				Description: "All claims should now be created in: <#" + claimMap["channel_id"].(string) + ">",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
-				Title:       "Claims Create Complete!",
-				Description: "No channel ID recognized. It's possible the role you used had no users to give a claim to.",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
 	case "user":
 		err := ClaimOutput(s, claimMap, "Custom Claim")
 		if err != nil {
-			h.ErrorResponse(s, i, err.Error())
-			fmt.Println(err)
-			return
+			return err
 		}
 		err = h.SuccessResponse(s, i, h.PresetResponse{
 			Title:       "Claim Successfully Created!",
@@ -267,6 +222,44 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			fmt.Println(err)
 		}
 	}
+	return nil
+}
+
+func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error {
+
+	details := strings.Split(g.Nonce, ":")
+
+	id, err := strconv.Atoi(details[1])
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	claimMap := ClaimCreateRolesChunk[id]
+
+	for _, v := range g.Members {
+		for _, role := range v.Roles {
+			if role == claimMap["role"].(string) {
+				claimMap["winner"] = v.User.ID
+				err = ClaimOutput(s, claimMap, "Custom Claim")
+				if err != nil {
+					h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
+				}
+			}
+		}
+	}
+
+	h.FollowUpSuccessResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), h.PresetResponse{
+		Title:       "__**Claim Create Role**__",
+		Description: fmt.Sprintf("Claims are currently being created for all users in <@&%s>", claimMap["role"]),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "**Progress**",
+				Value:  fmt.Sprintf("`%d`/`%d` chunks completed", g.ChunkIndex+1, g.ChunkCount),
+				Inline: false,
+			},
+		},
+	})
+	return nil
 }
 
 //Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
@@ -433,26 +426,24 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	return err
 }
 
-func ClaimTicket(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ClaimTicket(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+
+	return nil
 }
 
-func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	idSlice := strings.Split(i.MessageComponentData().CustomID, ":")
 	if len(idSlice) == 2 {
 		if idSlice[1] != i.Member.User.ID {
-			h.ErrorResponse(s, i, "UserID does not match. You can only claim your own prizes")
-			return
+			return fmt.Errorf("UserID does not match. You can only claim your own prizes")
 		}
 	} else {
 		err := h.SuccessResponse(s, i, h.PresetResponse{
 			Title:       "Claim Prize",
 			Description: "This button was created before the Claim Prize update, and has no ID saved so the bot cannot easily verify if you are the winner. Contact the auction host to claim.",
 		})
-		if err != nil {
-			fmt.Println(err)
-		}
-		return
+		return err
 	}
 
 	claimMap := map[string]interface{}{}
@@ -460,21 +451,18 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	result := database.DB.Model(database.Claim{}).First(&claimMap, i.Message.ID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 	database.DB.Model(database.ClaimSetup{}).First(&claimSetup, i.GuildID)
 
 	if claimSetup["disable_claiming"] == true {
-		h.ErrorResponse(s, i, "Claiming has been disabled. A server administrator must use `/claim setup disable_claiming:` to re-enable.")
-		return
+		return fmt.Errorf("Claiming has been disabled. A server administrator must use `/claim setup disable_claiming:` to re-enable.")
 	}
 	if claimSetup["category"] == nil {
 		claimSetup["category"] = ""
 	}
 	if claimMap["item"] == nil {
-		h.ErrorResponse(s, i, "No item to claim saved in database. Contact support server for help.")
-		return
+		return fmt.Errorf("No item to claim saved in database. Contact support server for help.")
 	}
 	if claimMap["host"] == nil {
 		claimMap["host"] = "0"
@@ -482,8 +470,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if claimMap["ticket_id"] != nil {
 		currentChannel, err := s.Channel(claimMap["ticket_id"].(string))
 		if err == nil {
-			h.ErrorResponse(s, i, "You already have a ticket open for this prize. Please go to <#"+currentChannel.ID+"> to claim.")
-			return
+			return fmt.Errorf("You already have a ticket open for this prize. Please go to <#" + currentChannel.ID + "> to claim.")
 		}
 	}
 
@@ -494,29 +481,21 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		ParentID: claimSetup["category"].(string),
 	})
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	//Fix this too
 	err = s.ChannelPermissionSet(channel.ID, i.Member.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 	err = s.ChannelPermissionSet(channel.ID, claimMap["host"].(string), discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 	err = s.ChannelPermissionSet(channel.ID, i.GuildID, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionViewChannel)
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	fields := []*discordgo.MessageEmbedField{
@@ -605,9 +584,10 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }
 
-func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	issues := ""
 	thumbnail := ""
@@ -615,24 +595,21 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	customID := strings.Split(i.MessageComponentData().CustomID, ":")
 
 	if len(customID) < 3 {
-		h.ErrorResponse(s, i, "Failed parsing button ID. No messageID found. Please contact __AFTM Prize Manager support__ and I can look into the issue.")
-		return
+		return fmt.Errorf("Failed parsing button ID. No messageID found. Please contact __AFTM Prize Manager support__ and I can look into the issue.")
 	}
 
 	claimMap := map[string]interface{}{}
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[2])
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return fmt.Errorf("Failed to find claim. Please contact __AFTM Prize Manager support__ and I can look into the issue. %w", result.Error)
 	}
 
 	claimSetup := map[string]interface{}{}
 
 	result = database.DB.Model(database.ClaimSetup{}).First(claimSetup, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return fmt.Errorf("Failed to find claim setup. Please make sure you have used `/settings claiming` at least once. %w", result.Error)
 	}
 
 	if claimMap["image_url"] != nil {
@@ -640,8 +617,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if claimSetup["log_channel"] == nil {
-		h.ErrorResponse(s, i, "No Log Channel set for claim tickets. Please have an administrator run `/claim setup log_channel:` to set it.")
-		return
+		return fmt.Errorf("No Log Channel set for claim tickets. Please have an administrator run `/claim setup log_channel:` to set it.")
 	}
 
 	message, err := s.ChannelMessage(customID[1], customID[2])
@@ -662,9 +638,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Channel:         customID[1],
 		})
 		if err != nil {
-			h.ErrorResponse(s, i, "There was an issue editing the old log embed: "+err.Error())
-			fmt.Println("There was an issue editing the old log embed: " + err.Error())
-			return
+			return fmt.Errorf("There was an issue editing the old log embed: %w", err)
 		}
 	} else if message != nil {
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
@@ -752,14 +726,12 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
 
 	result = database.DB.Delete(database.Claim{}, customID[2])
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	err = h.SuccessResponse(s, i, h.PresetResponse{
@@ -772,41 +744,37 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		h.ErrorMessage(s, i.ChannelID, "Ticket could not be closed: "+err.Error())
 		fmt.Println("Ticket could not be closed: " + err.Error())
 	}
+	return nil
 }
 
-func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	customID := strings.Split(i.MessageComponentData().CustomID, ":")
 
 	if len(customID) < 2 {
-		h.ErrorResponse(s, i, "Failed parsing button ID. No messageID found. Please contact __AFTM Prize Manager support__ and I can look into the issue.")
-		return
+		return fmt.Errorf("Failed parsing button ID. No messageID found. Please contact __AFTM Prize Manager support__ and I can look into the issue.")
 	}
 
 	claimMap := map[string]interface{}{}
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[1])
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != claimMap["host"] {
-		h.ErrorResponse(s, i, fmt.Sprintf("User must have administrator permissions or be the host (%s) to run this command", fmt.Sprint(claimMap["host"])))
-		return
+		return fmt.Errorf("User must have administrator permissions or be the host (<@%s>) to run this command", fmt.Sprint(claimMap["host"]))
 	}
 
 	claimSetup := map[string]interface{}{}
 
 	result = database.DB.Model(database.ClaimSetup{}).First(claimSetup, i.GuildID)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	if claimSetup["log_channel"] == nil {
-		h.ErrorResponse(s, i, "No Log Channel set for claim tickets. Please have an administrator run `/claim setup log_channel:` to set it.")
-		return
+		return fmt.Errorf("No Log Channel set for claim tickets. Please have an administrator run `/settings claiming log_channel:` to set it.")
 	}
 
 	fields := []*discordgo.MessageEmbedField{
@@ -864,13 +832,12 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
-		h.ErrorResponse(s, i, err.Error())
-		return
+		return err
 	}
-
+	return nil
 }
 
-func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSubCommand(i)
 
@@ -885,7 +852,7 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 	if result.Error != nil {
 		h.FollowUpErrorResponse(s, i, result.Error.Error())
-		return
+		return nil
 	}
 
 	var restored int
@@ -915,9 +882,10 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Title:       "Claim Refresh Complete",
 		Description: fmt.Sprintf("%d claim(s) have been restored to <#%s>", restored, options["channel"]),
 	})
+	return nil
 }
 
-func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSubCommand(i)
 	claimSlice := []map[string]interface{}{}
@@ -930,8 +898,7 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		"guild_id": options["guild_id"],
 	}).Limit(25).Find(&claimSlice)
 	if result.Error != nil {
-		h.ErrorResponse(s, i, result.Error.Error())
-		return
+		return result.Error
 	}
 
 	for _, v := range claimSlice {
@@ -982,13 +949,14 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Embeds: []*discordgo.MessageEmbed{},
 		Files:  []*discordgo.File{},
 	})
-
+	return nil
 }
 
 func TicketEnd() {
 
 }
 
-func ReopenTicket(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ReopenTicket(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
+	return nil
 }

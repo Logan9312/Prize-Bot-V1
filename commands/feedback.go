@@ -23,14 +23,15 @@ var FeedbackCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Feedback(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Feedback(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "suggestion":
-		FeedbackSuggestion(s, i)
+		return FeedbackSuggestion(s, i)
 	}
+	return fmt.Errorf("Unknown Feedback command, please contact support")
 }
 
-func FeedbackSuggestion(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func FeedbackSuggestion(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseModal,
 		Data: &discordgo.InteractionResponseData{
@@ -63,4 +64,5 @@ func FeedbackSuggestion(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }

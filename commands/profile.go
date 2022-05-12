@@ -20,7 +20,7 @@ var ProfileCommand = discordgo.ApplicationCommand{
 	},
 }
 
-func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	userID := i.ApplicationCommandData().Options[0].UserValue(s).ID
 	username := i.ApplicationCommandData().Options[0].UserValue(s).Username
@@ -36,4 +36,5 @@ func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }

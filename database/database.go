@@ -138,6 +138,7 @@ type CurrencySetup struct {
 type UserProfile struct {
 	UserID  string `gorm:"primaryKey;autoIncrement:false"`
 	GuildID string `gorm:"primaryKey;autoIncrement:false"`
+	Balance float64
 }
 
 var DB *gorm.DB
@@ -152,7 +153,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{})
+	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{})
 	if err != nil {
 		fmt.Println(err)
 	}
