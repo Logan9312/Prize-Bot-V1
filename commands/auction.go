@@ -1252,8 +1252,11 @@ func AuctionEnd(auctionMap map[string]interface{}) error {
 		return nil
 	}
 
-	if AuctionSetup.LogChannel == "" {
+	_, err = Session.Channel(AuctionSetup.LogChannel)
+
+	if AuctionSetup.LogChannel == "" || err != nil {
 		fmt.Println("Log channel has not been set for guild: " + auctionMap["guild_id"].(string))
+		fmt.Println(auctionMap)
 		_, err := h.ErrorMessage(Session, auctionMap["channel_id"].(string), "Auction cannot end because log channel has not been set. Please setup an auction log using `/settings auction`. You might need to end the auction manually after setting the channel.")
 		if err != nil {
 			fmt.Println(err)
