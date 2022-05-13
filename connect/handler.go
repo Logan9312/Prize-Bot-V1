@@ -74,7 +74,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
 		}
 	case discordgo.InteractionMessageComponent:
-		fmt.Println(i.MessageComponentData().CustomID)
+		fmt.Println(i.MessageComponentData().CustomID, "is being run by:", i.Member.User.Username)
 		if f, ok := buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]; ok {
 			err := f(s, i)
 			if err != nil {
