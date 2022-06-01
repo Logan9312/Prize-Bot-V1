@@ -54,15 +54,15 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "currency_override",
+					Name:        "currency",
 					Description: "A one time currency to use for this auction.",
 					Required:    false,
 				},
-				{
+				/*{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "use_currency",
 					Description: "The winner will pay with their currency balance.",
-				},
+				},*/
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "integer_only",
