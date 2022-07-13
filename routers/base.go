@@ -25,7 +25,7 @@ type StatusOutput struct {
 }
 
 func HandleRequests(r *mux.Router) {
-	
+
 	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
 	r.HandleFunc("/success", Success)
 }
@@ -51,6 +51,8 @@ func Success(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println(templates.DefinedTemplates())
 
 	if err := templates.ExecuteTemplate(w, "success.html", nil); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
