@@ -1,13 +1,18 @@
 package routers
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
+
+//go:embed embedded/*.html
+var templateFS embed.FS
 
 func BotStatus() {
 	r := mux.NewRouter().StrictSlash(true)
@@ -20,7 +25,8 @@ type StatusOutput struct {
 }
 
 func HandleRequests(r *mux.Router) {
-	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
+	r.HandleFunc("/success", Success)
+	r.HandleFunc("auction-bot/status", GetStatus).Methods("GET")
 }
 
 // GetStatus responds with the availability status of this service
@@ -34,5 +40,18 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	err := json.NewEncoder(w).Encode(status)
 	if err != nil {
 		fmt.Println("Error encoding: ", err.Error())
+	}
+}
+
+func Success(w http.ResponseWriter, r *http.Request) {
+
+	tmpl, err := template.ParseFS(templateFS, "embedded/*.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, nil); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
