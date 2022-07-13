@@ -10,7 +10,7 @@ import (
 )
 
 func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-	var options map[string]interface{} = make(map[string]interface{})
+	var options = make(map[string]interface{})
 	for _, option := range i.ApplicationCommandData().Options {
 		options[option.Name] = option.Value
 	}
@@ -19,7 +19,7 @@ func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
 }
 
 func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-	var options map[string]interface{} = make(map[string]interface{})
+	var options = make(map[string]interface{})
 	for _, option := range i.ApplicationCommandData().Options[0].Options {
 		options[option.Name] = option.Value
 	}
@@ -28,7 +28,7 @@ func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
 }
 
 func ParseSubSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-	var options map[string]interface{} = make(map[string]interface{})
+	var options = make(map[string]interface{})
 	for _, option := range i.ApplicationCommandData().Options[0].Options[0].Options {
 		options[option.Name] = option.Value
 	}

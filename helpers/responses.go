@@ -252,9 +252,9 @@ func SuccessMessageEdit(s *discordgo.Session, channelID, messageID string, r Pre
 
 func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) (*discordgo.Message, error) {
 	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content:    r.Content,
-		Components: r.Components,
-		Embeds: []*discordgo.MessageEmbed{
+		Content:    &r.Content,
+		Components: &r.Components,
+		Embeds: &[]*discordgo.MessageEmbed{
 			{
 				Title:       r.Title,
 				Description: r.Description,
@@ -269,7 +269,7 @@ func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pr
 
 func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) (*discordgo.Message, error) {
 	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Components: []discordgo.MessageComponent{
+		Components: &[]discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
@@ -285,7 +285,7 @@ func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 				},
 			},
 		},
-		Embeds: []*discordgo.MessageEmbed{
+		Embeds: &[]*discordgo.MessageEmbed{
 			{
 				Title:       "Error",
 				Description: "There was an error. Please contact support if you need help.",
