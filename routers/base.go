@@ -25,8 +25,9 @@ type StatusOutput struct {
 }
 
 func HandleRequests(r *mux.Router) {
-	r.HandleFunc("/success", Success)
+	
 	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
+	r.HandleFunc("/success", Success)
 }
 
 // GetStatus responds with the availability status of this service
@@ -45,13 +46,13 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 
 func Success(w http.ResponseWriter, r *http.Request) {
 
-	tmpl, err := template.ParseFS(templateFS, "embedded/*.html")
+	templates, err := template.ParseFS(templateFS, "embedded/*.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := tmpl.ExecuteTemplate(w, "success.html", nil); err != nil {
+	if err := templates.ExecuteTemplate(w, "success.html", nil); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
