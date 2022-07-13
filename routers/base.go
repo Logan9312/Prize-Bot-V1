@@ -25,13 +25,13 @@ type StatusOutput struct {
 }
 
 func HandleRequests(r *mux.Router) {
-
 	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
 	r.HandleFunc("/success", Success)
 }
 
 // GetStatus responds with the availability status of this service
 func GetStatus(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Routing /auction-bot/status")
 	status := StatusOutput{
 		Message: "Bot is available",
 	}
@@ -45,14 +45,14 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func Success(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("Routing /success")
 	templates, err := template.ParseFS(templateFS, "embedded/*.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println(templates.DefinedTemplates())
+	fmt.Println("Templates: ", templates.DefinedTemplates())
 
 	if err := templates.ExecuteTemplate(w, "success.html", nil); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
