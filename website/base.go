@@ -6,7 +6,7 @@ import (
 )
 
 func SetupWebsite() {
-	fs := http.FileServer(http.Dir("./static"))
+	fs := http.FileServer(http.Dir("./website"))
 	http.Handle("/", fs)
 
 	log.Print("Listening on :3000...")
