@@ -9,6 +9,7 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/routers"
+	"gitlab.com/logan9312/discord-auction-bot/website"
 )
 
 // Environment struct
@@ -39,6 +40,7 @@ func main() {
 	connect.BotConnect(environment.DiscordToken, environment.Environment, "main")
 
 	fmt.Println("Bot is running!")
+	go website.SetupWebsite()
 
 	routers.BotStatus()
 }
