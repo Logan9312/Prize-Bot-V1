@@ -6,11 +6,11 @@ require (
 	github.com/bwmarrin/discordgo v0.25.1-0.20220703185115-4e021d914065
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/mux v1.8.0
-	github.com/stripe/stripe-go/v72 v72.107.0
+	github.com/stripe/stripe-go/v72 v72.119.0
 	golang.org/x/text v0.3.7
-	gorm.io/driver/postgres v1.3.5
-	gorm.io/driver/sqlite v1.3.2
-	gorm.io/gorm v1.23.5
+	gorm.io/driver/postgres v1.3.8
+	gorm.io/driver/sqlite v1.3.6
+	gorm.io/gorm v1.23.8
 )
 
 require (
@@ -25,11 +25,11 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/mattn/go-sqlite3 v1.14.12 // indirect
+	github.com/mattn/go-sqlite3 v1.14.14 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88 // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
+	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
