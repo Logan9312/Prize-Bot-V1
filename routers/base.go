@@ -45,7 +45,7 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetStatus responds with the availability status of this service
+// Test responds with the availability status of this service
 func Test(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Routing /auction-bot/status")
 	status := StatusOutput{
@@ -72,19 +72,5 @@ func Success(w http.ResponseWriter, r *http.Request) {
 
 	if err := templates.ExecuteTemplate(w, "success.html", nil); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func Test(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Routing /auction-bot/status")
-	status := StatusOutput{
-		Message: "Bot is available",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	err := json.NewEncoder(w).Encode(status)
-	if err != nil {
-		fmt.Println("Error encoding: ", err.Error())
 	}
 }
