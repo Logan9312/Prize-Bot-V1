@@ -25,7 +25,7 @@ type StatusOutput struct {
 }
 
 func HandleRequests(r *mux.Router) {
-	r.HandleFunc("/success", Success)
+	r.HandleFunc("/auction-bot/success", Success)
 	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
 	r.HandleFunc("/auction-bot/test", Test).Methods("GET")
 }
