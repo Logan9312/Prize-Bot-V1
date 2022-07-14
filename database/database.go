@@ -141,6 +141,15 @@ type UserProfile struct {
 	Balance float64
 }
 
+type Quest struct {
+	MessageID string `gorm:"primaryKey;autoIncrement:false"`
+}
+
+type Errors struct {
+	ErrorID string `gorm:"primaryKey"`
+	UserID  string `gorm:"primaryKey;autoIncrement:false"`
+}
+
 var DB *gorm.DB
 
 func DatabaseConnect(password, host, env string) {
