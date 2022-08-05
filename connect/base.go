@@ -37,6 +37,7 @@ var botCommands = slashCommands{
 	},
 	dev: []*discordgo.ApplicationCommand{
 		&commands.DevCommand,
+		&commands.StatsCommand,
 	},
 }
 

@@ -23,6 +23,7 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"dev":            c.Dev,
 	"premium":        c.Premium,
 	"settings":       c.Settings,
+	"stats":          c.Stats,
 }
 
 var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
