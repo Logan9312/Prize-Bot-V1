@@ -93,7 +93,7 @@ func BotConnect(token, environment, botName string) {
 	s.AddHandler(ReadyHandler)
 	s.AddHandler(CommandHandler)
 	s.AddHandler(MessageHandler)
-
+	s.AddHandler(GuildCreateHandler)
 	s.AddHandler(GuildMemberChunkHandler)
 
 	go commands.SetRoles(s)
