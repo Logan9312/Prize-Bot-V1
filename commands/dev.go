@@ -21,6 +21,11 @@ var DevCommand = discordgo.ApplicationCommand{
 	},
 }
 
+var StatsCommand = discordgo.ApplicationCommand{
+	Name:        "stats",
+	Description: "Developer only commands!",
+}
+
 func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	devUsers := map[string]interface{}{
@@ -84,6 +89,44 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:  "Success!",
 		Fields: fields,
+	})
+
+	return nil
+}
+
+func Stats(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+
+	members := 0
+	largestServerCount := 0
+	largestServerName := ""
+
+	for _, v := range s.State.Guilds {
+		members += v.MemberCount
+		if v.MemberCount > largestServerCount {
+			largestServerCount = v.MemberCount
+			largestServerName = v.Name
+		}
+	}
+
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title: "Statistics",
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Members",
+				Value:  fmt.Sprint(members),
+				Inline: false,
+			},
+			{
+				Name:   "Servers",
+				Value:  fmt.Sprint(len(s.State.Guilds)),
+				Inline: false,
+			},
+			{
+				Name:   largestServerName,
+				Value:  fmt.Sprint(largestServerCount),
+				Inline: false,
+			},
+		},
 	})
 
 	return nil

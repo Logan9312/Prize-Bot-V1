@@ -194,6 +194,10 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 }
 
 func SetRoles(s *discordgo.Session) {
+
+	const premiumRole = "942927890100682752"
+	const supportServer = "885228283573178408"
+
 	for {
 		params := &stripe.SubscriptionListParams{}
 		activeMap := map[string]bool{}
@@ -209,15 +213,27 @@ func SetRoles(s *discordgo.Session) {
 		}
 
 		for userID, active := range activeMap {
-			if active {
+			hasRole := false
+
+			m, err := s.GuildMember(supportServer, userID)
+			if err != nil {
+				continue
+			}
+			for _, role := range m.Roles {
+				if role == premiumRole {
+					hasRole = true
+				}
+			}
+
+			if active && !hasRole {
 				fmt.Println("Adding role for:", userID)
-				err := s.GuildMemberRoleAdd("885228283573178408", userID, "942927890100682752")
+				err := s.GuildMemberRoleAdd(supportServer, userID, premiumRole)
 				if err != nil {
 					fmt.Println(err)
 				}
-			} else {
+			} else if !active && hasRole {
 				fmt.Println("Removing role for:", userID)
-				err := s.GuildMemberRoleRemove("885228283573178408", userID, "942927890100682752")
+				err := s.GuildMemberRoleRemove(supportServer, userID, premiumRole)
 				if err != nil {
 					fmt.Println(err)
 				}
