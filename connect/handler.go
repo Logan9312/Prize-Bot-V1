@@ -111,6 +111,45 @@ func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
 	fmt.Println("Bot is ready")
 }
 
+func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
+	channelID := "1005255087200948234"
+
+	fields := []*discordgo.MessageEmbedField{
+		{
+			Name:  "Name",
+			Value: g.Name,
+		},
+		{
+			Name:  "Member Count",
+			Value: fmt.Sprint(g.MemberCount),
+		},
+	}
+	if g.VanityURLCode != "" {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:  "Vanity URL",
+			Value: g.VanityURLCode,
+		})
+	}
+
+	if time.Since(g.JoinedAt) < 5*time.Minute {
+
+		_, err := h.SuccessMessage(s, channelID, h.PresetResponse{
+			Title:       "New Server Joined!",
+			Description: "The bot has joined a new discord within the last 5 minutes.",
+			Fields:      fields,
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL: g.IconURL(),
+			},
+			Image: &discordgo.MessageEmbedImage{
+				URL: g.BannerURL(),
+			},
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	bidValue := ""
 	mentioned := false

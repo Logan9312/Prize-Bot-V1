@@ -60,6 +60,10 @@ var CurrencyCommand = discordgo.ApplicationCommand{
 	},
 }
 
+func CurrencyChunkHandler() {
+
+}
+
 func Currency(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "add":
@@ -113,10 +117,10 @@ func CurrencyAdd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			currencyMap["interaction"] = i
 
 			currencyMap["role"] = role
-			id := len(CurrencyCreateRolesChunk)
+			id := i.ID
 			CurrencyCreateRolesChunk = append(CurrencyCreateRolesChunk, currencyMap)
 
-			err := s.RequestGuildMembers(i.GuildID, "", 0, "currency_add:"+fmt.Sprint(id)+":"+fmt.Sprint(currencyMap["amount"]), false)
+			err := s.RequestGuildMembers(i.GuildID, "", 0, "currency_add:"+id+":"+fmt.Sprint(currencyMap["amount"]), false)
 			if err != nil {
 				return err
 			}
@@ -159,10 +163,10 @@ func CurrencySet(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			currencyMap["interaction"] = i
 
 			currencyMap["role"] = role
-			id := len(CurrencyCreateRolesChunk)
+			id := i.ID
 			CurrencyCreateRolesChunk = append(CurrencyCreateRolesChunk, currencyMap)
 
-			err := s.RequestGuildMembers(i.GuildID, "", 0, "currency_set:"+fmt.Sprint(id)+":"+fmt.Sprint(currencyMap["amount"]), false)
+			err := s.RequestGuildMembers(i.GuildID, "", 0, "currency_set:"+id+":"+fmt.Sprint(currencyMap["amount"]), false)
 			if err != nil {
 				return err
 			}
