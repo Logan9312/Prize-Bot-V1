@@ -17,20 +17,14 @@ var PremiumCommand = discordgo.ApplicationCommand{
 	Description: "Info",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Name:        "option",
-			Description: "Get information or activate a premium subscription",
-			Choices: []*discordgo.ApplicationCommandOptionChoice{
-				{
-					Name:  "info",
-					Value: "info",
-				},
-				{
-					Name:  "activate",
-					Value: "activate",
-				},
-			},
-			Type:     discordgo.ApplicationCommandOptionString,
-			Required: true,
+			Name:        "info",
+			Description: "Get information about a premium subscription",
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+		},
+		{
+			Name:        "activate",
+			Description: "Activate a premium subscription",
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 		},
 	},
 	DMPermission: new(bool),
@@ -38,8 +32,7 @@ var PremiumCommand = discordgo.ApplicationCommand{
 
 func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	options := h.ParseSlashCommand(i)
-	switch options["option"] {
+	switch i.ApplicationCommandData().Options[0].Name {
 	case "info":
 		return PremiumInfo(s, i)
 	case "activate":
@@ -76,7 +69,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	if customerID != "" {
 		portal, err := session.New(&stripe.BillingPortalSessionParams{
 			Customer:  &customerID,
-			ReturnURL: stripe.String("https://aftmgaming.wordpress.com/"),
+			ReturnURL: stripe.String("https://www.aftmgaming.com/auction-bot/success"),
 		})
 		if err != nil {
 			return err
@@ -179,7 +172,7 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 
 	params := &stripe.CheckoutSessionParams{
 		CancelURL:  stripe.String("https://discord.gg/YBRvZ3mRtb"),
-		SuccessURL: stripe.String("https://aftmgaming.wordpress.com/"),
+		SuccessURL: stripe.String("https://www.aftmgaming.com/auction-bot/success"),
 		Mode:       stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
