@@ -36,7 +36,7 @@ type PresetResponse struct {
 }
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) error {
-	_, file, line, _ := runtime.Caller(2)
+	_, file, line, _ := runtime.Caller(1)
 	fmt.Println(file, line, errorText)
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -75,7 +75,7 @@ type AuctionQueue struct {
 	ChannelOverride string
 }
 
-//Make sure to remove LogChannel and ClaimMessage from auction log
+//ClaimSetup FromMake sure to remove LogChannel and ClaimMessage from auction log
 type ClaimSetup struct {
 	GuildID         string `gorm:"primaryKey"`
 	Category        string

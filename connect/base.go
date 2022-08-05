@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -25,6 +26,9 @@ var botCommands = slashCommands{
 		&commands.ShopCommand,
 		&commands.PremiumCommand,
 		&commands.SettingsCommand,
+		&commands.QuestCommand,
+		&commands.QuestContextMenu,
+		commands.CurrencyCommand,
 	},
 	prod: []*discordgo.ApplicationCommand{
 		&commands.AuctionCommand,
@@ -52,10 +56,6 @@ func BotConnect(token, environment, botName string) {
 		fmt.Println("discordgo.New error:" + err.Error())
 	}
 
-	defer s.ChannelMessageSend("943175605858496602", "Bot has finished restarting")
-
-	commands.Session = s
-
 	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
 	err = s.Open()
 
@@ -66,20 +66,14 @@ func BotConnect(token, environment, botName string) {
 
 	//Builds local commands
 	if environment == "local" {
+		s.LogLevel = discordgo.LogInformational
 		for _, v := range s.State.Guilds {
 			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, botCommands.local)
 			fmt.Println("Commands added to guild: " + v.Name)
 			if err != nil {
-				fmt.Println("Bulk Overwrite Error:", err)
+				log.Fatal("Bulk Overwrite Error:", err)
 			}
 		}
-		database.DB.Model(database.AuctionSetup{
-			GuildID: "915767892467920967",
-		}).Create(map[string]interface{}{
-			"GuildID":     "915767892467920967",
-			"category":    "915768615742103625",
-			"log_channel": "943175605858496602",
-		})
 	}
 
 	//Builds prod commands
@@ -96,8 +90,10 @@ func BotConnect(token, environment, botName string) {
 		}
 	}
 
+	s.AddHandler(ReadyHandler)
 	s.AddHandler(CommandHandler)
 	s.AddHandler(MessageHandler)
+
 	s.AddHandler(GuildMemberChunkHandler)
 
 	go commands.SetRoles(s)
@@ -158,10 +154,10 @@ func Timers(s *discordgo.Session) {
 func AuctionEndTimer(v map[string]interface{}, s *discordgo.Session) {
 	fmt.Println("Auction Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
 	if v["end_time"].(time.Time).Before(time.Now()) {
-		commands.AuctionEnd(v)
+		commands.AuctionEnd(s, v)
 	} else {
 		time.Sleep(time.Until(v["end_time"].(time.Time)))
-		commands.AuctionEnd(v)
+		commands.AuctionEnd(s, v)
 	}
 }
 
@@ -182,10 +178,10 @@ func GiveawayEndTimer(v map[string]interface{}, s *discordgo.Session) {
 			time.Sleep(time.Until(v["end_time"].(time.Time).Add(24 * time.Hour)))
 			database.DB.Delete(database.Giveaway{}, v["message_id"].(string))
 		} else {
-			commands.GiveawayEnd(commands.Session, v["message_id"].(string))
+			commands.GiveawayEnd(s, v["message_id"].(string))
 		}
 	} else {
 		time.Sleep(time.Until(v["end_time"].(time.Time)))
-		commands.GiveawayEnd(commands.Session, v["message_id"].(string))
+		commands.GiveawayEnd(s, v["message_id"].(string))
 	}
 }

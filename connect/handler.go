@@ -23,6 +23,8 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"dev":            c.Dev,
 	"premium":        c.Premium,
 	"settings":       c.Settings,
+	"quest":          c.Quest,
+	"currency":       c.Currency,
 	"stats":          c.Stats,
 }
 
@@ -42,6 +44,7 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"reopen_ticket":          c.ReopenTicket,
 	"additem":                c.AddItem,
 	"bid_history":            c.AuctionBidHistory,
+	"questbutton":            c.QuestButton,
 }
 
 var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
@@ -52,6 +55,7 @@ var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.Interac
 var guildMembersMap = map[string]func(s *discordgo.Session, g *discordgo.GuildMembersChunk) error{
 	"claim_create": c.ClaimCreateRole,
 	"currency_add": c.CurrencyAddRole,
+	"currency_set": c.CurrencySetRole,
 }
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -100,6 +104,11 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			h.ErrorResponse(s, i, "AutoComplete response has not been set properly, please contact Logan to fix")
 		}
 	}
+}
+
+func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
+	s.ChannelMessageSend("943175605858496602", "Bot has finished restarting")
+	fmt.Println("Bot is ready")
 }
 
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {

@@ -313,7 +313,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		})
 	}
 
-	user, err := Session.User(fmt.Sprint(claimMap["winner"]))
+	user, err := s.User(fmt.Sprint(claimMap["winner"]))
 	if err != nil {
 		user = &discordgo.User{}
 		user.Username = claimMap["winner"].(string)
@@ -380,7 +380,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 		return fmt.Errorf("No logging channel set.")
 	}
 
-	message, err := h.SuccessMessage(Session, claimMap["log_channel"].(string), h.PresetResponse{
+	message, err := h.SuccessMessage(s, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
 		Title:   fmt.Sprintf("%s Prize: __**%s**__", claimType, claimMap["item"]),
 		Fields:  fields,
@@ -738,6 +738,9 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 		Title:       "Prize Claimed Successfully",
 		Description: "The ticket will now be closed, please reopen if you have any issues.",
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
@@ -829,7 +832,9 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			},
 		},
 	})
-
+	if err != nil {
+		fmt.Println(err)
+	}
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
 		return err
