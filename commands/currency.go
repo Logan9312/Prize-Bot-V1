@@ -13,7 +13,7 @@ import (
 
 var CurrencyCreateRolesChunk = []map[string]interface{}{}
 
-var CurrencyCommand = &discordgo.ApplicationCommand{
+var CurrencyCommand = discordgo.ApplicationCommand{
 	Name:        "currency",
 	Description: "Shows the current currency of the bot",
 	Options: []*discordgo.ApplicationCommandOption{

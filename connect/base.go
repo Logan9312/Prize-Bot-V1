@@ -28,7 +28,7 @@ var botCommands = slashCommands{
 		&commands.SettingsCommand,
 		&commands.QuestCommand,
 		&commands.QuestContextMenu,
-		commands.CurrencyCommand,
+		&commands.CurrencyCommand,
 	},
 	prod: []*discordgo.ApplicationCommand{
 		&commands.AuctionCommand,
