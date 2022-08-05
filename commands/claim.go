@@ -262,7 +262,7 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 	return nil
 }
 
-//Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
+//ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
 func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimType string) error {
 
 	mentionUser := ""

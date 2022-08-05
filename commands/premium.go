@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/stripe/stripe-go/v72"
@@ -129,7 +130,6 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}
 
 	fmt.Println("Current Subscriptions")
-	ListSubscriptions(s)
 	return nil
 }
 
@@ -200,40 +200,43 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 	return checkout.New(params)
 }
 
-func ListSubscriptions(s *discordgo.Session) {
-	params := &stripe.SubscriptionListParams{}
-	activeMap := map[string]bool{}
-	i := sub.List(params)
-	for i.Next() {
-		subscription := i.Subscription()
-		fmt.Println(subscription.Metadata)
-		if subscription.Status == stripe.SubscriptionStatusActive {
-			activeMap[subscription.Metadata["discord_id"]] = true
-		} else if activeMap[subscription.Metadata["discord_id"]] != true {
-			activeMap[subscription.Metadata["discord_id"]] = false
+func SetRoles(s *discordgo.Session) {
+	for {
+		params := &stripe.SubscriptionListParams{}
+		activeMap := map[string]bool{}
+		i := sub.List(params)
+		for i.Next() {
+			subscription := i.Subscription()
+			fmt.Println(subscription.Metadata)
+			if subscription.Status == stripe.SubscriptionStatusActive {
+				activeMap[subscription.Metadata["discord_id"]] = true
+			} else if !activeMap[subscription.Metadata["discord_id"]] {
+				activeMap[subscription.Metadata["discord_id"]] = false
+			}
 		}
-	}
 
-	for userID, active := range activeMap {
-		if active {
-			fmt.Println("Adding role for:", userID)
-			err := s.GuildMemberRoleAdd("885228283573178408", userID, "942927890100682752")
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			fmt.Println("Removing role for:", userID)
-			err := s.GuildMemberRoleRemove("885228283573178408", userID, "942927890100682752")
-			if err != nil {
-				fmt.Println(err)
+		for userID, active := range activeMap {
+			if active {
+				fmt.Println("Adding role for:", userID)
+				err := s.GuildMemberRoleAdd("885228283573178408", userID, "942927890100682752")
+				if err != nil {
+					fmt.Println(err)
+				}
+			} else {
+				fmt.Println("Removing role for:", userID)
+				err := s.GuildMemberRoleRemove("885228283573178408", userID, "942927890100682752")
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 		}
+		time.Sleep(60 * time.Second)
 	}
 }
 
 func CheckPremiumGuild(guildID string) (status bool) {
 
-	if guildID == "915767892467920967"{
+	if guildID == "915767892467920967" {
 		return true
 	}
 

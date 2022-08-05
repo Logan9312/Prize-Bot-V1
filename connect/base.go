@@ -100,6 +100,8 @@ func BotConnect(token, environment, botName string) {
 	s.AddHandler(MessageHandler)
 	s.AddHandler(GuildMemberChunkHandler)
 
+	go commands.SetRoles(s)
+
 	Timers(s)
 
 	devData := database.DevSetup{
