@@ -16,9 +16,15 @@ var StatsCommand = discordgo.ApplicationCommand{
 func Stats(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	members := 0
+	largestServerCount := 0
+	largestServerName := ""
 
 	for _, v := range s.State.Guilds {
 		members += v.MemberCount
+		if v.MemberCount > largestServerCount {
+			largestServerCount = v.MemberCount
+			largestServerName = v.Name
+		}
 	}
 
 	
@@ -34,6 +40,11 @@ func Stats(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			{
 				Name:   "Servers",
 				Value:  fmt.Sprint(len(s.State.Guilds)),
+				Inline: false,
+			},
+			{
+				Name:   largestServerName,
+				Value:  fmt.Sprint(largestServerCount),
 				Inline: false,
 			},
 		},
