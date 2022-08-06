@@ -111,6 +111,51 @@ func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
 	fmt.Println("Bot is ready")
 }
 
+func GuildMemberAdd(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	channelID := "1005255087200948234"
+
+	if m.User.ID != s.State.User.ID {
+		return
+	}
+
+	g, err := s.Guild(m.GuildID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fields := []*discordgo.MessageEmbedField{
+		{
+			Name:  "Name",
+			Value: g.Name,
+		},
+		{
+			Name:  "Member Count",
+			Value: fmt.Sprint(g.MemberCount),
+		},
+	}
+	if g.VanityURLCode != "" {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:  "Vanity URL",
+			Value: g.VanityURLCode,
+		})
+	}
+
+	_, err = h.SuccessMessage(s, channelID, h.PresetResponse{
+		Title:       "New Server Joined!",
+		Description: "[GuildMemberJoin]",
+		Fields:      fields,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: g.IconURL(),
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: g.BannerURL(),
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 	channelID := "1005255087200948234"
 

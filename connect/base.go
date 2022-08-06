@@ -95,6 +95,7 @@ func BotConnect(token, environment, botName string) {
 	s.AddHandler(MessageHandler)
 	s.AddHandler(GuildCreateHandler)
 	s.AddHandler(GuildMemberChunkHandler)
+	s.AddHandler(GuildMemberAdd)
 
 	go commands.SetRoles(s)
 
