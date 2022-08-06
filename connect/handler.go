@@ -132,7 +132,7 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 		})
 	}
 
-	//if time.Since(g.JoinedAt) < 5*time.Minute {
+	if time.Since(g.JoinedAt) < 5*time.Minute {
 
 		_, err := h.SuccessMessage(s, channelID, h.PresetResponse{
 			Title:       "New Server Joined!",
@@ -148,7 +148,7 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 		if err != nil {
 			fmt.Println(err)
 		}
-	//}
+	}
 }
 
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
