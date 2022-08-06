@@ -56,6 +56,11 @@ func BotConnect(token, environment, botName string) {
 		fmt.Println("discordgo.New error:" + err.Error())
 	}
 
+	s.AddHandler(ReadyHandler)
+	s.AddHandler(CommandHandler)
+	s.AddHandler(MessageHandler)
+	s.AddHandler(GuildMemberChunkHandler)
+
 	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
 	err = s.Open()
 
@@ -89,13 +94,6 @@ func BotConnect(token, environment, botName string) {
 			fmt.Println("Bulk Overwrite Error:", err)
 		}
 	}
-
-	s.AddHandler(ReadyHandler)
-	s.AddHandler(CommandHandler)
-	s.AddHandler(MessageHandler)
-	s.AddHandler(GuildCreateHandler)
-	s.AddHandler(GuildMemberChunkHandler)
-	s.AddHandler(GuildMemberAdd)
 
 	go commands.SetRoles(s)
 
