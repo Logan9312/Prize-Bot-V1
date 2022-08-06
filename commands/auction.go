@@ -471,7 +471,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, priz
 	if prizeType == "Auction" {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**How to Bid**__",
-			Value:  "Use the command `/auction bid` below.\n• Ex: `/auction bid 550`.\n**Alternate Method:** reply to this auction or @ the bot with `bid <amount>`",
+			Value:  "Use the command `/bid` below.\n• Ex: `/bid 550`.\n**Alternate Method:** reply to this auction or @ the bot with `bid <amount>`",
 			Inline: false,
 		})
 	}
