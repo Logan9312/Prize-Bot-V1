@@ -8,9 +8,9 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
-	"gorm.io/gorm/clause"
 	"golang.org/x/text/language"
-    "golang.org/x/text/message"
+	"golang.org/x/text/message"
+	"gorm.io/gorm/clause"
 )
 
 var CurrencyCreateRolesChunk = []map[string]interface{}{}
@@ -80,7 +80,7 @@ func PriceFormat(price float64, guildID string, override interface{}) string {
 
 	p := message.NewPrinter(language.English)
 	currencyMap := map[string]interface{}{}
-	priceString := strings.TrimRight(strings.TrimRight(p.Sprintf("%d", price), "0"), ".")
+	priceString := strings.TrimRight(strings.TrimRight(p.Sprintf("%f", price), "0"), ".")
 
 	result := database.DB.Model(database.CurrencySetup{}).First(&currencyMap, guildID)
 	if result.Error != nil {
