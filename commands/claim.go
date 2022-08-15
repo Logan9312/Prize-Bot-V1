@@ -383,10 +383,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		return fmt.Errorf("No logging channel set.")
 	}
 
-	for _, v := range fields {
-		fmt.Println(v.Name, v.Value)
-	}
-
 	message, err := h.SuccessMessage(s, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
 		Title:   fmt.Sprintf("%s Prize: __**%s**__", eventType, claimMap["item"]),
