@@ -152,6 +152,8 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
+	var message *discordgo.Message
+
 	if !strings.HasPrefix(m.Content, "/") {
 		return
 	}
@@ -177,22 +179,23 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		}
-		
+
 		err = c.AuctionBidPlace(s, bidAmount, member, m.ChannelID, m.GuildID)
 		if err != nil {
 			fmt.Println(err)
-			_, err = h.ErrorMessage(s, m.ChannelID, err.Error())
+			message, err = h.ErrorMessage(s, m.ChannelID, err.Error())
 			if err != nil {
 				fmt.Println(err)
 			}
 			return
-		}
-		message, err := h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
-			Title:     "Bid has been successfully placed!",
-			Reference: m.Reference(),
-		})
-		if err != nil {
-			fmt.Println(err)
+		} else {
+			message, err = h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
+				Title:     "Bid has been successfully placed!",
+				Reference: m.Reference(),
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 
 		time.Sleep(10 * time.Second)
