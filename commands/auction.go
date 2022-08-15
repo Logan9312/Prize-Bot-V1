@@ -1356,7 +1356,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionMap["host"] {
-		return fmt.Errorf("User must have administrator permissions to run this command")
+		return fmt.Errorf("User must have administrator permissions or be host to run this command")
 	}
 
 	err := h.SuccessResponse(s, i, h.PresetResponse{
