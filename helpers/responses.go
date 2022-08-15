@@ -32,12 +32,13 @@ type PresetResponse struct {
 	Embeds      []*discordgo.MessageEmbed `json:"embeds,omitempty"`
 	Files       []*discordgo.File         `json:"-"`
 	//Flags uint64 `json:"flags,omitempty"`
-
+	Reference *discordgo.MessageReference
 }
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) error {
-	_, file, line, _ := runtime.Caller(1)
+	_, file, line, _ := runtime.Caller(-1)
 	fmt.Println(file, line, errorText)
+
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -213,40 +214,48 @@ func FollowUpSuccessResponse(s *discordgo.Session, i *discordgo.InteractionCreat
 
 func SuccessMessage(s *discordgo.Session, channelID string, r PresetResponse) (*discordgo.Message, error) {
 
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       r.Title,
+			Description: r.Description,
+			Color:       0x8073ff,
+			Image:       r.Image,
+			Thumbnail:   r.Thumbnail,
+			Fields:      r.Fields,
+		},
+	}
+
+	embed = append(embed, r.Embeds...)
 	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Content:    r.Content,
 		Components: r.Components,
-		Embeds: []*discordgo.MessageEmbed{
-			{
-				Title:       r.Title,
-				Description: r.Description,
-				Color:       0x8073ff,
-				Image:       r.Image,
-				Thumbnail:   r.Thumbnail,
-				Fields:      r.Fields,
-			},
-		},
-		Files: r.Files,
+		Embeds:     embed,
+		Files:      r.Files,
+		Reference:  r.Reference,
 	})
 }
 
 func SuccessMessageEdit(s *discordgo.Session, channelID, messageID string, r PresetResponse) (*discordgo.Message, error) {
 
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       r.Title,
+			Description: r.Description,
+			Color:       0x8073ff,
+			Image:       r.Image,
+			Thumbnail:   r.Thumbnail,
+			Fields:      r.Fields,
+		},
+	}
+
+	embed = append(embed, r.Embeds...)
+
 	return s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		Content:    &r.Content,
 		Components: r.Components,
-		Embeds: []*discordgo.MessageEmbed{
-			{
-				Title:       r.Title,
-				Description: r.Description,
-				Color:       0x8073ff,
-				Image:       r.Image,
-				Thumbnail:   r.Thumbnail,
-				Fields:      r.Fields,
-			},
-		},
-		ID:      messageID,
-		Channel: channelID,
+		Embeds:     embed,
+		ID:         messageID,
+		Channel:    channelID,
 	})
 }
 

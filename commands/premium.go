@@ -30,6 +30,11 @@ var PremiumCommand = discordgo.ApplicationCommand{
 	DMPermission: new(bool),
 }
 
+var PremiumServers = map[string]string{
+	"915767892467920967": "Testing",
+	"626094990984216586": "Aftermath",
+}
+
 func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	switch i.ApplicationCommandData().Options[0].Name {
@@ -204,7 +209,6 @@ func SetRoles(s *discordgo.Session) {
 		i := sub.List(params)
 		for i.Next() {
 			subscription := i.Subscription()
-			fmt.Println(subscription.Metadata)
 			if subscription.Status == stripe.SubscriptionStatusActive {
 				activeMap[subscription.Metadata["discord_id"]] = true
 			} else if !activeMap[subscription.Metadata["discord_id"]] {
@@ -239,13 +243,13 @@ func SetRoles(s *discordgo.Session) {
 				}
 			}
 		}
-		time.Sleep(60 * time.Second)
+		time.Sleep(5 * time.Minute)
 	}
 }
 
 func CheckPremiumGuild(guildID string) (status bool) {
 
-	if guildID == "915767892467920967" {
+	if PremiumServers[guildID] != "" {
 		return true
 	}
 

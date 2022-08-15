@@ -43,7 +43,7 @@ func ShopCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	shopMap["guild_id"] = i.GuildID
 	shopMap["host"] = i.Member.User.ID
 
-	response, err := AuctionFormat(s, shopMap, "Shop")
+	response, err := AuctionFormat(s, shopMap, EventTypeShop)
 	if err != nil {
 		fmt.Println(err)
 	}

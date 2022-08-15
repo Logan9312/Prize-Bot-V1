@@ -130,7 +130,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	giveawayMap["end_time"] = time.Now().Add(endTimeDuration)
 	giveawayMap["alert_role"] = GiveawaySetup["alert_role"]
 
-	formattedMessage, err := AuctionFormat(s, giveawayMap, "Giveaway")
+	formattedMessage, err := AuctionFormat(s, giveawayMap, EventTypeGiveaway)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		fmt.Println("Error fetching giveaway setups", result.Error)
 	}
 
-	fm, err := AuctionFormat(s, giveawayMap, "Giveaway")
+	fm, err := AuctionFormat(s, giveawayMap, EventTypeGiveaway)
 	if err != nil {
 		return err
 	}

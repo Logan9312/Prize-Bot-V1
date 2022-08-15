@@ -8,7 +8,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
-	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
@@ -107,7 +106,6 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
-	s.AddHandler(GuildCreateHandler)
 	s.ChannelMessageSend("943175605858496602", "Bot has finished restarting")
 	fmt.Println("Bot is ready")
 }
@@ -183,17 +181,15 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println(err)
 				return
 			}
-			response, err := c.AuctionBidFormat(s, database.Auction{
-				ChannelID: m.ChannelID,
-				Bid:       bidAmount,
-				Winner:    m.Author.ID,
-				GuildID:   m.GuildID,
-			})
+			err = c.AuctionBidPlace(s, bidAmount, m.Member, m.ChannelID, m.GuildID)
 			if err != nil {
 				fmt.Println(err)
 				h.ErrorMessage(s, m.ChannelID, err.Error())
 			}
-			message, err := h.SuccessMessage(s, m.ChannelID, response)
+			message, err := h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
+				Title:     "Bid has been successfully placed!",
+				Reference: m.Reference(),
+			})
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -203,11 +199,9 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				fmt.Println(err)
 			}
-			if message != nil {
-				err = s.ChannelMessageDelete(m.ChannelID, message.ID)
-				if err != nil {
-					fmt.Println(err)
-				}
+			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	}
