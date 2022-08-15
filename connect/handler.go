@@ -85,6 +85,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				err = h.ErrorResponse(s, i, err.Error())
 				if err != nil {
 					fmt.Println(err)
+					h.FollowUpErrorResponse(s, i, err.Error())
 				}
 			}
 		} else {
