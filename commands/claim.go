@@ -263,7 +263,7 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 }
 
 //ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
-func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimType string) error {
+func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventType string) error {
 
 	mentionUser := ""
 	finalBid := ""
@@ -382,7 +382,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 
 	message, err := h.SuccessMessage(s, claimMap["log_channel"].(string), h.PresetResponse{
 		Content: mentionUser,
-		Title:   fmt.Sprintf("%s Prize: __**%s**__", claimType, claimMap["item"]),
+		Title:   fmt.Sprintf("%s Prize: __**%s**__", eventType, claimMap["item"]),
 		Fields:  fields,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: claimMap["image_url"].(string),
@@ -404,7 +404,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, claimTyp
 	}
 
 	claimMap["channel_id"] = claimMap["log_channel"].(string)
-	claimMap["type"] = claimType
+	claimMap["type"] = eventType
 	claimMap["message_id"] = message.ID
 
 	result = database.DB.Clauses(clause.OnConflict{

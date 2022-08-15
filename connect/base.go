@@ -48,10 +48,10 @@ var botCommands = slashCommands{
 func BotConnect(token, environment, botName string) {
 
 	fmt.Println(botName + " Starting Up...")
-	var s *discordgo.Session
+
 	var err error
 
-	s, err = discordgo.New("Bot " + token)
+	s, err := discordgo.New("Bot " + token)
 	if err != nil {
 		fmt.Println("discordgo.New error:" + err.Error())
 	}
@@ -60,6 +60,7 @@ func BotConnect(token, environment, botName string) {
 	s.AddHandler(CommandHandler)
 	s.AddHandler(MessageHandler)
 	s.AddHandler(GuildMemberChunkHandler)
+	s.AddHandler(GuildCreateHandler)
 
 	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
 	err = s.Open()
@@ -152,21 +153,16 @@ func Timers(s *discordgo.Session) {
 
 func AuctionEndTimer(v map[string]interface{}, s *discordgo.Session) {
 	fmt.Println("Auction Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
-	if v["end_time"].(time.Time).Before(time.Now()) {
-		commands.AuctionEnd(s, v)
-	} else {
-		time.Sleep(time.Until(v["end_time"].(time.Time)))
-		commands.AuctionEnd(s, v)
-	}
+	commands.AuctionEnd(s, v["channel_id"].(string), v["guild_id"].(string))
 }
 
 func AuctionStartTimer(v map[string]interface{}, s *discordgo.Session) {
 	fmt.Println("Auction Re-Queued: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "Start Time", v["start_time"].(time.Time).String())
 	if v["start_time"].(time.Time).Before(time.Now()) {
-		commands.AuctionCreate(s, v)
+		commands.AuctionStart(s, v)
 	} else {
 		time.Sleep(time.Until(v["start_time"].(time.Time)))
-		commands.AuctionCreate(s, v)
+		commands.AuctionStart(s, v)
 	}
 }
 
