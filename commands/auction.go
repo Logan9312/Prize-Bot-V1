@@ -685,7 +685,9 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 
 	for key, value := range options {
 		if key == "bid" {
-			editedOptions += fmt.Sprintf("\n\u3000- %s set to: %s", key, PriceFormat(value.(float64), guildID, auctionMap["currency"]))
+			editedOptions += fmt.Sprintf("\n\u3000- %s set to: %s", key, strings.TrimRight(strings.TrimRight(p.Sprintf("%f", options["bid"].(float64)), "0"), "."))
+		} else {
+			editedOptions += fmt.Sprintf("\n\u3000- %s set to: %s", key, p.Sprint(value))
 		}
 	}
 
@@ -703,6 +705,8 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 	}
 
 	options["bid_history"] = auctionMap["bid_history"].(string) + "\n-> Auction edited by " + member.User.Username + ":" + editedOptions
+
+	fmt.Println(options["bid_history"])
 
 	result = database.DB.Model(database.Auction{
 		ChannelID: channelID,

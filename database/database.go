@@ -48,6 +48,7 @@ type Auction struct {
 	BidHistory      string
 	Note            string
 	ChannelOverride string
+	UseCurrency     bool
 }
 
 type AuctionQueue struct {
@@ -75,7 +76,7 @@ type AuctionQueue struct {
 	ChannelOverride string
 }
 
-//ClaimSetup FromMake sure to remove LogChannel and ClaimMessage from auction log
+// ClaimSetup FromMake sure to remove LogChannel and ClaimMessage from auction log
 type ClaimSetup struct {
 	GuildID         string `gorm:"primaryKey"`
 	Category        string
