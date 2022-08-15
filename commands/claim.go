@@ -285,6 +285,9 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 	if claimMap["target_message"] != nil {
 		finalBid = claimMap["target_message"].(string)
 	}
+	if claimMap["cost"] != nil {
+		finalBid = claimMap["cost"].(string)
+	}
 	if claimMap["winner"] == nil {
 		claimMap["winner"] = "No Winner Detected"
 	}
@@ -378,6 +381,10 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 
 	if claimMap["log_channel"] == nil {
 		return fmt.Errorf("No logging channel set.")
+	}
+
+	for _, v :=  range fields {
+		fmt.Println(v.Name, v.Value)
 	}
 
 	message, err := h.SuccessMessage(s, claimMap["log_channel"].(string), h.PresetResponse{
