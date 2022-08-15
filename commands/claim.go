@@ -262,7 +262,7 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 	return nil
 }
 
-//ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
+// ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
 func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventType string) error {
 
 	mentionUser := ""
@@ -286,7 +286,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		finalBid = claimMap["target_message"].(string)
 	}
 	if claimMap["cost"] != nil {
-		finalBid = claimMap["cost"].(string)
+		finalBid = fmt.Sprint(claimMap["cost"].(float64))
 	}
 	if claimMap["winner"] == nil {
 		claimMap["winner"] = "No Winner Detected"
@@ -383,7 +383,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		return fmt.Errorf("No logging channel set.")
 	}
 
-	for _, v :=  range fields {
+	for _, v := range fields {
 		fmt.Println(v.Name, v.Value)
 	}
 
