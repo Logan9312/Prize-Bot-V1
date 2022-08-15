@@ -518,12 +518,6 @@ func MakeAuctionChannel(s *discordgo.Session, auctionMap map[string]any) (channe
 func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSlashCommand(i)
-	auctionMap := map[string]any{}
-
-	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
-	if result.Error != nil {
-		return fmt.Errorf("Error fetching auction data from the database. Error Message: " + result.Error.Error())
-	}
 
 	err := AuctionBidPlace(s, options["amount"].(float64), i.Member, i.ChannelID, i.GuildID)
 	if err != nil {
@@ -541,8 +535,9 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Member, channelID, guildID string) error {
 
-	auctionSetup := map[string]interface{}{}
-	auctionMap := map[string]interface{}{}
+	auctionSetup := map[string]any{}
+	auctionMap := map[string]any{}
+	userMap := map[string]any{}
 	p := message.NewPrinter(language.English)
 
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, channelID)
@@ -561,6 +556,19 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 				Title:       "**Anti-Snipe Activated!**",
 				Description: fmt.Sprintf("New End Time: <t:%d>", auctionMap["end_time"].(time.Time).Unix()),
 			})
+		}
+	}
+
+	if auctionMap["use_currency"] != nil && auctionMap["use_currency"].(bool) {
+		result = database.DB.Model(database.UserProfile{}).First(&userMap, map[string]any{
+			"guild_id": guildID,
+			"user_id":  member.User.ID,
+		})
+		if result.Error != nil {
+			fmt.Println(result.Error)
+		}
+		if amount > userMap["balance"].(float64) {
+			return fmt.Errorf("You do not have enough currency to bid on this auction. You need %s and you have %s", PriceFormat(amount, guildID, auctionMap["currency"]), PriceFormat(userMap["balance"].(float64), guildID, auctionMap["currency"]))
 		}
 	}
 
@@ -872,8 +880,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, even
 	if eventType == EventTypeAuction {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**How to Bid**__",
-			Value:  "Use the command `/bid` below.\n• Ex: `/bid 550`.\n**Alternate Method:** reply to this auction or @ the bot with `bid <amount>`",
-			Inline: false,
+			Value:  "Use the command `/bid` below.\n• Ex: `/bid 550`.",
 		})
 	}
 
@@ -1151,6 +1158,12 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 	if auctionMap["target_price"] != nil && auctionMap["target_price"].(float64) > auctionMap["bid"].(float64) {
 		auctionMap["target_message"] = fmt.Sprintf("The host had set a target price of %s that has not been reached.", PriceFormat(auctionMap["target_price"].(float64), guildID, auctionMap["currency"]))
 		delete(auctionMap, "winner")
+	}
+
+	if auctionMap["use_currency"] != nil && auctionMap["use_currency"].(bool) && auctionMap["winner"] != nil {
+		//CurrencyRemoveUser(guildID, auctionMap["winner"].(string), auctionMap["bid"].(float64))
+		CurrencyAddUser(guildID, auctionMap["host"].(string), auctionMap["bid"].(float64))
+		//Add in a message about this when the auction ends
 	}
 
 	if auctionMap["buyout"] != nil && auctionMap["buyout"].(float64) != 0 {

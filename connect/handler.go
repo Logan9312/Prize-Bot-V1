@@ -150,59 +150,58 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 }
 
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
-	bidValue := ""
-	mentioned := false
-	if m.Content == "" {
+
+	if !strings.HasPrefix(m.Content, "/") {
 		return
 	}
+	command := strings.TrimPrefix(m.Content, "/")
 
-	for _, v := range m.Message.Mentions {
-		if v.ID == s.State.User.ID {
-			mentioned = true
+	args := strings.Split(command, " ")
+	fmt.Println(args)
+	if strings.ToLower(args[0]) == "bid" {
+
+		bidAmount, err := strconv.ParseFloat(args[1], 64)
+		if err != nil {
+			h.ErrorMessage(s, m.ChannelID, err.Error())
+			fmt.Println(err)
+			return
 		}
-	}
 
-	if !mentioned {
-		return
-	}
-
-	splitString := strings.Split(m.Content, " ")
-
-	for n, v := range splitString {
-		if strings.ToLower(v) == "bid" {
-			if len(splitString) <= n+1 {
-				h.ErrorMessage(s, m.ChannelID, "Error Bidding. Your message must contain the bid amount after the word bid. Ex: Bid 500")
-				return
-			}
-			bidValue = splitString[n+1]
-			bidAmount, err := strconv.ParseFloat(bidValue, 64)
+		member, err := s.GuildMember(m.GuildID, m.Author.ID)
+		if err != nil {
+			fmt.Println(err)
+			_, err = h.ErrorMessage(s, m.ChannelID, err.Error())
 			if err != nil {
-				h.ErrorMessage(s, m.ChannelID, err.Error())
 				fmt.Println(err)
 				return
 			}
-			err = c.AuctionBidPlace(s, bidAmount, m.Member, m.ChannelID, m.GuildID)
-			if err != nil {
-				fmt.Println(err)
-				h.ErrorMessage(s, m.ChannelID, err.Error())
-			}
-			message, err := h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
-				Title:     "Bid has been successfully placed!",
-				Reference: m.Reference(),
-			})
+		}
+		
+		err = c.AuctionBidPlace(s, bidAmount, member, m.ChannelID, m.GuildID)
+		if err != nil {
+			fmt.Println(err)
+			_, err = h.ErrorMessage(s, m.ChannelID, err.Error())
 			if err != nil {
 				fmt.Println(err)
 			}
+			return
+		}
+		message, err := h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
+			Title:     "Bid has been successfully placed!",
+			Reference: m.Reference(),
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
 
-			time.Sleep(10 * time.Second)
-			err = s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
-			if err != nil {
-				fmt.Println(err)
-			}
-			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
-			if err != nil {
-				fmt.Println(err)
-			}
+		time.Sleep(10 * time.Second)
+		err = s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }
