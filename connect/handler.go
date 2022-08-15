@@ -187,7 +187,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				fmt.Println(err)
 			}
-			return
 		} else {
 			message, err = h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
 				Title:     "Bid has been successfully placed!",
