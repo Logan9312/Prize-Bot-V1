@@ -93,15 +93,15 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Description: "Only allow integer bids (no decimals).",
 				},
 				{
-					Type:         discordgo.ApplicationCommandOptionString,
-					Name:         "snipe_extension",
-					Description:  "Set 0 to disable. Duration an auction by when a bid is placed within the snipe range. (Example: 5m)",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "snipe_extension",
+					Description: "Duration to extend an auction by when a bid is placed within the snipe range. (Example: 5m)",
 					//Autocomplete: true,
 				},
 				{
-					Type:         discordgo.ApplicationCommandOptionString,
-					Name:         "snipe_range",
-					Description:  "Set 0 to disable. The remaining time needed to activate Anti-Snipe (Example: 24h, or 1d)",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "snipe_range",
+					Description: "The remaining time needed to activate Anti-Snipe (Example: 24h)",
 					//Autocomplete: true,
 				},
 				{
