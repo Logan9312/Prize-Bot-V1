@@ -16,7 +16,6 @@ var templateFS embed.FS
 
 func BotStatus() {
 	r := mux.NewRouter().StrictSlash(true)
-	r.Schemes("https", "http")
 	HandleRequests(r)
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
