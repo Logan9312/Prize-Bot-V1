@@ -1138,15 +1138,11 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		auctionMap["message_id"] = ""
 	}
 
-	if auctionMap["channel_id"] == nil {
-		auctionMap["channel_id"] = ""
-	}
-
 	message := discordgo.NewMessageEdit(channelID, auctionMap["message_id"].(string))
 	messageEmbeds, err := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
 	if err != nil {
 		result = database.DB.Delete(database.Auction{
-			ChannelID: auctionMap["channel_id"].(string),
+			ChannelID: channelID,
 		})
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
