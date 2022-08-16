@@ -52,9 +52,8 @@ var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.Interac
 }
 
 var guildMembersMap = map[string]func(s *discordgo.Session, g *discordgo.GuildMembersChunk) error{
-	"claim_create": c.ClaimCreateRole,
-	"currency_add": c.CurrencyAddRole,
-	"currency_set": c.CurrencySetRole,
+	"claim": c.ClaimCreateRole,
+	"$":     c.CurrencyRoleHandler,
 }
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -72,6 +71,7 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				err = h.ErrorResponse(s, i, err.Error())
 				if err != nil {
 					fmt.Println(err)
+					h.FollowUpErrorResponse(s, i, err.Error())
 				}
 			}
 		} else {
@@ -153,6 +153,7 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var message *discordgo.Message
+	var err error
 
 	if !strings.HasPrefix(m.Content, "/") {
 		return
@@ -160,6 +161,9 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	command := strings.TrimPrefix(m.Content, "/")
 
 	args := strings.Split(command, " ")
+	if len(args) != 2 {
+		message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
+	}
 	fmt.Println(args)
 	if strings.ToLower(args[0]) == "bid" {
 
@@ -213,10 +217,9 @@ func GuildMemberChunkHandler(s *discordgo.Session, g *discordgo.GuildMembersChun
 	if f, ok := guildMembersMap[strings.Split(g.Nonce, ":")[0]]; ok {
 		err := f(s, g)
 		if err != nil {
-			id, err := strconv.Atoi(strings.Split(g.Nonce, ":")[1])
 			if err != nil {
 				fmt.Println(err)
-				_, err = h.FollowUpErrorResponse(s, c.ClaimCreateRolesChunk[id]["interaction"].(*discordgo.InteractionCreate), err.Error())
+				_, err = h.FollowUpErrorResponse(s, c.ReadCurrencyData(strings.Split(g.Nonce, ":")[1])["interaction"].(*discordgo.InteractionCreate), err.Error())
 				if err != nil {
 					fmt.Println(err)
 				}

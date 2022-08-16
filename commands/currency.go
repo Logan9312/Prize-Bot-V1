@@ -2,8 +2,9 @@ package commands
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
@@ -13,7 +14,14 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var CurrencyCreateRolesChunk = []map[string]interface{}{}
+type CurrencyEventTracker struct {
+	m    sync.Mutex
+	data map[string]map[string]any
+}
+
+var CurrencyCreateData = CurrencyEventTracker{
+	data: map[string]map[string]any{},
+}
 
 var CurrencyCommand = discordgo.ApplicationCommand{
 	Name:        "currency",
@@ -21,19 +29,39 @@ var CurrencyCommand = discordgo.ApplicationCommand{
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "add",
-			Description: "Add Currency to a user or role.",
+			Name:        "edit",
+			Description: "Change the currency of a user or role.",
 			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "action",
+					Description: "How to apply currency to the user.",
+					Required:    true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "add",
+							Value: "add",
+						},
+						{
+							Name:  "set",
+							Value: "set",
+						},
+						{
+							Name:  "subtract",
+							Value: "subtract",
+						},
+					},
+				},
 				{
 					Type:        discordgo.ApplicationCommandOptionMentionable,
 					Name:        "target",
-					Description: "Select a user or a role* (premium) add currency to.",
+					Description: "Select a user or a role to modify the currency of",
 					Required:    true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionNumber,
 					Name:        "amount",
-					Description: "The amount of currency to add.",
+					Description: "The amount of currency",
 					Required:    true,
 					Options:     []*discordgo.ApplicationCommandOption{},
 				},
@@ -41,39 +69,98 @@ var CurrencyCommand = discordgo.ApplicationCommand{
 		},
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "set",
-			Description: "Set the exact amount of currency for a user.",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionMentionable,
-					Name:        "target",
-					Description: "Select a user or a role* (premium) add currency to.",
-					Required:    true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionNumber,
-					Name:        "amount",
-					Description: "The amount of currency to add.",
-					Required:    true,
-					Options:     []*discordgo.ApplicationCommandOption{},
-				},
-			},
+			Name:        "list",
+			Description: "Lists the currency of all saved users.",
 		},
 	},
 }
 
-func CurrencyChunkHandler() {
-
-}
-
 func Currency(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
-	case "add":
-		return CurrencyAdd(s, i)
-	case "set":
-		return CurrencySet(s, i)
+	case "edit":
+		return CurrencyEdit(s, i)
+	case "list":
+		return CurrencyList(s, i)
 	}
 	return fmt.Errorf("Unknown Currency command, please contact support")
+}
+
+func SaveCurrencyData(id string, currencyMap map[string]any) {
+	CurrencyCreateData.m.Lock()
+	CurrencyCreateData.data[id] = currencyMap
+	CurrencyCreateData.m.Unlock()
+}
+
+func ReadCurrencyData(id string) map[string]any {
+	CurrencyCreateData.m.Lock()
+	defer CurrencyCreateData.m.Unlock()
+	return CurrencyCreateData.data[id]
+}
+
+func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+
+	if !CheckPremiumGuild(i.GuildID) {
+		err := h.PremiumError(s, i)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return nil
+	}
+
+	currencyMap := h.ParseSubCommand(i)
+	action := currencyMap["action"].(string)
+
+	currencyMap["guild_id"] = i.GuildID
+	currencyMap["interaction"] = i
+	if i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)] != nil {
+
+		currencyMap["role"] = i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)]
+
+		SaveCurrencyData(i.ID, currencyMap)
+		nonce := "$:" + i.ID
+
+		err := s.RequestGuildMembers(i.GuildID, "", 0, nonce, false)
+		if err != nil {
+			return err
+		}
+
+		err = h.ExperimentalResponse(s, i, h.PresetResponse{
+			Title:       "Adding currency to roles!",
+			Description: "This might take a while.",
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)] != nil {
+		err := h.ExperimentalResponse(s, i, h.PresetResponse{
+			Title:       "Adding currency to user!",
+			Description: "",
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		switch action {
+		case "add":
+			err = CurrencyAddUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
+			if err != nil {
+				return err
+			}
+		case "subtract":
+			err = CurrencyAddUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, -1*currencyMap["amount"].(float64))
+			if err != nil {
+				return err
+			}
+		case "set":
+			err = CurrencySetUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func PriceFormat(price float64, guildID string, override interface{}) string {
@@ -102,140 +189,15 @@ func PriceFormat(price float64, guildID string, override interface{}) string {
 	}
 }
 
-func CurrencyAdd(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	if !CheckPremiumGuild(i.GuildID) {
-		err := h.PremiumError(s, i)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return nil
-	}
-
-	currencyMap := h.ParseSubCommand(i)
-	currencyMap["guild_id"] = i.GuildID
-
-	if i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)] != nil {
-		for _, role := range i.ApplicationCommandData().Resolved.Roles {
-			currencyMap["interaction"] = i
-
-			currencyMap["role"] = role
-			id := i.ID
-			CurrencyCreateRolesChunk = append(CurrencyCreateRolesChunk, currencyMap)
-
-			err := s.RequestGuildMembers(i.GuildID, "", 0, "currency_add:"+id+":"+fmt.Sprint(currencyMap["amount"]), false)
-			if err != nil {
-				return err
-			}
-
-			err = h.ExperimentalResponse(s, i, h.PresetResponse{
-				Title:       "Adding currency to roles!",
-				Description: "This might take a while.",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-
-		}
-	} else {
-		for _, user := range i.ApplicationCommandData().Resolved.Users {
-
-			err := h.ExperimentalResponse(s, i, h.PresetResponse{
-				Title:       "Adding currency to user!",
-				Description: "",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-			err = CurrencyAddUser(i.GuildID, user.ID, currencyMap["amount"].(float64))
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func CurrencySet(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	currencyMap := h.ParseSubCommand(i)
-	currencyMap["guild_id"] = i.GuildID
-
-	if i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)] != nil {
-		for _, role := range i.ApplicationCommandData().Resolved.Roles {
-			currencyMap["interaction"] = i
-
-			currencyMap["role"] = role
-			id := i.ID
-			CurrencyCreateRolesChunk = append(CurrencyCreateRolesChunk, currencyMap)
-
-			err := s.RequestGuildMembers(i.GuildID, "", 0, "currency_set:"+id+":"+fmt.Sprint(currencyMap["amount"]), false)
-			if err != nil {
-				return err
-			}
-
-			err = h.ExperimentalResponse(s, i, h.PresetResponse{
-				Title:       "Adding currency to roles!",
-				Description: "This might take a while.",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-
-		}
-	} else {
-		for _, user := range i.ApplicationCommandData().Resolved.Users {
-
-			err := h.ExperimentalResponse(s, i, h.PresetResponse{
-				Title:       "Adding currency to user!",
-				Description: "",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-			err = CurrencyAddUser(i.GuildID, user.ID, currencyMap["amount"].(float64))
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func CurrencyAddRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error {
+func CurrencyRoleHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) error {
 
 	details := strings.Split(g.Nonce, ":")
 
-	fmt.Println(details)
+	currencyMap := ReadCurrencyData(details[1])
 
-	id, err := strconv.Atoi(details[1])
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	amount := currencyMap["amount"].(float64)
 
-	amount, err := strconv.ParseFloat(details[2], 64)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	currencyMap := CurrencyCreateRolesChunk[id]
-
-	for _, v := range g.Members {
-		for _, role := range v.Roles {
-			if role == currencyMap["role"].(*discordgo.Role).ID {
-				currencyMap["user_id"] = v.User.ID
-				err = CurrencyAddUser(g.GuildID, v.User.ID, amount)
-				if err != nil {
-					h.FollowUpErrorResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
-				}
-			}
-		}
-	}
-
-	h.FollowUpSuccessResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), h.PresetResponse{
+	defer h.FollowUpSuccessResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), h.PresetResponse{
 		Title:       "__**Currency Add Role**__",
 		Description: fmt.Sprintf("Currency is currently being added to all users in <@&%s>", currencyMap["role"].(*discordgo.Role).ID),
 		Fields: []*discordgo.MessageEmbedField{
@@ -246,52 +208,60 @@ func CurrencyAddRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 			},
 		},
 	})
+
+	switch currencyMap["action"].(string) {
+	case "add":
+		return CurrencyAddRole(g, currencyMap["role"].(*discordgo.Role).ID, amount)
+	case "subtract":
+		return CurrencyAddRole(g, currencyMap["role"].(*discordgo.Role).ID, -1*amount)
+	case "set":
+		return CurrencySetRole(g, currencyMap["role"].(*discordgo.Role).ID, amount)
+	}
+
 	return nil
 }
 
-func CurrencySetRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error {
-
-	details := strings.Split(g.Nonce, ":")
-
-	fmt.Println(details)
-
-	id, err := strconv.Atoi(details[1])
-	if err != nil {
-		fmt.Println(err)
-		return err
+func CurrencyAddRole(g *discordgo.GuildMembersChunk, roleID string, amount float64) error {
+	if roleID == g.GuildID {
+		for _, v := range g.Members {
+			err := CurrencyAddUser(g.GuildID, v.User.ID, amount)
+			if err != nil {
+				return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
+			}
+		}
 	}
-
-	amount, err := strconv.ParseFloat(details[2], 64)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	currencyMap := CurrencyCreateRolesChunk[id]
-
 	for _, v := range g.Members {
 		for _, role := range v.Roles {
-			if role == currencyMap["role"].(*discordgo.Role).ID {
-				currencyMap["user_id"] = v.User.ID
-				err = CurrencySetUser(g.GuildID, v.User.ID, amount)
+			if role == roleID {
+				err := CurrencyAddUser(g.GuildID, v.User.ID, amount)
 				if err != nil {
-					h.FollowUpErrorResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
+					return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
 				}
 			}
 		}
 	}
+	return nil
+}
 
-	h.FollowUpSuccessResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), h.PresetResponse{
-		Title:       "__**Currency Set Role**__",
-		Description: fmt.Sprintf("Currency is being set for all users in <@&%s>", currencyMap["role"].(*discordgo.Role).ID),
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "**Progress**",
-				Value:  fmt.Sprintf("`%d`/`%d` chunks completed", g.ChunkIndex+1, g.ChunkCount),
-				Inline: false,
-			},
-		},
-	})
+func CurrencySetRole(g *discordgo.GuildMembersChunk, roleID string, amount float64) error {
+	if roleID == g.GuildID {
+		for _, v := range g.Members {
+			err := CurrencySetUser(g.GuildID, v.User.ID, amount)
+			if err != nil {
+				return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
+			}
+		}
+	}
+	for _, v := range g.Members {
+		for _, role := range v.Roles {
+			if role == roleID {
+				err := CurrencySetUser(g.GuildID, v.User.ID, amount)
+				if err != nil {
+					return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -319,9 +289,7 @@ func CurrencyAddUser(guildID, userID string, amount float64) error {
 
 	amount += currencyMap["balance"].(float64)
 
-	err := SetUserCurrency(amount, guildID, userID)
-
-	return err
+	return CurrencySetUser(guildID, userID, amount)
 }
 
 func CurrencySetUser(guildID, userID string, amount float64) (err error) {
@@ -336,24 +304,9 @@ func CurrencySetUser(guildID, userID string, amount float64) (err error) {
 		return result.Error
 	}
 
-	currencyMap := map[string]any{}
+	fmt.Println("User Currency: ", userID, amount)
 
-	result = database.DB.Model(database.UserProfile{}).First(currencyMap, map[string]any{
-		"user_id":  userID,
-		"guild_id": guildID,
-	})
-	if result.Error != nil {
-		return result.Error
-	}
-
-	err = SetUserCurrency(amount, guildID, userID)
-
-	return err
-}
-
-func SetUserCurrency(amount float64, guildID, userID string) (err error) {
-
-	result := database.DB.Model(database.UserProfile{
+	result = database.DB.Model(database.UserProfile{
 		UserID:  userID,
 		GuildID: guildID,
 	}).Updates(map[string]any{"balance": amount})
@@ -361,9 +314,36 @@ func SetUserCurrency(amount float64, guildID, userID string) (err error) {
 		fmt.Println(result.Error)
 		return result.Error
 	}
+	return err
+}
 
-	fmt.Println(amount)
+func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	p := message.NewPrinter(language.English)
+	userMapSlice := []map[string]any{}
+	result := database.DB.Model(&database.UserProfile{}).Where(map[string]interface{}{"guild_id": i.GuildID}).Order("balance DESC").Find(&userMapSlice)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	currencyList := ""
+
+	for k, v := range userMapSlice {
+		member, err := s.State.Member(i.GuildID, v["user_id"].(string))
+		if err != nil {
+			fmt.Println(err)
+			member, err = s.GuildMember(i.GuildID, v["user_id"].(string))
+			if err != nil {
+				return err
+			}
+		}
+
+		currencyList += fmt.Sprintf("%d. %s#%s %f\n", k, member.User.Username, member.User.Discriminator, strings.TrimRight(strings.TrimRight(p.Sprintf("%f", v["balance"].(float64)), "0"), "."))
+		fmt.Println(currencyList)
+	}
+
+	_, err := s.ChannelMessageSendComplex(i.ChannelID, &discordgo.MessageSend{
+		Files: []*discordgo.File{{Name: "currency_list.txt", ContentType: "txt", Reader: strings.NewReader(currencyList)}},
+	})
 
 	return err
-
 }
