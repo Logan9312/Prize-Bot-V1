@@ -337,7 +337,7 @@ func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			}
 		}
 
-		currencyList += fmt.Sprintf("%d. %s#%s %f\n", k, member.User.Username, member.User.Discriminator, strings.TrimRight(strings.TrimRight(p.Sprintf("%f", v["balance"].(float64)), "0"), "."))
+		currencyList += fmt.Sprintf("%d. %s#%s %s\n", k, member.User.Username, member.User.Discriminator, strings.TrimRight(strings.TrimRight(p.Sprintf("%f", v["balance"].(float64)), "0"), "."))
 		fmt.Println(currencyList)
 	}
 
