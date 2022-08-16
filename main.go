@@ -13,12 +13,12 @@ import (
 
 // Environment struct
 type Environment struct {
-	Environment  string `env:"ENVIRONMENT,required"`
-	DiscordToken string `env:"DISCORD_TOKEN,required"`
-	Migrate      bool   `env:"MIGRATE"`
-	Host         string `env:"DB_HOST"`
-	Password     string `env:"DB_PASSWORD"`
-	StripeToken  string `env:"STRIPE_TOKEN"`
+	Environment         string `env:"ENVIRONMENT,required"`
+	DiscordToken        string `env:"DISCORD_TOKEN,required"`
+	Migrate             bool   `env:"MIGRATE"`
+	Host                string `env:"DB_HOST"`
+	Password            string `env:"DB_PASSWORD"`
+	StripeToken         string `env:"STRIPE_TOKEN"`
 }
 
 func main() {

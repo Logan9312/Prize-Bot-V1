@@ -177,7 +177,7 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 
 	params := &stripe.CheckoutSessionParams{
 		CancelURL:  stripe.String("https://discord.gg/YBRvZ3mRtb"),
-		SuccessURL: stripe.String("https://www.aftmgaming.com/auction-bot/success"),
+		SuccessURL: stripe.String("http://www.aftmgaming.com/auction-bot/success"),
 		Mode:       stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
