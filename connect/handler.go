@@ -166,10 +166,17 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if err != nil {
 			fmt.Println(err)
 		}
+		time.Sleep(10 * time.Second)
+		err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return
+
 	}
 	fmt.Println(args)
 	if strings.ToLower(args[0]) == "bid" {
-
+		args[1] = strings.Replace(args[1], "amount:", "", -1)
 		bidAmount, err := strconv.ParseFloat(args[1], 64)
 		if err != nil {
 			h.ErrorMessage(s, m.ChannelID, err.Error())

@@ -879,8 +879,8 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, even
 
 	if eventType == EventTypeAuction {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**How to Bid**__",
-			Value:  "Use the command `/bid` below.\n• Ex: `/bid 550`.",
+			Name:  "__**How to Bid**__",
+			Value: "Use the command `/bid` below.\n• Ex: `/bid 550`.",
 		})
 	}
 
@@ -1136,6 +1136,10 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 
 	if auctionMap["message_id"] == nil {
 		auctionMap["message_id"] = ""
+	}
+
+	if auctionMap["channel_id"] == nil {
+		auctionMap["channel_id"] = ""
 	}
 
 	message := discordgo.NewMessageEdit(channelID, auctionMap["message_id"].(string))
