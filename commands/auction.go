@@ -1134,6 +1134,10 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		return err
 	}
 
+	if auctionMap["message_id"] == nil {
+		auctionMap["message_id"] = ""
+	}
+
 	message := discordgo.NewMessageEdit(channelID, auctionMap["message_id"].(string))
 	messageEmbeds, err := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
 	if err != nil {
