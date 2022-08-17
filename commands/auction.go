@@ -577,6 +577,16 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		return fmt.Errorf("cannot Bid, Auction has ended")
 	}
 
+	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
+
+		auctionMap["end_time"] = time.Now()
+
+		err := AuctionEnd(s, channelID, guildID)
+		if err != nil {
+			return err
+		}
+	}
+
 	//Checking if the auction is capped and the current winner is bidding.
 	if member.User.ID == auctionMap["winner"] && auctionMap["increment_max"] != nil {
 		return fmt.Errorf("cannot out bid yourself on a capped bid auction")
@@ -631,16 +641,6 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 	_, err = h.SuccessMessageEdit(s, channelID, auctionMap["message_id"].(string), m)
 	if err != nil {
 		return err
-	}
-
-	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
-
-		auctionMap["end_time"] = time.Now()
-
-		err = AuctionEnd(s, channelID, guildID)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -1127,8 +1127,10 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		fmt.Println(result.Error.Error())
 	}
 
+	fmt.Println(auctionMap["end_time"])
+
 	//Pause auction ending until end time if the auction is not over yet.
-	if auctionMap["end_time"] != nil && auctionMap["end_time"].(time.Time).After(time.Now()) {
+	if auctionMap["end_time"] != nil && auctionMap["end_time"].(time.Time).Before(time.Now()) {
 		time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 		err := AuctionEnd(s, channelID, guildID)
 		return err
