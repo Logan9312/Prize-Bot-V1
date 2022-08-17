@@ -615,11 +615,19 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 	auctionMap["winner"] = member.User.ID
 	auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + member.User.Username + ": " + strings.TrimRight(strings.TrimRight(p.Sprintf("%f", amount), "0"), ".")
 
+	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
+		auctionMap["end_time"] = time.Now()
+	}
+
 	result = database.DB.Model(database.Auction{
 		ChannelID: channelID,
 	}).Updates(auctionMap)
 	if result.Error != nil {
 		return result.Error
+	}
+
+	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
+		go AuctionEnd(s, channelID, guildID)
 	}
 
 	auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
@@ -635,12 +643,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		return err
 	}
 
-	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
-
-		auctionMap["end_time"] = time.Now()
-
-		go AuctionEnd(s, channelID, guildID)
-	}
+	go AuctionEnd(s, channelID, guildID)
 
 	return nil
 }
