@@ -1126,6 +1126,10 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		fmt.Println(result.Error.Error())
 	}
 
+	if len(auctionMap) == 0 {
+		return fmt.Errorf("Auction Contained no Data")
+	}
+
 	if auctionMap["end_time"] == nil {
 		s.ChannelMessageSend("943175605858496602", fmt.Sprint(auctionMap))
 	}
