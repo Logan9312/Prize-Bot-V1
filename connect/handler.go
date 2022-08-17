@@ -165,6 +165,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		time.Sleep(10 * time.Second)
 		err = s.ChannelMessageDelete(m.ChannelID, message.ID)
