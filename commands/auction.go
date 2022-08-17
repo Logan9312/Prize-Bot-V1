@@ -1124,10 +1124,10 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		fmt.Println(result.Error.Error())
 	}
 
-	fmt.Println(auctionMap["end_time"])
+	fmt.Println(time.Until(auctionMap["end_time"].(time.Time)))
 
 	//Pause auction ending until end time if the auction is not over yet.
-	if auctionMap["end_time"] != nil && auctionMap["end_time"].(time.Time).Before(time.Now()) {
+	if auctionMap["end_time"] != nil && auctionMap["end_time"].(time.Time).After(time.Now()) {
 		time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 		err := AuctionEnd(s, channelID, guildID)
 		return err
