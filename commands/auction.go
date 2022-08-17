@@ -643,8 +643,6 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		return err
 	}
 
-	go AuctionEnd(s, channelID, guildID)
-
 	return nil
 }
 
