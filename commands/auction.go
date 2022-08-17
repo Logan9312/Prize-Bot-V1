@@ -466,7 +466,7 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 
 	channel, err := MakeAuctionChannel(s, auctionMap)
 	if err != nil {
-		return channel.ID, err
+		return "", err
 	}
 	auctionMap["channel_id"] = channel.ID
 
