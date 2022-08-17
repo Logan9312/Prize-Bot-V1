@@ -8,6 +8,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -265,6 +267,7 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 // ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
 func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventType string) error {
 
+	p := message.NewPrinter(language.English)
 	mentionUser := ""
 	finalBid := ""
 	primaryKey := ""
@@ -286,7 +289,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		finalBid = claimMap["target_message"].(string)
 	}
 	if claimMap["cost"] != nil {
-		finalBid = fmt.Sprint(claimMap["cost"].(float64))
+		finalBid = p.Sprint(claimMap["cost"].(float64))
 	}
 	if claimMap["winner"] == nil {
 		claimMap["winner"] = "No Winner Detected"
