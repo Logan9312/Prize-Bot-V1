@@ -1002,7 +1002,6 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) err
 			URL: "https://i.imgur.com/9wo7diC.png",
 		},
 	})
-
 }
 
 //Extra Responses
@@ -1129,10 +1128,13 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		fmt.Println(result.Error.Error())
 	}
 
-	fmt.Println(time.Until(auctionMap["end_time"].(time.Time)))
+	if auctionMap["end_time"] == nil {
+		s.ChannelMessageSend("943175605858496602", fmt.Sprint(auctionMap))
+	}
 
 	//Pause auction ending until end time if the auction is not over yet.
 	if auctionMap["end_time"] != nil && auctionMap["end_time"].(time.Time).After(time.Now()) {
+		fmt.Println(time.Until(auctionMap["end_time"].(time.Time)))
 		time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 		err := AuctionEnd(s, channelID, guildID)
 		return err
@@ -1174,7 +1176,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		//Add in a message about this when the auction ends
 	}
 
-	if auctionMap["buyout"] != nil && auctionMap["buyout"].(float64) != 0 {
+	if auctionMap["buyout"] != nil {
 		if auctionMap["bid"].(float64) >= auctionMap["buyout"].(float64) {
 			auctionMap["buyout_message"] = fmt.Sprintf("%s\n\u200bBUYOUT!", PriceFormat(auctionMap["buyout"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
 		}
