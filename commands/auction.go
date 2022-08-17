@@ -581,10 +581,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 
 		auctionMap["end_time"] = time.Now()
 
-		err := AuctionEnd(s, channelID, guildID)
-		if err != nil {
-			return err
-		}
+		go AuctionEnd(s, channelID, guildID)
 	}
 
 	//Checking if the auction is capped and the current winner is bidding.
