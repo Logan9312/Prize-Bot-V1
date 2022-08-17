@@ -577,31 +577,26 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		return fmt.Errorf("cannot Bid, Auction has ended")
 	}
 
-	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
+	if auctionMap["buyout"] == nil {
+		//Checking if the auction is capped and the current winner is bidding.
+		if member.User.ID == auctionMap["winner"] && auctionMap["increment_max"] != nil {
+			return fmt.Errorf("cannot out bid yourself on a capped bid auction")
+		}
 
-		auctionMap["end_time"] = time.Now()
+		//Checking if integer only bidding is enabled.
+		if auctionMap["integer_only"] != nil && auctionMap["integer_only"].(bool) && amount != math.Floor(amount) {
+			return fmt.Errorf("Your bid must be an integer for this auction! For example: " + fmt.Sprint(math.Floor(amount)) + " instead of " + PriceFormat(amount, guildID, auctionMap["currency"]))
+		}
 
-		go AuctionEnd(s, channelID, guildID)
-	}
+		//Checking if bid is higher than minimum increment.
+		if auctionMap["increment_min"] != nil && amount-auctionMap["bid"].(float64) < auctionMap["increment_min"].(float64) {
+			return fmt.Errorf("Bid must be higher than the previous bid by: %s\n\u200b", PriceFormat(auctionMap["increment_min"].(float64), guildID, auctionMap["currency"]))
+		}
 
-	//Checking if the auction is capped and the current winner is bidding.
-	if member.User.ID == auctionMap["winner"] && auctionMap["increment_max"] != nil {
-		return fmt.Errorf("cannot out bid yourself on a capped bid auction")
-	}
-
-	//Checking if integer only bidding is enabled.
-	if auctionMap["integer_only"] != nil && auctionMap["integer_only"].(bool) && amount != math.Floor(amount) {
-		return fmt.Errorf("Your bid must be an integer for this auction! For example: " + fmt.Sprint(math.Floor(amount)) + " instead of " + PriceFormat(amount, guildID, auctionMap["currency"]))
-	}
-
-	//Checking if bid is higher than minimum increment.
-	if auctionMap["increment_min"] != nil && amount-auctionMap["bid"].(float64) < auctionMap["increment_min"].(float64) {
-		return fmt.Errorf("Bid must be higher than the previous bid by: %s\n\u200b", PriceFormat(auctionMap["increment_min"].(float64), guildID, auctionMap["currency"]))
-	}
-
-	//Checking if bid is lower than maximum increment.
-	if auctionMap["increment_max"] != nil && amount-auctionMap["bid"].(float64) > auctionMap["increment_max"].(float64) {
-		return fmt.Errorf("Bid must be no more than %s higher than the previous bid. \n\u200b", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
+		//Checking if bid is lower than maximum increment.
+		if auctionMap["increment_max"] != nil && amount-auctionMap["bid"].(float64) > auctionMap["increment_max"].(float64) {
+			return fmt.Errorf("Bid must be no more than %s higher than the previous bid. \n\u200b", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
+		}
 	}
 
 	if amount < auctionMap["bid"].(float64) {
@@ -638,6 +633,13 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 	_, err = h.SuccessMessageEdit(s, channelID, auctionMap["message_id"].(string), m)
 	if err != nil {
 		return err
+	}
+
+	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
+
+		auctionMap["end_time"] = time.Now()
+
+		go AuctionEnd(s, channelID, guildID)
 	}
 
 	return nil
