@@ -577,7 +577,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		return fmt.Errorf("cannot Bid, Auction has ended")
 	}
 
-	if auctionMap["buyout"] == nil || (auctionMap["buyout"] != nil && amount < auctionMap["buyout"].(float64))  {
+	if auctionMap["buyout"] == nil || (auctionMap["buyout"] != nil && amount < auctionMap["buyout"].(float64)) {
 		//Checking if the auction is capped and the current winner is bidding.
 		if member.User.ID == auctionMap["winner"] && auctionMap["increment_max"] != nil {
 			return fmt.Errorf("cannot out bid yourself on a capped bid auction")
@@ -877,7 +877,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, even
 	if eventType == EventTypeAuction {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:  "__**How to Bid**__",
-			Value: "Use the command `/bid` below.\n• Ex: `/bid 550`.",
+			Value: "Use the /bid command or type `/bid {value}` in chat\nEx: `/bid 550`\n",
 		})
 	}
 
