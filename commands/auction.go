@@ -714,8 +714,6 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 
 	options["bid_history"] = auctionMap["bid_history"].(string) + "\n-> Auction edited by " + member.User.Username + ":" + editedOptions
 
-	fmt.Println(options["bid_history"])
-
 	result = database.DB.Model(database.Auction{
 		ChannelID: channelID,
 	}).Updates(options)
@@ -728,8 +726,7 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 		if err != nil {
 			return err
 		}
-		username := member.User.Username
-		options["bid_history"] = options["bid_history"].(string) + "\n-> " + username + ": " + strings.TrimRight(strings.TrimRight(p.Sprintf("%f", options["bid"].(float64)), "0"), ".")
+		options["bid_history"] = options["bid_history"].(string) + "\n-> " + member.User.Username + ": " + strings.TrimRight(strings.TrimRight(p.Sprintf("%f", options["bid"].(float64)), "0"), ".")
 	}
 
 	if options["item"] != nil {
@@ -884,7 +881,7 @@ func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, even
 		})
 	}
 
-	if eventType == EventTypeAuction {
+	if eventType == EventTypeGiveaway {
 		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
 			Name:   "__**How to Enter**__",
 			Value:  "To enter, select the 🎁 reaction below! Removing your reaction will remove your entry.",

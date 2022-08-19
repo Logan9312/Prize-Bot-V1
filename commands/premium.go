@@ -74,7 +74,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	if customerID != "" {
 		portal, err := session.New(&stripe.BillingPortalSessionParams{
 			Customer:  &customerID,
-			ReturnURL: stripe.String("https://www.aftmgaming.com/auction-bot/success"),
+			ReturnURL: stripe.String("http://www.aftmgaming.com/auction-bot/success"),
 		})
 		if err != nil {
 			return err
