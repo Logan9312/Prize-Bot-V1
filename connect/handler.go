@@ -52,11 +52,11 @@ var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.Interac
 }
 
 var guildMembersMap = map[string]func(s *discordgo.Session, g *discordgo.GuildMembersChunk) error{
-	"claim_create":    c.ClaimCreateRole,
-	"currency_edit": c.CurrencyRoleHandler,
+	"claim_create": c.ClaimCreateRole,
+	"$":            c.CurrencyRoleHandler,
 }
 
-func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
@@ -68,10 +68,13 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if f, ok := commandMap[i.ApplicationCommandData().Name]; ok {
 			err := f(s, i)
 			if err != nil {
-				err = h.ErrorResponse(s, i, err.Error())
-				if err != nil {
-					fmt.Println(err)
-					h.FollowUpErrorResponse(s, i, err.Error())
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
 			}
 		} else {
@@ -82,10 +85,13 @@ func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if f, ok := buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]; ok {
 			err := f(s, i)
 			if err != nil {
-				err = h.ErrorResponse(s, i, err.Error())
-				if err != nil {
-					fmt.Println(err)
-					h.FollowUpErrorResponse(s, i, err.Error())
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
 			}
 		} else {
@@ -225,6 +231,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func GuildMemberChunkHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) {
+	fmt.Println(g.Nonce)
 	if f, ok := guildMembersMap[strings.Split(g.Nonce, ":")[0]]; ok {
 		err := f(s, g)
 		if err != nil {

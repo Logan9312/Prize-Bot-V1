@@ -61,20 +61,20 @@ var SettingsCommand = discordgo.ApplicationCommand{
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "category",
-					Description: "Sets the category to create auctions in.",
-					ChannelTypes: []discordgo.ChannelType{
-						4,
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "log_channel",
 					Description: "Sets the channel where auctions will send outputs when they end",
 					Required:    false,
 					ChannelTypes: []discordgo.ChannelType{
 						0,
 						5,
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "category",
+					Description: "Sets the category to create auctions in.",
+					ChannelTypes: []discordgo.ChannelType{
+						4,
 					},
 				},
 				{
@@ -91,6 +91,11 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "integer_only",
 					Description: "Only allow integer bids (no decimals).",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "use_currency",
+					Description: "The winner will pay with their currency balance.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,

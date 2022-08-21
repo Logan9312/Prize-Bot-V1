@@ -65,11 +65,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "A one time currency to use for this auction.",
 					Required:    false,
 				},
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "use_currency",
 					Description: "The winner will pay with their currency balance.",
-				},*/
+				},
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "integer_only",
@@ -188,6 +188,11 @@ var AuctionCommand = discordgo.ApplicationCommand{
 					Description: "Change the currency",
 					Required:    false,
 					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "use_currency",
+					Description: "The winner will pay with their currency balance.",
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -414,7 +419,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 		auctionMap["currency"] = currencyMap["currency"]
 	}
 
-	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_override"} {
+	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_override", "use_currency"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
@@ -620,6 +625,9 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		if result.Error != nil {
 			fmt.Println(result.Error)
 		}
+		if userMap["balance"] == nil {
+			return fmt.Errorf("You have %s currency and cannot bid on this auction.", PriceFormat(0, guildID, auctionMap["currency"]))
+		}
 		if amount > userMap["balance"].(float64) {
 			return fmt.Errorf("You do not have enough currency to bid on this auction. You need %s and you have %s", PriceFormat(amount, guildID, auctionMap["currency"]), PriceFormat(userMap["balance"].(float64), guildID, auctionMap["currency"]))
 		}
@@ -745,9 +753,12 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 	editedOptions := ""
 
 	for key, value := range options {
-		if key == "bid" {
+		switch key {
+		case "winner", "host":
+			editedOptions += fmt.Sprintf("\n\u3000- %s set to: <@%s>", key, value)
+		case "bid":
 			editedOptions += fmt.Sprintf("\n\u3000- %s set to: %s", key, strings.TrimRight(strings.TrimRight(p.Sprintf("%f", options["bid"].(float64)), "0"), "."))
-		} else {
+		default:
 			editedOptions += fmt.Sprintf("\n\u3000- %s set to: %s", key, p.Sprint(value))
 		}
 	}
@@ -1042,8 +1053,14 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 	}
 
 	if auctionMap["use_currency"] != nil && auctionMap["use_currency"].(bool) && auctionMap["winner"] != nil {
-		//CurrencyRemoveUser(guildID, auctionMap["winner"].(string), auctionMap["bid"].(float64))
-		CurrencyAddUser(guildID, auctionMap["host"].(string), auctionMap["bid"].(float64))
+		err = CurrencySubtractUser(guildID, auctionMap["winner"].(string), auctionMap["bid"].(float64))
+		if err != nil {
+			return err
+		}
+		err = CurrencyAddUser(guildID, auctionMap["host"].(string), auctionMap["bid"].(float64))
+		if err != nil {
+			return err
+		}
 		//Add in a message about this when the auction ends
 	}
 
@@ -1176,7 +1193,6 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	auctionSetup := database.AuctionSetup{}
 	auctionMap := map[string]interface{}{}
 
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
@@ -1227,14 +1243,6 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		})
 		return nil
 	}
-	database.DB.First(&auctionSetup, i.GuildID)
-	if result.Error != nil {
-		fmt.Println(result.Error)
-	}
-
-	if auctionMap["log_channel"] == "" {
-		return fmt.Errorf("Auction cannot end because log channel has not been set. Please setup an auction log using `/settings auction`")
-	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != auctionMap["host"] {
 		return fmt.Errorf("User must have administrator permissions or be host to run this command")
@@ -1249,13 +1257,11 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		fmt.Println(err)
 	}
 
-	auctionMap["end_time"] = time.Now()
-
 	result = database.DB.Model(database.Auction{
 		ChannelID: i.ChannelID,
-	}).Updates(auctionMap)
+	}).Update("end_time", time.Now())
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		return result.Error
 	}
 
 	err = AuctionEnd(s, i.ChannelID, i.GuildID)

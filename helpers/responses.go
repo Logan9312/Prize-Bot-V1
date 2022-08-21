@@ -260,19 +260,24 @@ func SuccessMessageEdit(s *discordgo.Session, channelID, messageID string, r Pre
 }
 
 func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) (*discordgo.Message, error) {
-	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content:    &r.Content,
-		Components: &r.Components,
-		Embeds: &[]*discordgo.MessageEmbed{
-			{
-				Title:       r.Title,
-				Description: r.Description,
-				Color:       0x8073ff,
-				Image:       r.Image,
-				Thumbnail:   r.Thumbnail,
-				Fields:      r.Fields,
-			},
+
+	embed := []*discordgo.MessageEmbed{
+		{
+			Title:       r.Title,
+			Description: r.Description,
+			Color:       0x8073ff,
+			Image:       r.Image,
+			Thumbnail:   r.Thumbnail,
+			Fields:      r.Fields,
 		},
+	}
+
+	embed = append(embed, r.Embeds...)
+	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Content:         &r.Content,
+		Components:      &r.Components,
+		Embeds:          &embed,
+		Files:           r.Files,
 	})
 }
 

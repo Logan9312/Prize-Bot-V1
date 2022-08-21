@@ -92,7 +92,7 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		currencyMap["role"] = i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)]
 
 		h.SaveChunkData(i.ID, currencyMap)
-		nonce := "currency_edit:" + i.ID
+		nonce := "$:" + i.ID
 
 		err := s.RequestGuildMembers(i.GuildID, "", 0, nonce, false)
 		if err != nil {
@@ -118,20 +118,11 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		}
 		switch action {
 		case "add":
-			err = CurrencyAddUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
-			if err != nil {
-				return err
-			}
+			return CurrencyAddUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
 		case "subtract":
-			err = CurrencyAddUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, -1*currencyMap["amount"].(float64))
-			if err != nil {
-				return err
-			}
+			return CurrencySubtractUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
 		case "set":
-			err = CurrencySetUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
-			if err != nil {
-				return err
-			}
+			return CurrencySetUser(i.GuildID, i.ApplicationCommandData().Resolved.Users[currencyMap["target"].(string)].ID, currencyMap["amount"].(float64))
 		}
 	}
 
@@ -172,72 +163,78 @@ func CurrencyRoleHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) e
 
 	amount := currencyMap["amount"].(float64)
 
-	defer h.FollowUpSuccessResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), h.PresetResponse{
+	successCount, userCount, err := CurrencyEditRole(s, g, currencyMap["role"].(*discordgo.Role).ID, amount, currencyMap["action"].(string))
+	if err != nil {
+		return err
+	}
+
+	_, err = h.FollowUpSuccessResponse(s, currencyMap["interaction"].(*discordgo.InteractionCreate), h.PresetResponse{
 		Title:       "__**Currency Add Role**__",
 		Description: fmt.Sprintf("Currency is currently being added to all users in <@&%s>", currencyMap["role"].(*discordgo.Role).ID),
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "**Progress**",
-				Value:  fmt.Sprintf("`%d`/`%d` chunks completed", g.ChunkIndex+1, g.ChunkCount),
+				Value:  fmt.Sprintf("`%d`/`%d` chunks completed\n%d/%d user's currency applied successfully in this chunk.", g.ChunkIndex+1, g.ChunkCount, successCount, userCount),
 				Inline: false,
 			},
 		},
 	})
-
-	switch currencyMap["action"].(string) {
-	case "add":
-		return CurrencyAddRole(g, currencyMap["role"].(*discordgo.Role).ID, amount)
-	case "subtract":
-		return CurrencyAddRole(g, currencyMap["role"].(*discordgo.Role).ID, -1*amount)
-	case "set":
-		return CurrencySetRole(g, currencyMap["role"].(*discordgo.Role).ID, amount)
-	}
-
-	return nil
+	return err
 }
 
-func CurrencyAddRole(g *discordgo.GuildMembersChunk, roleID string, amount float64) error {
-	if roleID == g.GuildID {
-		for _, v := range g.Members {
-			err := CurrencyAddUser(g.GuildID, v.User.ID, amount)
-			if err != nil {
-				return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
-			}
-		}
-	}
+func CurrencyEditRole(s *discordgo.Session, g *discordgo.GuildMembersChunk, roleID string, amount float64, action string) (int, int, error) {
+	errCount := 0
+	userCount := 0
+	successCount := 0
+	var err error
 	for _, v := range g.Members {
-		for _, role := range v.Roles {
-			if role == roleID {
-				err := CurrencyAddUser(g.GuildID, v.User.ID, amount)
-				if err != nil {
-					return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
+		addUser := false
+		if roleID != g.GuildID {
+			for _, role := range v.Roles {
+				if role == roleID {
+					addUser = true
 				}
 			}
+		} else {
+			addUser = true
+		}
+
+		if addUser {
+			userCount++
+			switch action {
+			case "add":
+				err = CurrencyAddUser(g.GuildID, v.User.ID, amount)
+			case "subtract":
+				err = CurrencySubtractUser(g.GuildID, v.User.ID, amount)
+			case "set":
+				err = CurrencySetUser(g.GuildID, v.User.ID, amount)
+			}
+
+			if err != nil && errCount < 5 {
+				data := h.ReadChunkData(strings.Split(g.Nonce, ":")[1])
+				fmt.Println(err)
+				_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue adding currency for <@%s>. Error Message: %s", v.User.ID, err))
+				if err != nil {
+					fmt.Println(err)
+				}
+				errCount++
+				if errCount == 5 {
+					_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), "**5 or more users have failed to update their currency.** Refer to previous errors for more information.")
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			} else {
+				successCount++
+			}
 		}
 	}
-	return nil
+
+	return successCount, userCount, nil
 }
 
-func CurrencySetRole(g *discordgo.GuildMembersChunk, roleID string, amount float64) error {
-	if roleID == g.GuildID {
-		for _, v := range g.Members {
-			err := CurrencySetUser(g.GuildID, v.User.ID, amount)
-			if err != nil {
-				return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
-			}
-		}
-	}
-	for _, v := range g.Members {
-		for _, role := range v.Roles {
-			if role == roleID {
-				err := CurrencySetUser(g.GuildID, v.User.ID, amount)
-				if err != nil {
-					return fmt.Errorf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err)
-				}
-			}
-		}
-	}
-	return nil
+func CurrencySubtractUser(guildID, userID string, amount float64) error {
+	return CurrencyAddUser(guildID, userID, -1*amount)
 }
 
 func CurrencyAddUser(guildID, userID string, amount float64) error {
@@ -279,7 +276,9 @@ func CurrencySetUser(guildID, userID string, amount float64) (err error) {
 		return result.Error
 	}
 
-	fmt.Println("User Currency: ", userID, amount)
+	if amount < 0 {
+		return fmt.Errorf("<@%s> does not have enough currency to complete this request. Resulting balance would be: %s", userID, PriceFormat(amount, guildID, nil))
+	}
 
 	result = database.DB.Model(database.UserProfile{
 		UserID:  userID,
@@ -300,6 +299,13 @@ func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return result.Error
 	}
 
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	currencyList := ""
 
 	for k, v := range userMapSlice {
@@ -313,11 +319,19 @@ func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		}
 
 		currencyList += fmt.Sprintf("%d. %s#%s %s\n", k, member.User.Username, member.User.Discriminator, strings.TrimRight(strings.TrimRight(p.Sprintf("%f", v["balance"].(float64)), "0"), "."))
-		fmt.Println(currencyList)
 	}
 
-	_, err := s.ChannelMessageSendComplex(i.ChannelID, &discordgo.MessageSend{
-		Files: []*discordgo.File{{Name: "currency_list.txt", ContentType: "txt", Reader: strings.NewReader(currencyList)}},
+	_, err = h.DeferredResponse(s, i, h.PresetResponse{
+		Content:     "",
+		Title:       "Currency List",
+		Description: "Successfully generated a list of all users in the server",
+		Fields:      []*discordgo.MessageEmbedField{},
+		Thumbnail:   &discordgo.MessageEmbedThumbnail{},
+		Image:       &discordgo.MessageEmbedImage{},
+		Components:  []discordgo.MessageComponent{},
+		Embeds:      []*discordgo.MessageEmbed{},
+		Files:       []*discordgo.File{{Name: "currency_list.txt", ContentType: "txt", Reader: strings.NewReader(currencyList)}},
+		Reference:   &discordgo.MessageReference{},
 	})
 
 	return err
