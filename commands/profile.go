@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gorm.io/gorm/clause"
 )
 
 var ProfileCommand = discordgo.ApplicationCommand{
@@ -23,22 +24,34 @@ func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSlashCommand(i)
 
-	member := i.Member
 	var balance float64
 	userMap := map[string]any{}
 
-	if options["user"] != nil {
-		member = i.ApplicationCommandData().Resolved.Members[options["user"].(string)]
+	member, err := s.GuildMember(i.GuildID, options["user"].(string))
+	if err != nil {
+		return err
 	}
 
-	database.DB.Model(database.UserProfile{}).First(userMap, map[string]any{
+	result := database.DB.Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Model(database.UserProfile{}).Create(map[string]any{
+		"guild_id": i.GuildID,
+		"user_id":  member.User.ID,
+		"balance":  0,
+	})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	result = database.DB.Model(database.UserProfile{}).First(userMap, map[string]any{
 		"guild_id": i.GuildID,
 		"user_id":  member.User.ID,
 	})
-
-	if userMap["balance"] != nil {
-		balance = userMap["balance"].(float64)
+	if result.Error != nil {
+		return result.Error
 	}
+
+	balance = userMap["balance"].(float64)
 
 	return h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**__" + member.User.Username + "__**" + "#" + member.User.Discriminator,
