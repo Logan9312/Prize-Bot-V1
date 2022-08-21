@@ -1,9 +1,8 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
@@ -22,19 +21,37 @@ var ProfileCommand = discordgo.ApplicationCommand{
 
 func Profile(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	userID := i.ApplicationCommandData().Options[0].UserValue(s).ID
-	username := i.ApplicationCommandData().Options[0].UserValue(s).Username
-	Discriminator := i.ApplicationCommandData().Options[0].UserValue(s).Discriminator
+	options := h.ParseSlashCommand(i)
 
-	err := h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "**__" + username + "__**" + "#" + Discriminator,
-		Description: "Inventory For: <@" + userID + ">",
+	member := i.Member
+	var balance float64
+	userMap := map[string]any{}
+
+	if options["user"] != nil {
+		member = i.ApplicationCommandData().Resolved.Members[options["user"].(string)]
+	}
+
+	database.DB.Model(database.UserProfile{}).First(userMap, map[string]any{
+		"guild_id": i.GuildID,
+		"user_id":  member.User.ID,
+	})
+
+	if userMap["balance"] != nil {
+		balance = userMap["balance"].(float64)
+	}
+
+	return h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "**__" + member.User.Username + "__**" + "#" + member.User.Discriminator,
+		Description: "Profile for: <@" + member.User.ID + ">",
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: i.ApplicationCommandData().Options[0].UserValue(s).AvatarURL(""),
+			URL: member.AvatarURL(""),
+		},
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "**Currency**",
+				Value:  PriceFormat(balance, i.GuildID, nil),
+				Inline: true,
+			},
 		},
 	})
-	if err != nil {
-		fmt.Println(err)
-	}
-	return nil
 }
