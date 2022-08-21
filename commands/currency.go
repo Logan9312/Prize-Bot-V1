@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"sync"
-
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
@@ -13,15 +11,6 @@ import (
 	"golang.org/x/text/message"
 	"gorm.io/gorm/clause"
 )
-
-type CurrencyEventTracker struct {
-	m    sync.Mutex
-	data map[string]map[string]any
-}
-
-var CurrencyCreateData = CurrencyEventTracker{
-	data: map[string]map[string]any{},
-}
 
 var CurrencyCommand = discordgo.ApplicationCommand{
 	Name:        "currency",
@@ -85,27 +74,7 @@ func Currency(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return fmt.Errorf("Unknown Currency command, please contact support")
 }
 
-func SaveCurrencyData(id string, currencyMap map[string]any) {
-	CurrencyCreateData.m.Lock()
-	CurrencyCreateData.data[id] = currencyMap
-	CurrencyCreateData.m.Unlock()
-}
-
-func ReadCurrencyData(id string) map[string]any {
-	CurrencyCreateData.m.Lock()
-	defer CurrencyCreateData.m.Unlock()
-	return CurrencyCreateData.data[id]
-}
-
 func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	if !CheckPremiumGuild(i.GuildID) {
-		err := h.PremiumError(s, i)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return nil
-	}
 
 	currencyMap := h.ParseSubCommand(i)
 	action := currencyMap["action"].(string)
@@ -113,11 +82,17 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	currencyMap["guild_id"] = i.GuildID
 	currencyMap["interaction"] = i
 	if i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)] != nil {
-
+		if !CheckPremiumGuild(i.GuildID) {
+			err := h.PremiumError(s, i, "Premium is needed to edit the currency of an entire role. Please select only an user or purchase premium to use this function.")
+			if err != nil {
+				fmt.Println(err)
+			}
+			return nil
+		}
 		currencyMap["role"] = i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)]
 
-		SaveCurrencyData(i.ID, currencyMap)
-		nonce := "$:" + i.ID
+		h.SaveChunkData(i.ID, currencyMap)
+		nonce := "currency_edit:" + i.ID
 
 		err := s.RequestGuildMembers(i.GuildID, "", 0, nonce, false)
 		if err != nil {
@@ -193,7 +168,7 @@ func CurrencyRoleHandler(s *discordgo.Session, g *discordgo.GuildMembersChunk) e
 
 	details := strings.Split(g.Nonce, ":")
 
-	currencyMap := ReadCurrencyData(details[1])
+	currencyMap := h.ReadChunkData(details[1])
 
 	amount := currencyMap["amount"].(float64)
 

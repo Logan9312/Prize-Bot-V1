@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -19,79 +18,37 @@ var ClaimCommand = discordgo.ApplicationCommand{
 	Description: "Put an item up for auction!",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Type:        discordgo.ApplicationCommandOptionSubCommandGroup,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "create",
 			Description: "Create a claimable prize.",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type:        discordgo.ApplicationCommandOptionSubCommand,
-					Name:        "user",
-					Description: "Create a claimable prize for someone.",
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Type:        discordgo.ApplicationCommandOptionUser,
-							Name:        "winner",
-							Description: "The user who will receive the prize.",
-							Required:    true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "item",
-							Description: "The prize you are giving",
-							Required:    true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionChannel,
-							Name:        "log_channel",
-							Description: "The output channel for the prizes.",
-							ChannelTypes: []discordgo.ChannelType{
-								0,
-								5,
-							},
-							Required: true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "description",
-							Description: "Set a custom item description",
-							Required:    false,
-						},
-					},
+					Type:        discordgo.ApplicationCommandOptionMentionable,
+					Name:        "target",
+					Description: "The user who will receive the prize.",
+					Required:    true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionSubCommand,
-					Name:        "role",
-					Description: "Create a claimable prize for a role.",
-					Options: []*discordgo.ApplicationCommandOption{
-						{
-							Type:        discordgo.ApplicationCommandOptionRole,
-							Name:        "role",
-							Description: "The role of users who will receive the prize.",
-							Required:    true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "item",
-							Description: "The prize you are giving",
-							Required:    true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionChannel,
-							Name:        "log_channel",
-							Description: "The output channel for the prizes.",
-							ChannelTypes: []discordgo.ChannelType{
-								0,
-								5,
-							},
-							Required: true,
-						},
-						{
-							Type:        discordgo.ApplicationCommandOptionString,
-							Name:        "description",
-							Description: "Set a custom item description",
-							Required:    false,
-						},
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The prize you are giving",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "log_channel",
+					Description: "The output channel for the prizes.",
+					ChannelTypes: []discordgo.ChannelType{
+						0,
+						5,
 					},
+					Required: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "description",
+					Description: "Set a custom item description",
+					Required:    false,
 				},
 			},
 		},
@@ -128,8 +85,6 @@ var ClaimCommand = discordgo.ApplicationCommand{
 	},
 	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
 }
-
-var ClaimCreateRolesChunk = []map[string]interface{}{}
 
 func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	fmt.Println(i.ApplicationCommandData().Options[0].Name)
@@ -181,24 +136,22 @@ func ClaimSetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	claimMap := h.ParseSubSubCommand(i)
+	claimMap := h.ParseSubCommand(i)
 
 	claimMap["host"] = i.Member.User.ID
 	claimMap["guild_id"] = i.GuildID
 
-	switch i.ApplicationCommandData().Options[0].Options[0].Name {
-	case "role":
+	if i.ApplicationCommandData().Resolved.Roles[claimMap["target"].(string)] != nil {
 		if !CheckPremiumGuild(i.GuildID) {
-			h.PremiumError(s, i)
+			h.PremiumError(s, i, "Giving out a claim to an entire role is restricted to premium users. Please select an user instead or upgrade to premium.")
 			return nil
 		}
 
 		claimMap["interaction"] = i
 
-		id := len(ClaimCreateRolesChunk)
-		ClaimCreateRolesChunk = append(ClaimCreateRolesChunk, claimMap)
+		h.SaveChunkData(i.ID, claimMap)
 
-		err := s.RequestGuildMembers(i.GuildID, "", 0, "claim_create:"+fmt.Sprint(id), false)
+		err := s.RequestGuildMembers(i.GuildID, "", 0, "claim_create:"+i.ID, false)
 		if err != nil {
 			return err
 		}
@@ -210,8 +163,10 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		if err != nil {
 			fmt.Println(err)
 		}
+	}
 
-	case "user":
+	if i.ApplicationCommandData().Resolved.Users[claimMap["target"].(string)] != nil {
+		claimMap["winner"] = claimMap["target"].(string)
 		err := ClaimOutput(s, claimMap, "Custom Claim")
 		if err != nil {
 			return err
@@ -224,6 +179,7 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			fmt.Println(err)
 		}
 	}
+
 	return nil
 }
 
@@ -231,20 +187,25 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 
 	details := strings.Split(g.Nonce, ":")
 
-	id, err := strconv.Atoi(details[1])
-	if err != nil {
-		fmt.Println(err)
-	}
+	claimMap := h.ReadChunkData(details[1])
 
-	claimMap := ClaimCreateRolesChunk[id]
-
-	for _, v := range g.Members {
-		for _, role := range v.Roles {
-			if role == claimMap["role"].(string) {
-				claimMap["winner"] = v.User.ID
-				err = ClaimOutput(s, claimMap, "Custom Claim")
-				if err != nil {
-					h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
+	if g.GuildID == claimMap["target"].(string) {
+		for _, v := range g.Members {
+			claimMap["winner"] = v.User.ID
+			err := ClaimOutput(s, claimMap, "Custom Claim")
+			if err != nil {
+				h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
+			}
+		}
+	} else {
+		for _, v := range g.Members {
+			for _, role := range v.Roles {
+				if role == claimMap["target"].(string) {
+					claimMap["winner"] = v.User.ID
+					err := ClaimOutput(s, claimMap, "Custom Claim")
+					if err != nil {
+						h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
+					}
 				}
 			}
 		}

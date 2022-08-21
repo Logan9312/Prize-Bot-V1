@@ -336,7 +336,7 @@ func PresetMessageSend(s *discordgo.Session, channelID string, m PresetResponse)
 	})
 }
 
-func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate, message string) error {
 
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -345,8 +345,15 @@ func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "__**Premium Users Only**__",
-					Description: "This function is restricted to premium users. Please check out `/premium` for more information.",
+					Description: "This function is restricted to premium users. Please check out `/premium info` for more information.",
 					Color:       0xffd700,
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "**Message**",
+							Value:  message,
+							Inline: false,
+						},
+					},
 				},
 			},
 			Flags: 64,

@@ -281,7 +281,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	if options["schedule"] != nil {
 		if !CheckPremiumGuild(i.GuildID) {
-			return h.PremiumError(s, i)
+			return h.PremiumError(s, i, "Please leave `schedule` blank when creating an option or purchase premium to scheudue auctions in advance")
 		}
 	}
 
@@ -297,7 +297,14 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	delete(options, "duration")
 
 	multiAuctions := strings.Split(options["item"].(string), ";")
-	fmt.Println(multiAuctions)
+
+	if len(multiAuctions) > 5 && !CheckPremiumGuild(i.GuildID) {
+		h.PremiumError(s, i, "Free users can only start 5 auctions in bulk. Upgrade to premium to start up to 100 in bulk.")
+	}
+
+	if len(multiAuctions) > 100 {
+		return fmt.Errorf("You can only start 100 auctions in bulk at once. You attempted to start: %d.", len(multiAuctions))
+	}
 
 	for _, item := range multiAuctions {
 		auctionMap := map[string]any{}
@@ -305,7 +312,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		for k, v := range options {
 			auctionMap[k] = v
 		}
-		
+
 		channelID, err := AuctionHandler(s, auctionMap, i.Member, i.GuildID, duration)
 		if err != nil {
 			return err
@@ -326,7 +333,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 				}
 			}
 		} else {
-			exampleMessage, err := AuctionFormat(s, auctionMap, EventTypeAuction)
+			exampleMessage, err := EventFormat(s, auctionMap, EventTypeAuction, i.GuildID)
 			if err != nil {
 				fmt.Println("Error formatting auction", err)
 				return err
@@ -499,7 +506,7 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 		}
 	}
 
-	auctionMessage, err := AuctionFormat(s, auctionMap, EventTypeAuction)
+	auctionMessage, err := EventFormat(s, auctionMap, EventTypeAuction, auctionMap["guild_id"].(string))
 	if err != nil {
 		return "", err
 	}
@@ -679,7 +686,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 	auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
 	auctionMap["snipe_range"] = auctionSetup["snipe_range"]
 
-	m, err := AuctionFormat(s, auctionMap, EventTypeAuction)
+	m, err := EventFormat(s, auctionMap, EventTypeAuction, guildID)
 	if err != nil {
 		return err
 	}
@@ -794,7 +801,7 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 		return result.Error
 	}
 
-	message, err := AuctionFormat(s, auctionMap, EventTypeAuction)
+	message, err := EventFormat(s, auctionMap, EventTypeAuction, guildID)
 	if err != nil {
 		return err
 	}
@@ -831,187 +838,6 @@ func AuctionQueueUpdate(options map[string]any, guildID string) error {
 	}
 
 	return nil
-}
-
-func AuctionFormat(s *discordgo.Session, auctionMap map[string]interface{}, eventType EventType) (h.PresetResponse, error) {
-
-	content := ""
-	imageURL := ""
-	embeds := []*discordgo.MessageEmbed{}
-
-	if auctionMap["item"] != nil && len(auctionMap["item"].(string)) > 100 {
-		return h.PresetResponse{}, fmt.Errorf("title cannot be over 100 characters long")
-	}
-
-	if auctionMap["image_url"] != nil {
-		imageURL = auctionMap["image_url"].(string)
-	}
-
-	description := fmt.Sprintf("**Host:** <@%s>.\n", auctionMap["host"])
-
-	if auctionMap["description"] != nil {
-		description += fmt.Sprintf("**Description:** %s\n", auctionMap["description"])
-	}
-
-	if auctionMap["winners"] != nil {
-		description += fmt.Sprintf("**Winners:** %d\n", int(auctionMap["winners"].(float64)))
-	}
-
-	if auctionMap["increment_min"] != nil {
-		description += fmt.Sprintf("**Minimum Bid:** + %s above previous.\n", PriceFormat(auctionMap["increment_min"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
-	}
-
-	if auctionMap["increment_max"] != nil {
-		description += fmt.Sprintf("**Maximum Bid:** + %s above previous.\n", PriceFormat(auctionMap["increment_max"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
-	}
-
-	if auctionMap["target_price"] != nil {
-		description += "**Target Price:** The host has set a hidden target price for this auction.\n"
-	}
-
-	if auctionMap["integer_only"] != nil {
-		description += fmt.Sprintf("**Integer Only:** %t.\n", auctionMap["integer_only"].(bool))
-	}
-
-	if auctionMap["snipe_extension"] != nil && auctionMap["snipe_range"] != nil {
-		description += fmt.Sprintf("**Anti Snipe:** If a bid is placed within the last %s, the auction will be extended by %s.\n", auctionMap["snipe_range"], auctionMap["snipe_extension"].(time.Duration).String())
-	}
-
-	if auctionMap["buyout"] != nil {
-		description += fmt.Sprintf("**Buyout Price:** %s.\n", PriceFormat(auctionMap["buyout"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]))
-	}
-
-	auctionfields := []*discordgo.MessageEmbedField{
-		{
-			Name:  "__**Details:**__",
-			Value: description,
-		},
-	}
-
-	if auctionMap["end_time"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**End Time**__",
-			Value:  fmt.Sprintf("<t:%d:R>", auctionMap["end_time"].(time.Time).Unix()),
-			Inline: true,
-		})
-	}
-
-	if auctionMap["bid"] != nil {
-		if auctionMap["winner"] != nil {
-			auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-				Name:   "__**Current Highest Bid:**__",
-				Value:  PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]),
-				Inline: true,
-			})
-		} else {
-			auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-				Name:   "__**Starting Bid:**__",
-				Value:  PriceFormat(auctionMap["bid"].(float64), auctionMap["guild_id"].(string), auctionMap["currency"]),
-				Inline: true,
-			})
-		}
-	}
-
-	if auctionMap["winner"] != nil {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**Current Winner**__",
-			Value:  fmt.Sprintf("<@%s>", auctionMap["winner"]),
-			Inline: true,
-		})
-	}
-
-	if eventType == EventTypeAuction {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:  "__**How to Bid**__",
-			Value: "Use the /bid command or type `/bid {value}` in chat\nEx: `/bid 550`\n",
-		})
-	}
-
-	if eventType == EventTypeGiveaway {
-		auctionfields = append(auctionfields, &discordgo.MessageEmbedField{
-			Name:   "__**How to Enter**__",
-			Value:  "To enter, select the 🎁 reaction below! Removing your reaction will remove your entry.",
-			Inline: false,
-		})
-	}
-
-	guild, err := s.Guild(auctionMap["guild_id"].(string))
-	if err != nil {
-		fmt.Println("Error fetching guild: ", err)
-		return h.PresetResponse{}, err
-	}
-
-	if auctionMap["alert_role"] != nil {
-		content = fmt.Sprintf("<@&%s>", strings.Trim(auctionMap["alert_role"].(string), " "))
-	}
-
-	components := []discordgo.MessageComponent{}
-
-	if eventType == EventTypeAuction {
-		components = []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label: "End Auction",
-						Style: 4,
-						Emoji: discordgo.ComponentEmoji{
-							Name: "🛑",
-						},
-						CustomID: "endauction",
-					},
-					discordgo.Button{
-						Label:    "Clear Chat",
-						Style:    3,
-						CustomID: "clearauction",
-						Emoji: discordgo.ComponentEmoji{
-							Name: "restart",
-							ID:   "835685528917114891",
-						},
-						Disabled: false,
-					},
-				},
-			},
-		}
-	}
-
-	if eventType == EventTypeShop {
-		components = []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label:    "Purchase",
-						Style:    discordgo.SuccessButton,
-						CustomID: "additem",
-					},
-				},
-			},
-		}
-	}
-
-	if auctionMap["bid_history"] != nil {
-		if len(auctionMap["bid_history"].(string)) > 4095 {
-			auctionMap["bid_history"] = auctionMap["bid_history"].(string)[len(auctionMap["bid_history"].(string))-4095:]
-		}
-		embeds = []*discordgo.MessageEmbed{{
-			Title:       "**Bid History**",
-			Description: auctionMap["bid_history"].(string),
-			Color:       0x8073ff,
-			Image: &discordgo.MessageEmbedImage{
-				URL: "https://i.imgur.com/9wo7diC.png",
-			},
-		}}
-	}
-
-	return h.PresetResponse{
-		Content:    content,
-		Title:      fmt.Sprintf("%s Item: __**%s**__", eventType, auctionMap["item"]),
-		Fields:     auctionfields,
-		Thumbnail:  &discordgo.MessageEmbedThumbnail{URL: guild.IconURL()},
-		Image:      &discordgo.MessageEmbedImage{URL: imageURL},
-		Components: components,
-		Embeds:     embeds,
-		Files:      []*discordgo.File{},
-	}, nil
 }
 
 //Buttons

@@ -97,7 +97,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 			canHost = true
 		}
 		if !canHost {
-			return fmt.Errorf("User must be administrator or have the role <@&"+GiveawaySetup["host_role"].(string)+"> to host giveaways.")
+			return fmt.Errorf("User must be administrator or have the role <@&" + GiveawaySetup["host_role"].(string) + "> to host giveaways.")
 		}
 	}
 
@@ -130,7 +130,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	giveawayMap["end_time"] = time.Now().Add(endTimeDuration)
 	giveawayMap["alert_role"] = GiveawaySetup["alert_role"]
 
-	formattedMessage, err := AuctionFormat(s, giveawayMap, EventTypeGiveaway)
+	formattedMessage, err := EventFormat(s, giveawayMap, EventTypeGiveaway, i.GuildID)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		fmt.Println("Error fetching giveaway setups", result.Error)
 	}
 
-	fm, err := AuctionFormat(s, giveawayMap, EventTypeGiveaway)
+	fm, err := EventFormat(s, giveawayMap, EventTypeGiveaway, giveawayMap["guild_id"].(string))
 	if err != nil {
 		return err
 	}

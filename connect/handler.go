@@ -52,8 +52,8 @@ var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.Interac
 }
 
 var guildMembersMap = map[string]func(s *discordgo.Session, g *discordgo.GuildMembersChunk) error{
-	"claim": c.ClaimCreateRole,
-	"$":     c.CurrencyRoleHandler,
+	"claim_create":    c.ClaimCreateRole,
+	"currency_edit": c.CurrencyRoleHandler,
 }
 
 func CommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -228,12 +228,10 @@ func GuildMemberChunkHandler(s *discordgo.Session, g *discordgo.GuildMembersChun
 	if f, ok := guildMembersMap[strings.Split(g.Nonce, ":")[0]]; ok {
 		err := f(s, g)
 		if err != nil {
+			fmt.Println(err)
+			_, err = h.FollowUpErrorResponse(s, h.ReadChunkData(strings.Split(g.Nonce, ":")[1])["interaction"].(*discordgo.InteractionCreate), err.Error())
 			if err != nil {
 				fmt.Println(err)
-				_, err = h.FollowUpErrorResponse(s, c.ReadCurrencyData(strings.Split(g.Nonce, ":")[1])["interaction"].(*discordgo.InteractionCreate), err.Error())
-				if err != nil {
-					fmt.Println(err)
-				}
 			}
 		}
 	} else {
