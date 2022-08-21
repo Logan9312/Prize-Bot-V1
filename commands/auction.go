@@ -290,46 +290,99 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		delete(options, "image")
 	}
 
-	channelID, err := AuctionHandler(s, options, i.Member, i.GuildID)
+	duration, err := h.ParseTime(strings.ToLower(options["duration"].(string)))
 	if err != nil {
-		return err
+		return fmt.Errorf("Error parsing duration input: %w", err)
 	}
+	delete(options, "duration")
 
-	if channelID != "" {
-		return h.SuccessResponse(s, i, h.PresetResponse{
-			Title:       "**Auction Starting**",
-			Description: fmt.Sprintf("Auction has successfully been started in <#%s>!", channelID),
-		})
-	} else {
-		exampleMessage, err := AuctionFormat(s, options, EventTypeAuction)
+	multiAuctions := strings.Split(options["item"].(string), ";")
+	fmt.Println(multiAuctions)
+
+	for _, item := range multiAuctions {
+		auctionMap := map[string]any{}
+		options["item"] = item
+		for k, v := range options {
+			auctionMap[k] = v
+		}
+		
+		channelID, err := AuctionHandler(s, auctionMap, i.Member, i.GuildID, duration)
 		if err != nil {
 			return err
 		}
 
-		return h.SuccessResponse(s, i, h.PresetResponse{
-			Title: "Auction has been Scheduled!",
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:   "**Auction Start Time:**",
-					Value:  fmt.Sprintf("<t:%d:R>", options["start_time"].(time.Time).Unix()),
-					Inline: false,
+		if channelID != "" {
+			err = h.SuccessResponse(s, i, h.PresetResponse{
+				Title:       "**Auction Starting**",
+				Description: fmt.Sprintf("Auction has successfully been started in <#%s>!", channelID),
+			})
+			if err != nil {
+				_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+					Title:       "**Auction Starting**",
+					Description: fmt.Sprintf("Auction has successfully been started in <#%s>!", channelID),
+				})
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			exampleMessage, err := AuctionFormat(s, auctionMap, EventTypeAuction)
+			if err != nil {
+				fmt.Println("Error formatting auction", err)
+				return err
+			}
+
+			err = h.SuccessResponse(s, i, h.PresetResponse{
+				Title: "Auction has been Scheduled!",
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:   "**Auction Start Time:**",
+						Value:  fmt.Sprintf("<t:%d:R>", auctionMap["start_time"].(time.Time).Unix()),
+						Inline: false,
+					},
 				},
-			},
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "[__**PREVIEW:**__] " + exampleMessage.Title,
-					Description: exampleMessage.Description,
-					Color:       0x8073ff,
-					Image:       exampleMessage.Image,
-					Thumbnail:   exampleMessage.Thumbnail,
-					Fields:      exampleMessage.Fields,
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "[__**PREVIEW:**__] " + exampleMessage.Title,
+						Description: exampleMessage.Description,
+						Color:       0x8073ff,
+						Image:       exampleMessage.Image,
+						Thumbnail:   exampleMessage.Thumbnail,
+						Fields:      exampleMessage.Fields,
+					},
 				},
-			},
-		})
+			})
+			if err != nil {
+				_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+					Title: "Auction has been Scheduled!",
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "**Auction Start Time:**",
+							Value:  fmt.Sprintf("<t:%d:R>", auctionMap["start_time"].(time.Time).Unix()),
+							Inline: false,
+						},
+					},
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Title:       "[__**PREVIEW:**__] " + exampleMessage.Title,
+							Description: exampleMessage.Description,
+							Color:       0x8073ff,
+							Image:       exampleMessage.Image,
+							Thumbnail:   exampleMessage.Thumbnail,
+							Fields:      exampleMessage.Fields,
+						},
+					},
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
+	return nil
 }
 
-func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *discordgo.Member, guildID string) (channelID string, err error) {
+func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *discordgo.Member, guildID string, duration time.Duration) (channelID string, err error) {
 	auctionSetup := map[string]interface{}{}
 	currencyMap := map[string]interface{}{}
 
@@ -360,19 +413,13 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 		}
 	}
 
-	auctionMap["duration"], err = h.ParseTime(strings.ToLower(auctionMap["duration"].(string)))
-	if err != nil {
-		return "", fmt.Errorf("Error parsing duration input: %w", err)
-	}
-
 	if auctionMap["schedule"] != nil {
-		err = AuctionSchedule(s, auctionMap)
+		err = AuctionSchedule(s, auctionMap, duration)
 		if err != nil {
 			return "", fmt.Errorf("Error scheduling auction: %w", err)
 		}
 	} else {
-		auctionMap["end_time"] = time.Now().Add(auctionMap["duration"].(time.Duration))
-		delete(auctionMap, "duration")
+		auctionMap["end_time"] = time.Now().Add(duration)
 
 		channelID, err := AuctionStart(s, auctionMap)
 		if err != nil {
@@ -386,7 +433,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 	return "", nil
 }
 
-func AuctionSchedule(s *discordgo.Session, auctionMap map[string]any) error {
+func AuctionSchedule(s *discordgo.Session, auctionMap map[string]any, duration time.Duration) error {
 
 	var AuctionQueue []database.AuctionQueue
 
@@ -400,10 +447,9 @@ func AuctionSchedule(s *discordgo.Session, auctionMap map[string]any) error {
 		return err
 	}
 
-	auctionMap["end_time"] = time.Now().Add(auctionMap["duration"].(time.Duration)).Add(startTimeDuration)
+	auctionMap["end_time"] = time.Now().Add(duration).Add(startTimeDuration)
 	auctionMap["start_time"] = time.Now().Add(startTimeDuration)
 	delete(auctionMap, "schedule")
-	delete(auctionMap, "duration")
 
 	result := database.DB.Model(database.AuctionQueue{}).Create(&auctionMap)
 	if result.Error != nil {
