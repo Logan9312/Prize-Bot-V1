@@ -5,6 +5,8 @@ github.com/bwmarrin/discordgo v0.25.1-0.20220804185119-c0803d021f34 h1:K5fvIqFk/
 github.com/bwmarrin/discordgo v0.25.1-0.20220804185119-c0803d021f34/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
 github.com/bwmarrin/discordgo v0.25.1-0.20220813210452-7c87035a7178 h1:Chc9t+cczCmvRLsbfexRGFXY44VxlPXZwrzQlnkooCM=
 github.com/bwmarrin/discordgo v0.25.1-0.20220813210452-7c87035a7178/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
+github.com/bwmarrin/discordgo v0.26.1-0.20220817175619-aa9af1488f6e h1:doRsOecTAkUeSjBp4rpNYn0g0UNUBAf39UM/Jal5jQc=
+github.com/bwmarrin/discordgo v0.26.1-0.20220817175619-aa9af1488f6e/go.mod h1:NJZpH+1AfhIcyQsPeuBKsUtYrRnjkyu0kIVMCHkZtRY=
 github.com/caarlos0/env v3.5.0+incompatible h1:Yy0UN8o9Wtr/jGHZDpCBLpNrzcFLLM2yixi/rBrKyJs=
 github.com/caarlos0/env v3.5.0+incompatible/go.mod h1:tdCsowwCzMLdkqRYDlHpZCp2UooDD3MspDBjZ2AD02Y=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=

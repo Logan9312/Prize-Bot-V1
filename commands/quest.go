@@ -27,10 +27,10 @@ var QuestCommand = discordgo.ApplicationCommand{
 	},
 }
 
-var QuestContextMenu = discordgo.ApplicationCommand{
+/*var QuestContextMenu = discordgo.ApplicationCommand{
 	Type:                     discordgo.MessageApplicationCommand,
 	Name:                     "Add New Object",
-}
+}*/
 
 func Quest(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
