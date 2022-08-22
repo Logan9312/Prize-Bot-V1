@@ -456,6 +456,10 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	if err != nil {
 		return err
 	}
+	err = s.ChannelPermissionSet(channel.ID, s.State.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
+	if err != nil {
+		return err
+	}
 	err = s.ChannelPermissionSet(channel.ID, claimMap["host"].(string), discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
 	if err != nil {
 		return err
