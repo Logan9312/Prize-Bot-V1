@@ -189,25 +189,18 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 
 	claimMap := h.ReadChunkData(details[1])
 
-	if g.GuildID == claimMap["target"].(string) {
-		for _, v := range g.Members {
-			claimMap["winner"] = v.User.ID
-			err := ClaimOutput(s, claimMap, "Custom Claim")
-			if err != nil {
-				h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
-			}
+	for _, v := range g.Members {
+		if g.GuildID != claimMap["target"].(string) && !HasRole(v, claimMap["target"].(string)) {
+			continue
 		}
-	} else {
-		for _, v := range g.Members {
-			for _, role := range v.Roles {
-				if role == claimMap["target"].(string) {
-					claimMap["winner"] = v.User.ID
-					err := ClaimOutput(s, claimMap, "Custom Claim")
-					if err != nil {
-						h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
-					}
-				}
-			}
+		if v.User.Bot {
+			continue
+		}
+
+		claimMap["winner"] = v.User.ID
+		err := ClaimOutput(s, claimMap, "Custom Claim")
+		if err != nil {
+			h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
 		}
 	}
 
@@ -441,32 +434,56 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		}
 	}
 
-	//Add permissions for the opener to see the channels. Plus add support role.
-	channel, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
-		Name:     "🎁│" + i.Member.User.Username + i.Member.User.Discriminator,
-		Type:     0,
-		ParentID: claimSetup["category"].(string),
-	})
+	category, err := s.Channel(claimSetup["category"].(string))
 	if err != nil {
-		return err
+		fmt.Println("Error fetching category:", err)
+		category = &discordgo.Channel{}
 	}
 
-	//Fix this too
-	err = s.ChannelPermissionSet(channel.ID, i.Member.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
-	if err != nil {
-		return err
+	perms := []*discordgo.PermissionOverwrite{
+		{
+			ID:    i.Member.User.ID,
+			Type:  discordgo.PermissionOverwriteTypeMember,
+			Allow: discordgo.PermissionViewChannel | discordgo.PermissionSendMessages,
+		},
+		{
+			ID:    s.State.User.ID,
+			Type:  discordgo.PermissionOverwriteTypeMember,
+			Allow: discordgo.PermissionViewChannel | discordgo.PermissionSendMessages,
+		},
+		{
+			ID:    claimMap["host"].(string),
+			Type:  discordgo.PermissionOverwriteTypeMember,
+			Allow: discordgo.PermissionViewChannel | discordgo.PermissionSendMessages,
+		},
+		{
+			ID:   i.GuildID,
+			Type: discordgo.PermissionOverwriteTypeRole,
+			Deny: discordgo.PermissionViewChannel,
+		},
 	}
-	err = s.ChannelPermissionSet(channel.ID, s.State.User.ID, discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
-	if err != nil {
-		return err
+
+	for _, catPerm := range category.PermissionOverwrites {
+		duplicatePerm := false
+		for _, newPerm := range perms {
+			if catPerm.ID == newPerm.ID {
+				duplicatePerm = true
+			}
+		}
+		if !duplicatePerm {
+			perms = append(perms, catPerm)
+		}
 	}
-	err = s.ChannelPermissionSet(channel.ID, claimMap["host"].(string), discordgo.PermissionOverwriteTypeMember, discordgo.PermissionViewChannel|discordgo.PermissionSendMessages, 0)
+
+	//Add permissions for the opener to see the channels. Plus add support role.
+	channel, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
+		Name:                 "🎁│" + i.Member.User.Username + i.Member.User.Discriminator,
+		Type:                 discordgo.ChannelTypeGuildText,
+		ParentID:             claimSetup["category"].(string),
+		PermissionOverwrites: perms,
+	})
 	if err != nil {
-		return err
-	}
-	err = s.ChannelPermissionSet(channel.ID, i.GuildID, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionViewChannel)
-	if err != nil {
-		return err
+		return fmt.Errorf("Error creating claim channel: %w", err)
 	}
 
 	fields := []*discordgo.MessageEmbedField{
@@ -733,7 +750,7 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[1])
 	if result.Error != nil {
-		return result.Error
+		return fmt.Errorf("Error fetching claim settings. Please have an admin run `/settings claiming` at least once and set the log channel to fix. Error Message: %w", result.Error)
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != claimMap["host"] {

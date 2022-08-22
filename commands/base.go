@@ -196,3 +196,12 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType Ev
 		Files:      []*discordgo.File{},
 	}, nil
 }
+
+func HasRole(m *discordgo.Member, roleID string) bool {
+	for _, role := range m.Roles {
+		if role == roleID {
+			return true
+		}
+	}
+	return false
+}

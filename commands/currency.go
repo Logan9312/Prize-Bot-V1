@@ -188,45 +188,39 @@ func CurrencyEditRole(s *discordgo.Session, g *discordgo.GuildMembersChunk, role
 	successCount := 0
 	var err error
 	for _, v := range g.Members {
-		addUser := false
-		if roleID != g.GuildID {
-			for _, role := range v.Roles {
-				if role == roleID {
-					addUser = true
-				}
-			}
-		} else {
-			addUser = true
+		if roleID != g.GuildID && !HasRole(v, roleID) {
+			continue
+		}
+		if v.User.Bot {
+			continue
 		}
 
-		if addUser {
-			userCount++
-			switch action {
-			case "add":
-				err = CurrencyAddUser(g.GuildID, v.User.ID, amount)
-			case "subtract":
-				err = CurrencySubtractUser(g.GuildID, v.User.ID, amount)
-			case "set":
-				err = CurrencySetUser(g.GuildID, v.User.ID, amount)
-			}
+		userCount++
+		switch action {
+		case "add":
+			err = CurrencyAddUser(g.GuildID, v.User.ID, amount)
+		case "subtract":
+			err = CurrencySubtractUser(g.GuildID, v.User.ID, amount)
+		case "set":
+			err = CurrencySetUser(g.GuildID, v.User.ID, amount)
+		}
 
-			if err != nil && errCount < 5 {
-				data := h.ReadChunkData(strings.Split(g.Nonce, ":")[1])
+		if err != nil && errCount < 5 {
+			data := h.ReadChunkData(strings.Split(g.Nonce, ":")[1])
+			fmt.Println(err)
+			_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue adding currency for <@%s>. Error Message: %s", v.User.ID, err))
+			if err != nil {
 				fmt.Println(err)
-				_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue adding currency for <@%s>. Error Message: %s", v.User.ID, err))
+			}
+			errCount++
+			if errCount == 5 {
+				_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), "**5 or more users have failed to update their currency.** Refer to previous errors for more information.")
 				if err != nil {
 					fmt.Println(err)
 				}
-				errCount++
-				if errCount == 5 {
-					_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), "**5 or more users have failed to update their currency.** Refer to previous errors for more information.")
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
-			} else {
-				successCount++
 			}
+		} else {
+			successCount++
 		}
 	}
 
