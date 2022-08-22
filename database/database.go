@@ -74,6 +74,7 @@ type AuctionQueue struct {
 	AlertRole       string
 	Note            string
 	ChannelOverride string
+	UseCurrency     bool
 }
 
 // ClaimSetup FromMake sure to remove LogChannel and ClaimMessage from auction log
