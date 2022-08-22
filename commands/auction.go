@@ -284,6 +284,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	options := h.ParseSubCommand(i)
 
+	if options["currency"] != nil && options["use_currency"] == true {
+		return fmt.Errorf("An auction cannot be created with both `use_currency` and `currency` set. This is because if `use_currency` is on, it will affect the global currency set with `/settings currency`.")
+	}
+
 	if options["schedule"] != nil {
 		if !CheckPremiumGuild(i.GuildID) {
 			return h.PremiumError(s, i, "Please leave `schedule` blank when creating an option or purchase premium to scheudue auctions in advance")
