@@ -31,13 +31,15 @@ var botCommands = slashCommands{
 		&commands.CurrencyCommand,
 	},
 	prod: []*discordgo.ApplicationCommand{
+		&commands.ProfileCommand,
 		&commands.AuctionCommand,
 		&commands.BidCommand,
 		&commands.GiveawayCommand,
 		&commands.PrivacyCommand,
 		&commands.ClaimCommand,
-		&commands.SettingsCommand,
 		&commands.PremiumCommand,
+		&commands.SettingsCommand,
+		&commands.CurrencyCommand,
 	},
 	dev: []*discordgo.ApplicationCommand{
 		&commands.DevCommand,
