@@ -45,6 +45,7 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"additem":                c.AddItem,
 	"bid_history":            c.AuctionBidHistory,
 	"questbutton":            c.QuestButton,
+	"helpmenu":               c.HelpMenu,
 }
 
 var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
@@ -224,9 +225,11 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		err = s.ChannelMessageDelete(m.ChannelID, message.ID)
-		if err != nil {
-			fmt.Println(err)
+		if message != nil {
+			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 }

@@ -15,7 +15,7 @@ import (
 
 var ClaimCommand = discordgo.ApplicationCommand{
 	Name:        "claim",
-	Description: "Put an item up for auction!",
+	Description: "Manage your claims!",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,

@@ -83,6 +83,7 @@ func BotConnect(token, environment, botName string) {
 				log.Fatal("Bulk Overwrite Error:", err)
 			}
 		}
+		commands.CommandList = botCommands.local
 	}
 
 	//Builds prod commands
@@ -97,6 +98,7 @@ func BotConnect(token, environment, botName string) {
 		if err != nil {
 			fmt.Println("Bulk Overwrite Error:", err)
 		}
+		commands.CommandList = botCommands.prod
 	}
 
 	go commands.SetRoles(s)

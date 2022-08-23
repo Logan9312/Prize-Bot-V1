@@ -13,7 +13,7 @@ func AddCommand() {
 
 }
 
-func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType EventType, guildID string) (h.PresetResponse, error) {
+func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType string, guildID string) (h.PresetResponse, error) {
 
 	content := ""
 	imageURL := ""

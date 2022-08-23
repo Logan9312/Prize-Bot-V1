@@ -112,11 +112,7 @@ var SettingsCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionChannel,
 					Name:        "channel_override",
-					Description: "EXPERIMENTAL: Override the channel where auctions are created.",
-					ChannelTypes: []discordgo.ChannelType{
-						discordgo.ChannelTypeGuildText,
-						discordgo.ChannelTypeGuildNews,
-					},
+					Description: "Enabling this starts the auction in the channel where you run the auction create command.",
 				},
 			},
 		},
