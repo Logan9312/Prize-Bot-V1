@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"regexp"
+
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
@@ -162,31 +164,32 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var message *discordgo.Message
 	var err error
+	re := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
 
 	if !strings.HasPrefix(m.Content, "/") {
 		return
 	}
-	command := strings.TrimPrefix(m.Content, "/")
 
-	args := strings.Split(command, " ")
-	if len(args) != 2 {
-		message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
-		if err != nil {
-			fmt.Println(err)
+	args := strings.Split(strings.TrimPrefix(m.Content, "/"), " ")
+
+	defer DeleteCommandMessage(s, m.ChannelID, m.ID)
+
+	switch args[0] {
+	case "bid":
+		if len(args) != 2 {
+			message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			err = DeleteCommandMessage(s, m.ChannelID, message.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
 			return
 		}
-		time.Sleep(10 * time.Second)
-		err = s.ChannelMessageDelete(m.ChannelID, message.ID)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return
 
-	}
-	fmt.Println(args)
-	if strings.ToLower(args[0]) == "bid" {
-		args[1] = strings.Replace(args[1], "amount:", "", -1)
-		bidAmount, err := strconv.ParseFloat(args[1], 64)
+		bidAmount, err := strconv.ParseFloat(strings.Replace(re.FindString(args[1]), ",", "", -1), 64)
 		if err != nil {
 			h.ErrorMessage(s, m.ChannelID, err.Error())
 			fmt.Println(err)
@@ -220,16 +223,14 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 
-		time.Sleep(10 * time.Second)
-		err = s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	default:
+		return
+	}
+
+	if message != nil {
+		err = DeleteCommandMessage(s, m.ChannelID, message.ID)
 		if err != nil {
 			fmt.Println(err)
-		}
-		if message != nil {
-			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
-			if err != nil {
-				fmt.Println(err)
-			}
 		}
 	}
 }
@@ -248,4 +249,9 @@ func GuildMemberChunkHandler(s *discordgo.Session, g *discordgo.GuildMembersChun
 	} else {
 		fmt.Println("GuildMemberChunkHandler has not been set properly.")
 	}
+}
+
+func DeleteCommandMessage(s *discordgo.Session, channelID, messageID string) error {
+	time.Sleep(10 * time.Second)
+	return s.ChannelMessageDelete(channelID, messageID)
 }
