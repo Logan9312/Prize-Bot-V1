@@ -17,10 +17,9 @@ import (
 	"gorm.io/gorm"
 )
 
-
 const (
-	EventTypeAuction = "Auction"
-	EventTypeShop      = "Shop"
+	EventTypeAuction  = "Auction"
+	EventTypeShop     = "Shop"
 	EventTypeGiveaway = "Giveaway"
 )
 
@@ -556,7 +555,7 @@ func MakeAuctionChannel(s *discordgo.Session, auctionMap map[string]any) (channe
 		category = auctionMap["category"].(string)
 	}
 
-	if auctionMap["channel_loxk"] == nil {
+	if auctionMap["channel_override"] == nil {
 		channel, err = s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
 			Name:     "💸│" + auctionMap["item"].(string),
 			Type:     discordgo.ChannelTypeGuildText,
