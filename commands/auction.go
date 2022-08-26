@@ -744,6 +744,8 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 	p := message.NewPrinter(language.English)
 
 	if member.Permissions&(1<<3) != 8 && member.User.ID != auctionMap["host"] {
+		fmt.Println("Host:", auctionMap["host"])
+		fmt.Println("UserID:", member.User.ID)
 		return fmt.Errorf("User must have be host or have administrator permissions to run this command")
 	}
 
