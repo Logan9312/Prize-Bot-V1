@@ -110,8 +110,8 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					//Autocomplete: true,
 				},
 				{
-					Type:        discordgo.ApplicationCommandOptionChannel,
-					Name:        "channel_override",
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "channel_lock",
 					Description: "Enabling this starts the auction in the channel where you run the auction create command.",
 				},
 			},
@@ -269,6 +269,8 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			switch {
 			case options[v.Name] == nil || options[v.Name] == "":
 				options[v.Name] = "Not Set"
+			case fmt.Sprintf("%T", options[v.Name]) == "bool":
+				options[v.Name] = strings.Title(fmt.Sprint(options[v.Name]))
 			case strings.Contains(v.Name, "role"):
 				options[v.Name] = fmt.Sprintf("<@&%s>", options[v.Name])
 			case strings.Contains(v.Name, "channel"):

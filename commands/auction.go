@@ -297,6 +297,8 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		delete(options, "image")
 	}
 
+	options["channel_id"] = i.ChannelID
+
 	duration, err := h.ParseTime(strings.ToLower(options["duration"].(string)))
 	if err != nil {
 		return fmt.Errorf("Error parsing duration input: %w", err)
@@ -421,7 +423,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 		auctionMap["currency"] = currencyMap["currency"]
 	}
 
-	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_override", "use_currency"} {
+	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_override", "channel_lock", "use_currency"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
@@ -524,55 +526,44 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 	delete(auctionMap, "snipe_extension")
 	delete(auctionMap, "snipe_range")
 
-	channel, err := MakeAuctionChannel(s, auctionMap)
-	if err != nil {
-		return "", err
+	if auctionMap["category"] == nil {
+		auctionMap["category"] = ""
 	}
-	auctionMap["channel_id"] = channel.ID
+
+	if auctionMap["channel_lock"] != true {
+		channel, err := MakeAuctionChannel(s, auctionMap["guild_id"].(string), auctionMap["category"].(string), auctionMap["item"].(string))
+		if err != nil {
+			return "", err
+		}
+		auctionMap["channel_id"] = channel.ID
+	}
 
 	message, err := h.SuccessMessage(s, auctionMap["channel_id"].(string), auctionMessage)
 	if err != nil {
-		return channel.ID, err
+		return auctionMap["channel_id"].(string), err
 	}
 	auctionMap["message_id"] = message.ID
 
 	delete(auctionMap, "category")
+
 	result := database.DB.Model(database.Auction{}).Create(auctionMap)
 	if result.Error != nil {
-		return channel.ID, result.Error
+		return auctionMap["channel_id"].(string), result.Error
 	}
 
 	go AuctionEndTimer(s, auctionMap)
 
-	return channel.ID, nil
+	return auctionMap["channel_id"].(string), nil
 }
 
-func MakeAuctionChannel(s *discordgo.Session, auctionMap map[string]any) (channel *discordgo.Channel, err error) {
+func MakeAuctionChannel(s *discordgo.Session, guildID, category, item string) (*discordgo.Channel, error) {
 
-	var category string
+	return s.GuildChannelCreateComplex(guildID, discordgo.GuildChannelCreateData{
+		Name:     "💸│" + item,
+		Type:     discordgo.ChannelTypeGuildText,
+		ParentID: category,
+	})
 
-	if auctionMap["category"] != nil {
-		category = auctionMap["category"].(string)
-	}
-
-	if auctionMap["channel_override"] == nil {
-		channel, err = s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
-			Name:     "💸│" + auctionMap["item"].(string),
-			Type:     discordgo.ChannelTypeGuildText,
-			ParentID: category,
-		})
-		if err != nil {
-			err = fmt.Errorf("Error creating auction channel: %w", err)
-		}
-
-	} else {
-		channel, err = s.Channel(auctionMap["channel_override"].(string))
-		if err != nil {
-			err = fmt.Errorf("Error finding auction channel: %w", err)
-		}
-	}
-
-	return
 }
 
 func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -1110,7 +1101,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		}
 	}
 
-	if auctionMap["channel_override"] == nil {
+	if auctionMap["channel_lock"] != true && auctionMap["channel_override"] == nil {
 		time.Sleep(30 * time.Second)
 		_, err = s.ChannelDelete(channelID)
 		if err != nil {

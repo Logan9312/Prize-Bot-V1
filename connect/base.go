@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
+	"gorm.io/gorm"
 )
 
 type slashCommands struct {
@@ -127,13 +128,24 @@ func Timers(s *discordgo.Session) {
 	Auctions := []map[string]interface{}{}
 	AuctionQueue := []map[string]interface{}{}
 	Giveaways := []map[string]interface{}{}
-	Claims := []map[string]interface{}{}
-
+	AuctionSetups := []map[string]any{}
 	fmt.Println("Beginning Startup Timers")
 
 	database.DB.Model([]database.Auction{}).Find(&Auctions)
 	for _, v := range Auctions {
 		go AuctionEndTimer(v, s)
+	}
+
+	database.DB.Model([]database.AuctionSetup{}).Find(&AuctionSetups)
+	for _, v := range AuctionSetups {
+		if v["channel_override"] != nil {
+			result := database.DB.Model(database.AuctionSetup{
+				GuildID: v["guild_id"].(string),
+			}).Updates(map[string]any{"channel_lock": true, "channel_override": gorm.Expr("NULL")})
+			if result.Error != nil {
+				fmt.Println("Error saving channel lock.", result.Error)
+			}
+		}
 	}
 
 	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
@@ -144,15 +156,6 @@ func Timers(s *discordgo.Session) {
 	database.DB.Model([]database.Giveaway{}).Find(&Giveaways)
 	for _, v := range Giveaways {
 		go GiveawayEndTimer(v, s)
-	}
-
-	database.DB.Model([]database.Claim{}).Find(&Claims)
-	for _, v := range Claims {
-		if v["item"] == nil {
-			database.DB.Delete(database.Claim{
-				MessageID: v["message_id"].(string),
-			})
-		}
 	}
 }
 

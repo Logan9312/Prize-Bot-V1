@@ -25,6 +25,7 @@ type AuctionSetup struct {
 	CurrencySide    string
 	IntegerOnly     bool
 	ChannelOverride string
+	ChannelLock     bool
 }
 
 type Auction struct {
@@ -48,11 +49,13 @@ type Auction struct {
 	BidHistory      string
 	Note            string
 	ChannelOverride string
+	ChannelLock     bool
 	UseCurrency     bool
 }
 
 type AuctionQueue struct {
 	ID              int `gorm:"primaryKey"`
+	ChannelID       string
 	Bid             float64
 	StartTime       time.Time
 	EndTime         time.Time
@@ -74,6 +77,7 @@ type AuctionQueue struct {
 	AlertRole       string
 	Note            string
 	ChannelOverride string
+	ChannelLock     bool
 	UseCurrency     bool
 }
 
