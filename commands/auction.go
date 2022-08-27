@@ -423,7 +423,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 		auctionMap["currency"] = currencyMap["currency"]
 	}
 
-	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_override", "channel_lock", "use_currency"} {
+	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_lock", "use_currency"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
@@ -1101,7 +1101,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		}
 	}
 
-	if auctionMap["channel_lock"] != true && auctionMap["channel_override"] == nil {
+	if auctionMap["channel_lock"] != true {
 		time.Sleep(30 * time.Second)
 		_, err = s.ChannelDelete(channelID)
 		if err != nil {
