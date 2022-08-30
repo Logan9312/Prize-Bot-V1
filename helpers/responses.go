@@ -274,10 +274,10 @@ func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pr
 
 	embed = append(embed, r.Embeds...)
 	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Content:         &r.Content,
-		Components:      &r.Components,
-		Embeds:          &embed,
-		Files:           r.Files,
+		Content:    &r.Content,
+		Components: &r.Components,
+		Embeds:     &embed,
+		Files:      r.Files,
 	})
 }
 
@@ -358,6 +358,9 @@ func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate, message 
 							Value:  message,
 							Inline: false,
 						},
+					},
+					Thumbnail: &discordgo.MessageEmbedThumbnail{
+						URL: "https://imgur.com/a/JuBOP5o",
 					},
 				},
 			},
