@@ -50,6 +50,11 @@ func main() {
 		fmt.Println(result.Error)
 	}
 
+	err = mainSession.UpdateGameStatus(0, "Bot Version "+devData.Version)
+	if err != nil {
+		fmt.Println("Error setting status", err)
+	}
+
 	WhiteLabels := []map[string]any{}
 	result = database.DB.Model([]database.WhiteLabels{}).Find(&WhiteLabels)
 	if result.Error != nil {
@@ -61,9 +66,11 @@ func main() {
 		if err != nil {
 			fmt.Println("Error connecting bot: %w", err)
 		}
-		err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
-		if err != nil {
-			fmt.Println("Error updating status: %w", err)
+		if s.State.User.ID == "995022149226082324" {
+			err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
+			if err != nil {
+				fmt.Println("Error setting status", err)
+			}
 		}
 	}
 
