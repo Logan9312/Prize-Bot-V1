@@ -360,7 +360,7 @@ func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate, message 
 						},
 					},
 					Thumbnail: &discordgo.MessageEmbedThumbnail{
-						URL: "https://imgur.com/a/JuBOP5o",
+						URL: "https://i.imgur.com/SjJT2xp.png",
 					},
 				},
 			},

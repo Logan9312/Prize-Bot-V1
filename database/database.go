@@ -14,8 +14,8 @@ type DevSetup struct {
 }
 
 type WhiteLabels struct {
-	BotID    string `gorm:"primaryKey"`
-	UserID   string
+	BotID    string `gorm:"primaryKey;autoIncrement:false"`
+	UserID   string `gorm:"primaryKey;autoIncrement:false"`
 	BotToken string
 }
 

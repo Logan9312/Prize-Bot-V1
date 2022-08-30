@@ -36,7 +36,7 @@ var PremiumServers = map[string]string{
 }
 
 var PremiumUsers = map[string]string{
-	//"280812467775471627": "Logan",
+	"280812467775471627": "Logan",
 }
 
 func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
