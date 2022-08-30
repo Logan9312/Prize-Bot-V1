@@ -53,20 +53,15 @@ func WhitelabelToken(s *discordgo.Session, i *discordgo.InteractionCreate) error
 					},
 				},
 			},
-			Embeds:          []*discordgo.MessageEmbed{},
 			AllowedMentions: &discordgo.MessageAllowedMentions{},
-			Files:           []*discordgo.File{},
-			Flags:           0,
-			Choices:         []*discordgo.ApplicationCommandOptionChoice{},
 			CustomID:        "whitelabel_token",
 			Title:           "Custom Bot Token",
 		},
 	})
 }
 
-func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) (error) {
+func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	fmt.Println(i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value)
 	token := i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
 
 	newSession, err := BotConnect(token, "prod")
