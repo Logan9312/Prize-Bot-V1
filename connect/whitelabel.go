@@ -90,6 +90,7 @@ func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 
 	return h.SuccessResponse(s, i, h.PresetResponse{
-		Title: "Custom Bot Token Added",
+		Title:       "Custom Bot Token Added",
+		Description: fmt.Sprintf("<@%s> should now be functional.", newSession.State.User.ID),
 	})
 }
