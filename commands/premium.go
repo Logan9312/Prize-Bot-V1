@@ -116,6 +116,11 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 				Inline: true,
 			},
 			{
+				Name:   "🤖 **Whitelabelling**",
+				Value:  "✔️ Use a custom bot logo and username",
+				Inline: true,
+			},
+			{
 				Name:   "🎨 **Customization**",
 				Value:  "✔️ Custom Thumbnails (Coming Soon).\n✔️ Custom embed colors (Coming Soon)",
 				Inline: true,
