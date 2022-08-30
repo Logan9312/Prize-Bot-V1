@@ -812,7 +812,8 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 	return nil
 }
 
-// Fix this
+//FIXME Fix Auction Queue
+
 func AuctionQueueUpdate(options map[string]any, guildID string) error {
 
 	//Need to fix this since the database covers all guilds.

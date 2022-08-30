@@ -33,7 +33,6 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}
 
 	options := h.ParseSlashCommand(i)
-	guildMap := map[string]interface{}{}
 
 	if devUsers[i.Member.User.ID] == nil {
 		return fmt.Errorf("User must be a developer to run this command")
@@ -44,12 +43,6 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}).Model(database.DevSetup{}).Create(map[string]interface{}{
 		"bot_id": s.State.User.ID,
 	})
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
-		return result.Error
-	}
-
-	result = database.DB.Model(database.DevSetup{}).First(guildMap)
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 		return result.Error
