@@ -1,10 +1,11 @@
-package commands
+package connect
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
@@ -24,14 +25,11 @@ var PermissionNames = map[string]int64{
 	"Administrator": discordgo.PermissionAdministrator,
 }
 
-var CommandList []*discordgo.ApplicationCommand
-
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
-	commands := CommandList
 	fields := []*discordgo.MessageEmbedField{}
 
-	for _, c := range commands {
+	for _, c := range BotCommands.Prod {
 		fmt.Println(c.Name, c.DefaultMemberPermissions)
 		perms := ParsePerms(c.DefaultMemberPermissions)
 		fields = append(fields, &discordgo.MessageEmbedField{
@@ -55,7 +53,7 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 						Options: []discordgo.SelectMenuOption{
 							{
 								Label:       "Auctions",
-								Value:       EventTypeAuction,
+								Value:       c.EventTypeAuction,
 								Description: "Auction off prizes!",
 								Emoji: discordgo.ComponentEmoji{
 									Name: "💸",
@@ -73,7 +71,7 @@ func HelpMenu(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	name := i.MessageComponentData().Values[0]
 	info := CommandInfo{}
 	switch name {
-	case EventTypeAuction:
+	case c.EventTypeAuction:
 		info = CommandInfo{
 			Description:    "Auctions work by creating a new channel in the selected Category, and self-destructing when completed. You can modify this behaviour in `/settings auctions` by setting a channel override.",
 			GettingStarted: ".",

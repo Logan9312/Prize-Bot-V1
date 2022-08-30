@@ -13,6 +13,7 @@ import (
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
+// Move these to commands package
 var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
 	"auction":        c.Auction,
 	"bid":            c.AuctionBid,
@@ -27,7 +28,8 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"quest":          c.Quest,
 	"currency":       c.Currency,
 	"stats":          c.Stats,
-	"help":           c.Help,
+	"help":           Help,
+	"whitelabel":     Whitelabel,
 }
 
 var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
@@ -47,7 +49,7 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"additem":                c.AddItem,
 	"bid_history":            c.AuctionBidHistory,
 	"questbutton":            c.QuestButton,
-	"helpmenu":               c.HelpMenu,
+	"helpmenu":               HelpMenu,
 }
 
 var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
@@ -55,9 +57,19 @@ var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.Interac
 	"giveaway": c.GiveawayAutoComplete,
 }
 
+var modalSubmitMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{}
+
 var guildMembersMap = map[string]func(s *discordgo.Session, g *discordgo.GuildMembersChunk) error{
 	"claim_create": c.ClaimCreateRole,
 	"$":            c.CurrencyRoleHandler,
+}
+
+func RegisterHandlers(s *discordgo.Session) {
+	s.AddHandler(ReadyHandler)
+	s.AddHandler(InteractionHandler)
+	s.AddHandler(MessageHandler)
+	s.AddHandler(GuildMemberChunkHandler)
+	s.AddHandler(GuildCreateHandler)
 }
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -113,11 +125,42 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		} else {
 			h.ErrorResponse(s, i, "AutoComplete response has not been set properly, please contact Logan to fix")
 		}
+	case discordgo.InteractionModalSubmit:
+		if i.ModalSubmitData().CustomID == "whitelabel_token" {
+			err := WhitelabelTokenModal(s, i)
+			if err != nil {
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
+		} else if f, ok := modalSubmitMap[i.ModalSubmitData().CustomID]; ok {
+			err := f(s, i)
+			if err != nil {
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
+		} else {
+			h.ErrorResponse(s, i, "Modal Submit response has not been set properly, please contact Logan to fix")
+		}
 	}
 }
 
 func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
-	s.ChannelMessageSend("943175605858496602", "Bot has finished restarting")
+	_, err := s.ChannelMessageSend("943175605858496602", "Bot has finished restarting")
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("Bot is ready")
 }
 

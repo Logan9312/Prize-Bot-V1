@@ -35,6 +35,10 @@ var PremiumServers = map[string]string{
 	"626094990984216586": "Aftermath",
 }
 
+var PremiumUsers = map[string]string{
+	"280812467775471627": "Logan",
+}
+
 func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	switch i.ApplicationCommandData().Options[0].Name {
@@ -247,6 +251,25 @@ func SetRoles(s *discordgo.Session) {
 	}
 }
 
+func CheckPremiumUser(userID string) bool {
+	if PremiumUsers[userID] != "" {
+		return true
+	}
+
+	params := &stripe.SubscriptionSearchParams{}
+	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['user_id']:'%s'", userID))
+	iter := sub.Search(params)
+
+	for iter.Next() {
+		subscription := iter.Subscription()
+		if subscription.Status == stripe.SubscriptionStatusActive {
+			return true
+		}
+	}
+
+	return false
+}
+
 func CheckPremiumGuild(guildID string) (status bool) {
 
 	if PremiumServers[guildID] != "" {
@@ -260,9 +283,9 @@ func CheckPremiumGuild(guildID string) (status bool) {
 	for iter.Next() {
 		subscription := iter.Subscription()
 		if subscription.Status == stripe.SubscriptionStatusActive {
-			status = true
+			return true
 		}
 	}
 
-	return
+	return false
 }

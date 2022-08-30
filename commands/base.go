@@ -9,6 +9,12 @@ import (
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
+const (
+	EventTypeAuction  = "Auction"
+	EventTypeShop     = "Shop"
+	EventTypeGiveaway = "Giveaway"
+)
+
 func AddCommand() {
 
 }
@@ -205,3 +211,4 @@ func HasRole(m *discordgo.Member, roleID string) bool {
 	}
 	return false
 }
+

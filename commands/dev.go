@@ -39,14 +39,11 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return fmt.Errorf("User must be a developer to run this command")
 	}
 
-	devCreate := map[string]interface{}{
-		"bot": "main",
-	}
-
 	result := database.DB.Clauses(clause.OnConflict{
 		DoNothing: true,
-	}).Model(database.DevSetup{}).Create(&devCreate)
-
+	}).Model(database.DevSetup{}).Create(map[string]interface{}{
+		"bot_id": s.State.User.ID,
+	})
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 		return result.Error
@@ -66,9 +63,8 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}
 
 	result = database.DB.Model(database.DevSetup{
-		Bot: "main",
+		BotID: s.State.User.ID,
 	}).Updates(options)
-
 	if result.Error != nil {
 		fmt.Println(result.Error.Error())
 		return result.Error

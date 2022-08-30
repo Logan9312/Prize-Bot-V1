@@ -9,8 +9,14 @@ import (
 )
 
 type DevSetup struct {
-	Bot     string `gorm:"primaryKey"`
+	BotID   string `gorm:"primaryKey"`
 	Version string
+}
+
+type WhiteLabels struct {
+	BotID    string `gorm:"primaryKey"`
+	UserID   string
+	BotToken string
 }
 
 type AuctionSetup struct {
@@ -168,7 +174,7 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 
-	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{})
+	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
 	if err != nil {
 		fmt.Println(err)
 	}

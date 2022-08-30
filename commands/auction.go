@@ -17,12 +17,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	EventTypeAuction  = "Auction"
-	EventTypeShop     = "Shop"
-	EventTypeGiveaway = "Giveaway"
-)
-
 var AuctionCommand = discordgo.ApplicationCommand{
 	Name:        "auction",
 	Description: "Put an item up for auction!",
