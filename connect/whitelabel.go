@@ -83,7 +83,7 @@ func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 
 	result = database.DB.Model(database.WhiteLabels{
-		BotID: newSession.State.User.ID,
+		UserID: i.Member.User.Username,
 	}).Updates(whitelabelData)
 	if result.Error != nil {
 		return fmt.Errorf("Error saving bot data to database: %w", result.Error)
