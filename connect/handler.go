@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
@@ -207,6 +208,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var message *discordgo.Message
 	var err error
+	auctionMap := map[string]any{}
 	re := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
 
 	if !strings.HasPrefix(m.Content, "/") {
@@ -245,6 +247,19 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err = h.ErrorMessage(s, m.ChannelID, err.Error())
 			if err != nil {
 				fmt.Println(err)
+				return
+			}
+		}
+
+		//FIXME This was just a quick fix to prevent both bots trying to place a bit. Rework if needed once I can save auctions with bot ID
+		result := database.DB.Model(database.Auction{}).First(&auctionMap, m.ChannelID)
+		if result.Error != nil {
+			fmt.Println("Error fetching auction data from the database. Error Message:",  result.Error.Error())
+			return
+		}
+		m2, err := s.ChannelMessage(m.ChannelID, auctionMap["message_id"].(string))
+		if err == nil {
+			if m2.Author.ID != s.State.User.ID {
 				return
 			}
 		}
