@@ -284,7 +284,7 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 				options[v.Name] = strings.Title(fmt.Sprint(options[v.Name]))
 			case strings.Contains(v.Name, "role"):
 				options[v.Name] = fmt.Sprintf("<@&%s>", options[v.Name])
-			case strings.Contains(v.Name, "channel"):
+			case strings.Contains(v.Name, "channel") && v.Name != "channel_prefix":
 				options[v.Name] = fmt.Sprintf("<#%s>", options[v.Name])
 			case strings.Contains(v.Name, "category"):
 				category, err := s.Channel(options[v.Name].(string))
