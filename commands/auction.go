@@ -417,7 +417,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 		auctionMap["currency"] = currencyMap["currency"]
 	}
 
-	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_lock", "use_currency"} {
+	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_lock", "use_currency", "channel_prefix"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
@@ -552,7 +552,7 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 
 	result := database.DB.Model(database.Auction{}).Create(auctionMap)
 	if result.Error != nil {
-		return auctionMap["channel_id"].(string), fmt.Errorf("Error saving auction to database, auction will not work: %w",result.Error)
+		return auctionMap["channel_id"].(string), fmt.Errorf("Error saving auction to database, auction will not work: %w", result.Error)
 	}
 
 	go AuctionEndTimer(s, auctionMap)

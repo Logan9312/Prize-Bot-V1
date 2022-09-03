@@ -52,11 +52,12 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Name:        "disable_claiming",
 					Description: "Disables the claiming system, only leaves a record of prizes.",
 				},
-				{
+				//TODO Make channel prefix work for claiming
+				/*{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "channel_prefix",
 					Description: "modify the prefix of claiming tickets. Default: 🎁│",
-				},
+				},*/
 			},
 		},
 		{
