@@ -151,7 +151,7 @@ var SettingsCommand = discordgo.ApplicationCommand{
 				{
 					Type:        discordgo.ApplicationCommandOptionRole,
 					Name:        "host_role",
-					Description: "Set a role that can host auctions.",
+					Description: "DEPRECATED. Now slash command permissions are used instead.",
 				},
 				/*{
 					Type:        discordgo.ApplicationCommandOptionRole,
