@@ -593,6 +593,11 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		fmt.Println(result.Error)
 	}
 
+	message, _ := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
+	if message.Author.ID != s.State.User.ID {
+		return nil
+	}
+
 	if auctionSetup["snipe_range"] != nil && auctionSetup["snipe_extension"] != nil {
 		if time.Until(auctionMap["end_time"].(time.Time)) < auctionSetup["snipe_range"].(time.Duration) {
 			auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(auctionSetup["snipe_extension"].(time.Duration))

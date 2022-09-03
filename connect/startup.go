@@ -105,6 +105,7 @@ func Timers(s *discordgo.Session) {
 		go AuctionEndHandler(v, s)
 	}
 
+	//TODO Fix this with whitelabels
 	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
 	for _, v := range AuctionQueue {
 		go AuctionStartHandler(v, s)
