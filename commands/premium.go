@@ -262,7 +262,7 @@ func CheckPremiumUser(userID string) bool {
 	}
 
 	params := &stripe.SubscriptionSearchParams{}
-	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['user_id']:'%s'", userID))
+	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['discord_id']:'%s'", userID))
 	iter := sub.Search(params)
 
 	for iter.Next() {
