@@ -540,6 +540,8 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 		auctionMap["channel_id"] = channel.ID
 	}
 
+	delete(auctionMap, "channel_prefix")
+
 	message, err := h.SuccessMessage(s, auctionMap["channel_id"].(string), auctionMessage)
 	if err != nil {
 		return auctionMap["channel_id"].(string), err
