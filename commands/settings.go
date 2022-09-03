@@ -52,11 +52,11 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Name:        "disable_claiming",
 					Description: "Disables the claiming system, only leaves a record of prizes.",
 				},
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "channel_prefix",
 					Description: "modify the prefix of claiming tickets. Default: 🎁│",
-				},*/
+				},
 			},
 		},
 		{
@@ -119,11 +119,11 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Name:        "channel_lock",
 					Description: "Enabling this starts the auction in the channel where you run the auction create command.",
 				},
-				/*{
+				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "channel_prefix",
 					Description: "modify the prefix of auction channels. Default: 💸│",
-				},*/
+				},
 			},
 		},
 		{

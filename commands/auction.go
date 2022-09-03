@@ -524,13 +524,13 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 		auctionMap["category"] = ""
 	}
 	//TODO Make prefix work for editing and fix prefix working on create channel.
-	if auctionMap["prefix"] == nil {
-		auctionMap["prefix"] = "💸│"
+	if auctionMap["channel_prefix"] == nil {
+		auctionMap["channel_prefix"] = "💸│"
 	}
 
 	if auctionMap["channel_lock"] != true {
 		channel, err := s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
-			Name:     auctionMap["prefix"].(string) + auctionMap["item"].(string),
+			Name:     auctionMap["channel_prefix"].(string) + auctionMap["item"].(string),
 			Type:     discordgo.ChannelTypeGuildText,
 			ParentID: auctionMap["category"].(string),
 		})
