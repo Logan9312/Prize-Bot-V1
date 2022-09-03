@@ -142,6 +142,8 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
+	//TODO Turn this into a confirmation modal
+
 	if CheckPremiumGuild(i.GuildID) {
 		h.SuccessResponse(s, i, h.PresetResponse{
 			Title:       "**Premium Server**",

@@ -66,6 +66,7 @@ func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 	newSession, err := BotConnect(token, "prod")
 	if err != nil {
+		newSession.Close()
 		return fmt.Errorf("Error connecting bot: %w", err)
 	}
 
