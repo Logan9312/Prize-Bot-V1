@@ -593,9 +593,12 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 		fmt.Println(result.Error)
 	}
 
-	message, _ := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
-	if message.Author.ID != s.State.User.ID {
-		return nil
+	//FIXME This was just a quick fix to prevent both bots trying to place a bit. Rework if needed once I can save auctions with bot ID
+	message, err := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
+	if err == nil {
+		if message.Author.ID != s.State.User.ID {
+			return nil
+		}
 	}
 
 	if auctionSetup["snipe_range"] != nil && auctionSetup["snipe_extension"] != nil {
