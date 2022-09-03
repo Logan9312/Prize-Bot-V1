@@ -552,7 +552,7 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 
 	result := database.DB.Model(database.Auction{}).Create(auctionMap)
 	if result.Error != nil {
-		return auctionMap["channel_id"].(string), result.Error
+		return auctionMap["channel_id"].(string), fmt.Errorf("Error saving auction to database, auction will not work: %w",result.Error)
 	}
 
 	go AuctionEndTimer(s, auctionMap)
