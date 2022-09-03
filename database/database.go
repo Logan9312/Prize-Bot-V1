@@ -32,6 +32,7 @@ type AuctionSetup struct {
 	IntegerOnly     bool
 	ChannelOverride string
 	ChannelLock     bool
+	ChannelPrefix   string
 }
 
 type Auction struct {
@@ -96,6 +97,7 @@ type ClaimSetup struct {
 	LogChannel      string
 	Expiration      string
 	DisableClaiming bool
+	ChannelPrefix   string
 }
 
 type Claim struct {
@@ -112,6 +114,7 @@ type Claim struct {
 	ImageURL    string
 	TicketID    string
 	Description string
+	UseCurrency bool
 }
 
 type Giveaway struct {

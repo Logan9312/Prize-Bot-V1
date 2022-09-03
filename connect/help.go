@@ -23,6 +23,7 @@ var HelpCommand = discordgo.ApplicationCommand{
 
 var PermissionNames = map[string]int64{
 	"Administrator": discordgo.PermissionAdministrator,
+	"Manage Server": discordgo.PermissionManageServer,
 }
 
 func Help(s *discordgo.Session, i *discordgo.InteractionCreate) error {

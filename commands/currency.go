@@ -62,7 +62,7 @@ var CurrencyCommand = discordgo.ApplicationCommand{
 			Description: "Lists the currency of all saved users.",
 		},
 	},
-	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
+	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionManageServer)),
 	DMPermission:             new(bool),
 }
 

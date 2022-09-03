@@ -83,7 +83,7 @@ var ClaimCommand = discordgo.ApplicationCommand{
 			},
 		},
 	},
-	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
+	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionManageServer)),
 }
 
 func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) error {

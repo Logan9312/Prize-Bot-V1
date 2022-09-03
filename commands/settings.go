@@ -17,7 +17,7 @@ import (
 var SettingsCommand = discordgo.ApplicationCommand{
 	Name:                     "settings",
 	Description:              "Change any settings for your bot",
-	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionAdministrator)),
+	DefaultMemberPermissions: h.Ptr(int64(discordgo.PermissionManageServer)),
 	DMPermission:             new(bool),
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -51,6 +51,11 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "disable_claiming",
 					Description: "Disables the claiming system, only leaves a record of prizes.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "channel_prefix",
+					Description: "modify the prefix of claiming tickets. Default: 🎁│",
 				},
 			},
 		},
@@ -113,6 +118,11 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "channel_lock",
 					Description: "Enabling this starts the auction in the channel where you run the auction create command.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "channel_prefix",
+					Description: "modify the prefix of auction channels. Default: 💸│",
 				},
 			},
 		},

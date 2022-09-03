@@ -498,7 +498,7 @@ func AuctionHostCheck(auctionSetup map[string]any, member *discordgo.Member) boo
 		}
 	}
 
-	return member.Permissions&discordgo.PermissionAdministrator == 8
+	return member.Permissions&discordgo.PermissionManageServer == 8
 }
 
 func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (string, error) {
@@ -523,9 +523,17 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 	if auctionMap["category"] == nil {
 		auctionMap["category"] = ""
 	}
+	//TODO Make prefix work for editing and fix prefix working on create channel.
+	if auctionMap["prefix"] == nil {
+		auctionMap["prefix"] = "💸│"
+	}
 
 	if auctionMap["channel_lock"] != true {
-		channel, err := MakeAuctionChannel(s, auctionMap["guild_id"].(string), auctionMap["category"].(string), auctionMap["item"].(string))
+		channel, err := s.GuildChannelCreateComplex(auctionMap["guild_id"].(string), discordgo.GuildChannelCreateData{
+			Name:     auctionMap["prefix"].(string) + auctionMap["item"].(string),
+			Type:     discordgo.ChannelTypeGuildText,
+			ParentID: auctionMap["category"].(string),
+		})
 		if err != nil {
 			return "", err
 		}
@@ -548,16 +556,6 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 	go AuctionEndTimer(s, auctionMap)
 
 	return auctionMap["channel_id"].(string), nil
-}
-
-func MakeAuctionChannel(s *discordgo.Session, guildID, category, item string) (*discordgo.Channel, error) {
-
-	return s.GuildChannelCreateComplex(guildID, discordgo.GuildChannelCreateData{
-		Name:     "💸│" + item,
-		Type:     discordgo.ChannelTypeGuildText,
-		ParentID: category,
-	})
-
 }
 
 func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -1049,7 +1047,8 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		if err != nil {
 			return err
 		}
-		//Add in a message about this when the auction ends
+		//TODO Add in a message about this when the auction ends
+		//TODO Move this to the claiming process.
 	}
 
 	if auctionMap["buyout"] != nil {
