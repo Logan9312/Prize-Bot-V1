@@ -165,7 +165,6 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 					},
 				})
 				h.SuccessResponse(s, i, h.PresetResponse{
-					Content:     "",
 					Title:       "**Server Activated!**",
 					Description: "Your server has successfully been activated and should now work with premium features!",
 				})
@@ -174,7 +173,7 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 		}
 	}
 
-	err := h.ErrorResponse(s, i, "No valid subscription found! Please subscribe to premium first using `/premium info`")
+	err := h.ErrorResponse(s, i, "No unlinked subscription found! Please subscribe to premium first using `/premium info`")
 	if err != nil {
 		fmt.Println(err)
 		return err
