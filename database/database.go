@@ -33,6 +33,7 @@ type AuctionSetup struct {
 	ChannelOverride string
 	ChannelLock     bool
 	ChannelPrefix   string
+	UseCurrency     bool
 }
 
 type Auction struct {
