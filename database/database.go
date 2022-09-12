@@ -87,6 +87,7 @@ type AuctionQueue struct {
 	ChannelOverride string
 	ChannelLock     bool
 	UseCurrency     bool
+	ChannelPrefix   string
 }
 
 // ClaimSetup FromMake sure to remove LogChannel and ClaimMessage from auction log
