@@ -54,7 +54,7 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 
 	err = s.Open()
 	if err != nil {
-		return s, fmt.Errorf("Failed to open a websocket connection with discord. Likely due to an ivalid token. %w", err)
+		return s, fmt.Errorf("Failed to open a websocket connection with discord. Likely due to an invalid token. %w", err)
 	}
 
 	fmt.Println(s.State.User.Username, " Starting Up...")
