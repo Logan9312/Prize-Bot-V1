@@ -311,6 +311,7 @@ func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			member, err = s.GuildMember(i.GuildID, v["user_id"].(string))
 			if err != nil {
 				fmt.Println(err)
+				continue
 			}
 		}
 
