@@ -1035,6 +1035,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 
 	if auctionSetup["log_channel"] == nil {
 		fmt.Println("Log channel has not been set for guild: " + guildID)
+		// TODO Instead of sending an error message, update the auction with the error
 		_, err := h.ErrorMessage(s, channelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/settings auction`. You might need to end the auction manually after setting the channel.")
 		if err != nil {
 			return err

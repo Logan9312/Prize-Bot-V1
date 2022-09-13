@@ -61,6 +61,8 @@ func main() {
 		fmt.Println("Error fetching whitelabels:", result.Error)
 	}
 
+	connect.Timers(mainSession)
+
 	for _, v := range WhiteLabels {
 		s, err := connect.BotConnect(v["bot_token"].(string), environment.Environment)
 		if err != nil {
@@ -72,11 +74,11 @@ func main() {
 				fmt.Println("Error setting status", err)
 			}
 		}
+		connect.Timers(s)
 	}
 
 	go commands.SetRoles(mainSession)
-	connect.Timers(mainSession)
-
+	
 	fmt.Println("Bot is running!")
 
 	routers.BotStatus()
