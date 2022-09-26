@@ -78,7 +78,7 @@ func main() {
 	}
 
 	go commands.SetRoles(mainSession)
-	
+
 	fmt.Println("Bot is running!")
 
 	routers.BotStatus()
