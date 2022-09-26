@@ -626,6 +626,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 			return fmt.Errorf("You do not have enough currency to bid on this auction. You need %s and you have %s", PriceFormat(amount, guildID, auctionMap["currency"]), PriceFormat(userMap["balance"].(float64), guildID, auctionMap["currency"]))
 		}
 	}
+	
 
 	//Checking if the auction has ended.
 	if auctionMap["end_time"].(time.Time).Before(time.Now()) {
