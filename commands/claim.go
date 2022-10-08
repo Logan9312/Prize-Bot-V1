@@ -234,13 +234,13 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 	}
 
 	if claimMap["formatted_price"] != nil {
-		finalBid = claimMap["formatted_price"].(string)
+		finalBid = p.Sprint(claimMap["formatted_price"].(string))
 	}
 	if claimMap["buyout_message"] != nil {
-		finalBid = claimMap["buyout_message"].(string)
+		finalBid = p.Sprint(claimMap["buyout_message"].(string))
 	}
 	if claimMap["target_message"] != nil {
-		finalBid = claimMap["target_message"].(string)
+		finalBid = p.Sprint(claimMap["target_message"].(string))
 	}
 	if claimMap["cost"] != nil {
 		finalBid = p.Sprint(claimMap["cost"].(float64))
