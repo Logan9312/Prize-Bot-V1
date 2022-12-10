@@ -84,13 +84,13 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	currencyMap["guild_id"] = i.GuildID
 	currencyMap["interaction"] = i
 	if i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)] != nil {
-		if !CheckPremiumGuild(i.GuildID) {
+		/*if !CheckPremiumGuild(i.GuildID) {
 			err := h.PremiumError(s, i, "Premium is needed to edit the currency of an entire role. Please select only an user or purchase premium to use this function.")
 			if err != nil {
 				fmt.Println(err)
 			}
 			return nil
-		}
+		}*/
 		currencyMap["role"] = i.ApplicationCommandData().Resolved.Roles[currencyMap["target"].(string)]
 
 		h.SaveChunkData(i.ID, currencyMap)
