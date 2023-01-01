@@ -15,7 +15,6 @@ type slashCommands struct {
 
 var BotCommands = slashCommands{
 	Local: []*discordgo.ApplicationCommand{
-		&HelpCommand,
 		&c.ShopCommand,
 		&c.QuestCommand,
 		//&QuestContextMenu,
@@ -115,6 +114,33 @@ func Timers(s *discordgo.Session) {
 	for _, v := range Giveaways {
 		go GiveawayEndHandler(v, s)
 	}
+}
+
+func EventStart(s *discordgo.Session, event *database.Event) {
+
+}
+
+func EventEnd(s *discordgo.Session, event *database.Event) {
+
+}
+
+func EventTimers(s *discordgo.Session, event *database.Event) {
+	if event.StartTime != nil {
+		if event.StartTime.Before(time.Now()) {
+			EventStart(s, event)
+		} else {
+			time.Sleep(time.Until(*event.StartTime))
+			EventStart(s, event)
+		}
+	} else {
+		if event.EndTime.Before(time.Now()) {
+			EventEnd(s, event)
+		} else {
+			time.Sleep(time.Until(*event.EndTime))
+			EventEnd(s, event)
+		}
+	}
+
 }
 
 func AuctionEndHandler(v map[string]interface{}, s *discordgo.Session) {

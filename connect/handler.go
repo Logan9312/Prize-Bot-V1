@@ -33,7 +33,7 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"whitelabel":     Whitelabel,
 }
 
-var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
+var buttonMap = map[string]func(*discordgo.Session, *discordgo.InteractionCreate) error{
 	"endauction":             c.AuctionEndButton,
 	"claim_prize":            c.ClaimPrizeButton,
 	"clearauction":           c.ClearAuctionButton,
@@ -50,7 +50,6 @@ var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCr
 	"additem":                c.AddItem,
 	"bid_history":            c.AuctionBidHistory,
 	"questbutton":            c.QuestButton,
-	"helpmenu":               HelpMenu,
 }
 
 var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
@@ -233,7 +232,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		}
-		
+
 		if len(args) != 2 {
 			message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
 			if err != nil {

@@ -29,4 +29,4 @@ Prod:
         name: prod
     script: 
         - source scripts/deploy-prod.sh
-    when: on_success # set to manual if branch
+    when: manual # set to manual if branch

@@ -15,10 +15,6 @@ const (
 	EventTypeGiveaway = "Giveaway"
 )
 
-func AddCommand() {
-
-}
-
 func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType string, guildID string) (h.PresetResponse, error) {
 
 	content := ""

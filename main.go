@@ -50,11 +50,6 @@ func main() {
 		fmt.Println(result.Error)
 	}
 
-	err = mainSession.UpdateGameStatus(0, "Bot Version "+devData.Version)
-	if err != nil {
-		fmt.Println("Error setting status", err)
-	}
-
 	WhiteLabels := []map[string]any{}
 	result = database.DB.Model([]database.WhiteLabels{}).Find(&WhiteLabels)
 	if result.Error != nil {
