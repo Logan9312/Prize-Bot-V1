@@ -11,7 +11,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
-	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	r "gitlab.com/logan9312/discord-auction-bot/responses"
 )
 
 // Move these to commands package
@@ -73,87 +73,45 @@ func RegisterHandlers(s *discordgo.Session) {
 }
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.Member == nil {
+		r.ErrorResponse(s, i, fmt.Errorf("Commands cannot be run in a DM. Please contact support if you're not currently in a DM with the bot."))
+		return
+	}
+
+	if f := InteractionRouter(s, i); f != nil {
+		if err := f(s, i); err != nil {
+			r.ErrorResponse(s, i, err)
+		}
+	} else {
+		r.ErrorResponse(s, i, fmt.Errorf("Response has not been set properly, please contact Logan to fix"))
+	}
+
+}
+
+func InteractionRouter(s *discordgo.Session, i *discordgo.InteractionCreate) func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
-		if i.Member == nil {
-			h.ErrorResponse(s, i, "Commands cannot be run in a DM. Please contact support if you're not currently in a DM with the bot.")
-			return
-		}
 		fmt.Println(i.ApplicationCommandData().Name, "is being run by:", i.Member.User.Username)
-		if f, ok := commandMap[i.ApplicationCommandData().Name]; ok {
-			err := f(s, i)
-			if err != nil {
-				err2 := h.ErrorResponse(s, i, err.Error())
-				if err2 != nil {
-					fmt.Println(err2)
-					_, err = h.FollowUpErrorResponse(s, i, err.Error())
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
-			}
-		} else {
-			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
-		}
+		return commandMap[i.ApplicationCommandData().Name]
+
 	case discordgo.InteractionMessageComponent:
 		fmt.Println(i.MessageComponentData().CustomID, "is being run by:", i.Member.User.Username)
-		if f, ok := buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]; ok {
-			err := f(s, i)
-			if err != nil {
-				err2 := h.ErrorResponse(s, i, err.Error())
-				if err2 != nil {
-					fmt.Println(err2)
-					_, err = h.FollowUpErrorResponse(s, i, err.Error())
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
-			}
-		} else {
-			h.ErrorResponse(s, i, "Button response has not been set properly, please contact Logan to fix")
-		}
+		return buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]
+
 	case discordgo.InteractionApplicationCommandAutocomplete:
-		if f, ok := autoCompleteMap[i.ApplicationCommandData().Name]; ok {
-			err := f(s, i)
-			if err != nil {
-				err = h.ErrorResponse(s, i, err.Error())
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
-		} else {
-			h.ErrorResponse(s, i, "AutoComplete response has not been set properly, please contact Logan to fix")
-		}
+		return autoCompleteMap[i.ApplicationCommandData().Name]
+
 	case discordgo.InteractionModalSubmit:
+		fmt.Println(i.ModalSubmitData().CustomID, "is being run by:", i.Member.User.Username)
 		if i.ModalSubmitData().CustomID == "whitelabel_token" {
-			err := WhitelabelTokenModal(s, i)
-			if err != nil {
-				err2 := h.ErrorResponse(s, i, err.Error())
-				if err2 != nil {
-					fmt.Println(err2)
-					_, err = h.FollowUpErrorResponse(s, i, err.Error())
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
-			}
-		} else if f, ok := modalSubmitMap[i.ModalSubmitData().CustomID]; ok {
-			err := f(s, i)
-			if err != nil {
-				err2 := h.ErrorResponse(s, i, err.Error())
-				if err2 != nil {
-					fmt.Println(err2)
-					_, err = h.FollowUpErrorResponse(s, i, err.Error())
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
-			}
+			return WhitelabelTokenModal
 		} else {
-			h.ErrorResponse(s, i, "Modal Submit response has not been set properly, please contact Logan to fix")
+			return modalSubmitMap[i.ModalSubmitData().CustomID]
 		}
 	}
+
+	return nil
 }
 
 func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {

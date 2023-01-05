@@ -119,6 +119,7 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	options := h.ParseSubCommand(i)
+	errors := []string{}
 
 	duration, err := h.ParseTime(strings.ToLower(options["duration"].(string)))
 	if err != nil {
@@ -144,10 +145,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 		channelID, err := AuctionHandler(s, auctionMap, i.Member, i.GuildID, duration)
 		if err != nil {
-			return err
+			errors = append(errors, err.Error())
 		}
 
-		err = r.SuccessResponse(s, i, &discordgo.InteractionResponseData{
+		_, err = r.FollowUpSuccessResponse(s, i, &discordgo.WebhookParams{
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "**Auction Starting**",
@@ -159,7 +160,9 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			fmt.Println(err)
 		}
 	}
-
+	if len(errors) > 0 {
+		return fmt.Errorf("One or more auctions failed to start:\n", strings.Join(errors, "\n"))
+	}
 	return nil
 }
 
