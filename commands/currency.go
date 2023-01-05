@@ -22,15 +22,6 @@ var CurrencyCommand = discordgo.ApplicationCommand{
 		},
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "subtract",
-			Description: "Subtracts from existing currency amount.",
-			Options: []*discordgo.ApplicationCommandOption{
-				Require(CommandOptionTarget),
-				Require(CommandOptionAmount),
-			},
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "set",
 			Description: "Sets currency to a specific value.",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -65,8 +56,6 @@ func Currency(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "add":
 		return CurrencyAdd(s, i)
-	case "subtract":
-		return CurrencySubtract(s, i)
 	case "set":
 		return CurrencySet(s, i)
 	case "list":
@@ -78,3 +67,4 @@ func Currency(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}
 	return fmt.Errorf("Unknown Currency command, please contact support")
 }
+

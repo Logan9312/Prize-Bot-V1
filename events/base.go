@@ -1,15 +1,20 @@
 package events
 
-import "gitlab.com/logan9312/discord-auction-bot/database"
+import (
+	"time"
+)
 
-func EventSave(event database.Event) error {
-	return database.DB.Create(event).Error
+type Event struct {
+	ID        uint `gorm:"primaryKey"`
+	BotID     string
+	EventType string
+	GuildID   string
+	ChannelID string
+	MessageID string
+	StartTime *time.Time
+	EndTime   *time.Time
 }
 
-func Update(event any) error {
-	return database.DB.Updates(event).Error
-}
+func (event Event) StartTimers() {
 
-func EventCreate(event database.Event) error {
-	return database.DB.Create(event).Error
 }
