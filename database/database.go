@@ -172,13 +172,14 @@ var DB *gorm.DB
 func DatabaseConnect(password, host, env string) {
 	fmt.Println("Connecting to Database...")
 	defer fmt.Println("Bot has finished attempting to connect to the database!")
-
+	fmt.Println(env)
 	if env == "prod" {
 		DB = ProdDB(password, host)
 	} else if env == "local" {
 		DB = LocalDB()
 	}
 
+	fmt.Println(DB)
 	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
 	if err != nil {
 		fmt.Println(err)

@@ -524,18 +524,18 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		Value: "• **Complete**: Click when you have successfully claimed your prize.\n• **Cancel** (Admin only): Close the ticket without claiming.",
 	})
 
-	thumbnail := &discordgo.MessageEmbedThumbnail{}
+	/*thumbnail := &discordgo.MessageEmbedThumbnail{}
 
 	if len(i.Message.Embeds) > 0 && i.Message.Embeds[0].Thumbnail != nil {
 		thumbnail = i.Message.Embeds[0].Thumbnail
-	}
+	}*/
 
-	h.SuccessMessage(s, channel.ID, h.PresetResponse{
+	_, err = h.SuccessMessage(s, channel.ID, h.PresetResponse{
 		Content:     fmt.Sprintf("<@%s> %s", claimMap["host"].(string), i.Member.Mention()),
 		Title:       "Ticket!",
 		Description: "This is where you claim your prize.",
 		Fields:      fields,
-		Thumbnail:   thumbnail,
+		//Thumbnail:   thumbnail,
 		Image:       &discordgo.MessageEmbedImage{},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
@@ -558,6 +558,9 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		Embeds: []*discordgo.MessageEmbed{},
 		Files:  []*discordgo.File{},
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	database.DB.Model(database.Claim{
 		MessageID: claimMap["message_id"].(string),
