@@ -344,9 +344,9 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		Content: mentionUser,
 		Title:   fmt.Sprintf("%s Prize: __**%s**__", eventType, claimMap["item"]),
 		Fields:  fields,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
+		/*Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: claimMap["image_url"].(string),
-		},
+		},*/
 		Image: &discordgo.MessageEmbedImage{
 			URL: "https://i.imgur.com/9wo7diC.png",
 		},
@@ -578,7 +578,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	issues := ""
-	thumbnail := ""
+	//thumbnailImage := &discordgo.MessageEmbedThumbnail{}
 
 	customID := strings.Split(i.MessageComponentData().CustomID, ":")
 
@@ -601,7 +601,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	}
 
 	if claimMap["image_url"] != nil {
-		thumbnail = claimMap["image_url"].(string)
+		//thumbnailImage.URL = claimMap["image_url"].(string)
 	}
 
 	if claimSetup["log_channel"] == nil {
@@ -690,9 +690,7 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 		Title:       "**Ticket Log**",
 		Description: "This prize has been claimed successfully, soon I should have a transcript of the ticket saved as well.",
 		Fields:      fields,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: thumbnail,
-		},
+		//Thumbnail:   thumbnailImage,
 		Image: &discordgo.MessageEmbedImage{
 			URL: "https://i.imgur.com/9wo7diC.png",
 		},

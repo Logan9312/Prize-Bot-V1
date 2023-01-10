@@ -22,7 +22,7 @@ func AddCommand() {
 func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType string, guildID string) (h.PresetResponse, error) {
 
 	content := ""
-	imageURL := ""
+	//embedImage := &discordgo.MessageEmbedImage{}
 	embeds := []*discordgo.MessageEmbed{}
 
 	if data["item"] != nil && len(data["item"].(string)) > 100 {
@@ -30,7 +30,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 	}
 
 	if data["image_url"] != nil {
-		imageURL = data["image_url"].(string)
+		//embedImage.URL = data["image_url"].(string)
 	}
 
 	description := fmt.Sprintf("**Host:** <@%s>.\n", data["host"])
@@ -192,11 +192,11 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 	}
 
 	return h.PresetResponse{
-		Content:    content,
-		Title:      fmt.Sprintf("%s Item: __**%s**__", eventType, data["item"]),
-		Fields:     auctionfields,
-		Thumbnail:  &discordgo.MessageEmbedThumbnail{URL: guild.IconURL()},
-		Image:      &discordgo.MessageEmbedImage{URL: imageURL},
+		Content:   content,
+		Title:     fmt.Sprintf("%s Item: __**%s**__", eventType, data["item"]),
+		Fields:    auctionfields,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{URL: guild.IconURL()},
+		//Image:      embedImage,
 		Components: components,
 		Embeds:     embeds,
 		Files:      []*discordgo.File{},
@@ -211,4 +211,3 @@ func HasRole(m *discordgo.Member, roleID string) bool {
 	}
 	return false
 }
-
