@@ -11,7 +11,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
-	r "gitlab.com/logan9312/discord-auction-bot/responses"
+	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 )
 
 // Move these to commands package
@@ -33,7 +33,7 @@ var commandMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionC
 	"whitelabel":     Whitelabel,
 }
 
-var buttonMap = map[string]func(*discordgo.Session, *discordgo.InteractionCreate) error{
+var buttonMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
 	"endauction":             c.AuctionEndButton,
 	"claim_prize":            c.ClaimPrizeButton,
 	"clearauction":           c.ClearAuctionButton,
@@ -50,6 +50,7 @@ var buttonMap = map[string]func(*discordgo.Session, *discordgo.InteractionCreate
 	"additem":                c.AddItem,
 	"bid_history":            c.AuctionBidHistory,
 	"questbutton":            c.QuestButton,
+	"helpmenu":               HelpMenu,
 }
 
 var autoCompleteMap = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) error{
@@ -73,45 +74,87 @@ func RegisterHandlers(s *discordgo.Session) {
 }
 
 func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Member == nil {
-		r.ErrorResponse(s, i, fmt.Errorf("Commands cannot be run in a DM. Please contact support if you're not currently in a DM with the bot."))
-		return
-	}
-
-	if f := InteractionRouter(s, i); f != nil {
-		if err := f(s, i); err != nil {
-			r.ErrorResponse(s, i, err)
-		}
-	} else {
-		r.ErrorResponse(s, i, fmt.Errorf("Response has not been set properly, please contact Logan to fix"))
-	}
-
-}
-
-func InteractionRouter(s *discordgo.Session, i *discordgo.InteractionCreate) func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
+		if i.Member == nil {
+			h.ErrorResponse(s, i, "Commands cannot be run in a DM. Please contact support if you're not currently in a DM with the bot.")
+			return
+		}
 		fmt.Println(i.ApplicationCommandData().Name, "is being run by:", i.Member.User.Username)
-		return commandMap[i.ApplicationCommandData().Name]
-
+		if f, ok := commandMap[i.ApplicationCommandData().Name]; ok {
+			err := f(s, i)
+			if err != nil {
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
+		} else {
+			h.ErrorResponse(s, i, "Command response has not been set properly, please contact Logan to fix")
+		}
 	case discordgo.InteractionMessageComponent:
 		fmt.Println(i.MessageComponentData().CustomID, "is being run by:", i.Member.User.Username)
-		return buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]
-
-	case discordgo.InteractionApplicationCommandAutocomplete:
-		return autoCompleteMap[i.ApplicationCommandData().Name]
-
-	case discordgo.InteractionModalSubmit:
-		fmt.Println(i.ModalSubmitData().CustomID, "is being run by:", i.Member.User.Username)
-		if i.ModalSubmitData().CustomID == "whitelabel_token" {
-			return WhitelabelTokenModal
+		if f, ok := buttonMap[strings.Split(i.MessageComponentData().CustomID, ":")[0]]; ok {
+			err := f(s, i)
+			if err != nil {
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
 		} else {
-			return modalSubmitMap[i.ModalSubmitData().CustomID]
+			h.ErrorResponse(s, i, "Button response has not been set properly, please contact Logan to fix")
+		}
+	case discordgo.InteractionApplicationCommandAutocomplete:
+		if f, ok := autoCompleteMap[i.ApplicationCommandData().Name]; ok {
+			err := f(s, i)
+			if err != nil {
+				err = h.ErrorResponse(s, i, err.Error())
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		} else {
+			h.ErrorResponse(s, i, "AutoComplete response has not been set properly, please contact Logan to fix")
+		}
+	case discordgo.InteractionModalSubmit:
+		if i.ModalSubmitData().CustomID == "whitelabel_token" {
+			err := WhitelabelTokenModal(s, i)
+			if err != nil {
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
+		} else if f, ok := modalSubmitMap[i.ModalSubmitData().CustomID]; ok {
+			err := f(s, i)
+			if err != nil {
+				err2 := h.ErrorResponse(s, i, err.Error())
+				if err2 != nil {
+					fmt.Println(err2)
+					_, err = h.FollowUpErrorResponse(s, i, err.Error())
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
+		} else {
+			h.ErrorResponse(s, i, "Modal Submit response has not been set properly, please contact Logan to fix")
 		}
 	}
-
-	return nil
 }
 
 func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
@@ -190,7 +233,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		}
-
+		
 		if len(args) != 2 {
 			message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
 			if err != nil {

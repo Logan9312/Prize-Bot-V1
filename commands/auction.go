@@ -12,7 +12,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
-	r "gitlab.com/logan9312/discord-auction-bot/responses"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"gorm.io/gorm"
@@ -24,43 +23,96 @@ var AuctionCommand = discordgo.ApplicationCommand{
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
-			Name:        "schedule",
-			Description: "Schedule an auction",
-			Options: []*discordgo.ApplicationCommandOption{
-				Require(CommandOptionTimeUntil),
-				Require(CommandOptionItem),
-				Require(CommandOptionBid),
-				Require(CommandOptionDuration),
-				CommandOptionDescription,
-				CommandOptionCurrency,
-				CommandOptionUseCurrency,
-				CommandOptionIntegerOnly,
-				CommandOptionIncrementMax,
-				CommandOptionIncrementMin,
-				CommandOptionBuyout,
-				CommandOptionTargetPrice,
-				CommandOptionCategory,
-				CommandOptionImage,
-			},
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "create",
 			Description: "Create an Auction",
 			Options: []*discordgo.ApplicationCommandOption{
-				Require(CommandOptionItem),
-				Require(CommandOptionBid),
-				Require(CommandOptionDuration),
-				CommandOptionDescription,
-				CommandOptionCurrency,
-				CommandOptionUseCurrency,
-				CommandOptionIntegerOnly,
-				CommandOptionIncrementMax,
-				CommandOptionIncrementMin,
-				CommandOptionBuyout,
-				CommandOptionTargetPrice,
-				CommandOptionCategory,
-				CommandOptionImage,
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The item you wish to auction off",
+					Required:    true,
+				},
+				{
+					Type:        10,
+					Name:        "bid",
+					Description: "The starting price to bid on",
+					Required:    true,
+				},
+				{
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "duration",
+					Description:  "Time that auction will run for. (Example: 24h, or 1d)",
+					Required:     true,
+					Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "description",
+					Description: "Set a custom item description",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency",
+					Description: "A one time currency to use for this auction.",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "use_currency",
+					Description: "The winner will pay with their currency balance.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
+				},
+				{
+					Type:        10,
+					Name:        "increment_max",
+					Description: "The max amount someone can bid at once",
+					Required:    false,
+				},
+				{
+					Type:        10,
+					Name:        "increment_min",
+					Description: "The minimum amount someone can bid at once",
+					Required:    false,
+				},
+				{
+					Type:        10,
+					Name:        "buyout",
+					Description: "Set a price that someone can immediately win the auction for if they bid it or higher.",
+					Required:    false,
+				},
+				{
+					Type:        10,
+					Name:        "target_price",
+					Description: "If this hidden price is not reached, no winner will be chosen",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "category",
+					Description: "Sets the category to create auctions in.",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						4,
+					},
+				},
+				{
+					Type:        11,
+					Name:        "image",
+					Description: "Attach an image to your auction",
+					Required:    false,
+				},
+				{
+					Type:         discordgo.ApplicationCommandOptionString,
+					Name:         "schedule",
+					Description:  "Set how long until the auction starts. (Example: 24h, or 1d)",
+					Required:     false,
+					Autocomplete: true,
+				},
 			},
 		},
 		{
@@ -73,23 +125,123 @@ var AuctionCommand = discordgo.ApplicationCommand{
 			Name:        "edit",
 			Description: "Edit any auction details",
 			Options: []*discordgo.ApplicationCommandOption{
-				//CommandOptionQueueNumber
-				CommandOptionItem,
-				CommandOptionHost,
-				CommandOptionBid,
-				CommandOptionHost,
-				CommandOptionWinner,
-				CommandOptionExtend,
-				CommandOptionDescription,
-				CommandOptionCurrency,
-				CommandOptionUseCurrency,
-				CommandOptionCurrencySide,
-				CommandOptionIntegerOnly,
-				CommandOptionIncrementMax,
-				CommandOptionIncrementMin,
-				CommandOptionBuyout,
-				CommandOptionTargetPrice,
-				CommandOptionImage,
+				/*{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "queue_number",
+					Description: "The number of the auction if you are editing one in queue.",
+					Required:    false,
+					//Autocomplete: true,
+				},*/
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "Change the auction item",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "host",
+					Description: "Changes the host",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        10,
+					Name:        "bid",
+					Description: "Change the original bid, or edit the current bid",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "winner",
+					Description: "Set the current winner",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "extend",
+					Description: "Extend the length of the auction, use a negative value to reduce the time. (Example: 24h, or 1d)",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "description",
+					Description: "Change the description",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency",
+					Description: "Change the currency",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "use_currency",
+					Description: "The winner will pay with their currency balance.",
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "currency_side",
+					Description: "Left/Right currency",
+					//Autocomplete: true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "Left",
+							Value: "left",
+						},
+						{
+							Name:  "Right",
+							Value: "right",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "integer_only",
+					Description: "Only allow integer bids (no decimals).",
+				},
+				{
+					Type:        10,
+					Name:        "increment_max",
+					Description: "The max amount someone can bid at once",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        10,
+					Name:        "increment_min",
+					Description: "The minimum amount someone can bid at once",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        10,
+					Name:        "buyout",
+					Description: "Edit the buyout price",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        10,
+					Name:        "target_price",
+					Description: "Edit the hidden target price",
+					Required:    false,
+					//Autocomplete: true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionAttachment,
+					Name:        "image",
+					Description: "Edit the image",
+					Required:    false,
+					//Autocomplete: true,
+				},
 			},
 		},
 	},
@@ -99,14 +251,17 @@ var BidCommand = discordgo.ApplicationCommand{
 	Name:        "bid",
 	Description: "Bid on an Auction",
 	Options: []*discordgo.ApplicationCommandOption{
-		Require(CommandOptionBid),
+		{
+			Type:        10,
+			Name:        "amount",
+			Description: "Place your bid here",
+			Required:    true,
+		},
 	},
 }
 
 func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
-	case "schedule":
-		return AuctionSchedule(s, i)
 	case "create":
 		return AuctionCreate(s, i)
 	case "queue":
@@ -118,59 +273,18 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 }
 
 func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+
 	options := h.ParseSubCommand(i)
-	errors := []string{}
 
-	duration, err := h.ParseTime(strings.ToLower(options["duration"].(string)))
-	if err != nil {
-		return fmt.Errorf("Error parsing duration input: %w", err)
+	if options["currency"] != nil && options["use_currency"] == true {
+		return fmt.Errorf("An auction cannot be created with both `use_currency` and `currency` set. This is because if `use_currency` is on, it will affect the global currency set with `/settings currency`.")
 	}
 
-	auctions := strings.Split(options["item"].(string), ";")
-
-	if len(auctions) > 5 && !CheckPremiumGuild(i.GuildID) {
-		r.PremiumError(s, i, "Free users can only start 5 auctions in bulk. Upgrade to premium to start up to 100 in bulk.")
-	}
-
-	if len(auctions) > 100 {
-		return fmt.Errorf("You can only start 100 auctions in bulk at once. You attempted to start: %d.", len(auctions))
-	}
-
-	for _, item := range auctions {
-		auctionMap := map[string]any{}
-		for k, v := range options {
-			auctionMap[k] = v
-		}
-		auctionMap["item"] = item
-
-		channelID, err := AuctionHandler(s, auctionMap, i.Member, i.GuildID, duration)
-		if err != nil {
-			errors = append(errors, err.Error())
-		}
-
-		_, err = r.FollowUpSuccessResponse(s, i, &discordgo.WebhookParams{
-			Embeds: []*discordgo.MessageEmbed{
-				{
-					Title:       "**Auction Starting**",
-					Description: fmt.Sprintf("Auction has successfully been started in <#%s>!", channelID),
-				},
-			},
-		})
-		if err != nil {
-			fmt.Println(err)
+	if options["schedule"] != nil {
+		if !CheckPremiumGuild(i.GuildID) {
+			return h.PremiumError(s, i, "Please leave `schedule` blank when creating an option or purchase premium to scheudue auctions in advance")
 		}
 	}
-	if len(errors) > 0 {
-		return fmt.Errorf("One or more auctions failed to start:\n", strings.Join(errors, "\n"))
-	}
-	return nil
-}
-
-func AuctionSchedule(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-}
-
-func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	if options["image"] != nil {
 		options["image_url"] = i.ApplicationCommandData().Resolved.Attachments[options["image"].(string)].URL
@@ -212,6 +326,15 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 				Title:       "**Auction Starting**",
 				Description: fmt.Sprintf("Auction has successfully been started in <#%s>!", channelID),
 			})
+			if err != nil {
+				_, err = h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+					Title:       "**Auction Starting**",
+					Description: fmt.Sprintf("Auction has successfully been started in <#%s>!", channelID),
+				})
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			exampleMessage, err := EventFormat(s, auctionMap, EventTypeAuction, i.GuildID)
 			if err != nil {
@@ -272,6 +395,10 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *discordgo.Member, guildID string, duration time.Duration) (channelID string, err error) {
 	auctionSetup := map[string]interface{}{}
 	currencyMap := map[string]interface{}{}
+
+	if !AuctionHostCheck(auctionMap, member) {
+		return "", fmt.Errorf("User must be administrator or have the role <@&" + auctionSetup["host_role"].(string) + "> to host auctions.")
+	}
 
 	result := database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, guildID)
 	if result.Error != nil {
@@ -499,6 +626,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 			return fmt.Errorf("You do not have enough currency to bid on this auction. You need %s and you have %s", PriceFormat(amount, guildID, auctionMap["currency"]), PriceFormat(userMap["balance"].(float64), guildID, auctionMap["currency"]))
 		}
 	}
+	
 
 	//Checking if the auction has ended.
 	if auctionMap["end_time"].(time.Time).Before(time.Now()) {
