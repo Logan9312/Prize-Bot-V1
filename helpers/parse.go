@@ -10,26 +10,29 @@ import (
 )
 
 func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-	return ParseCommand(i, i.ApplicationCommandData().Options)
+	var options = make(map[string]interface{})
+	for _, option := range i.ApplicationCommandData().Options {
+		options[option.Name] = option.Value
+	}
 
+	return options
 }
 
 func ParseSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-	return ParseCommand(i, i.ApplicationCommandData().Options[0].Options)
+	var options = make(map[string]interface{})
+	for _, option := range i.ApplicationCommandData().Options[0].Options {
+		options[option.Name] = option.Value
+	}
+
+	return options
 }
 
 func ParseSubSubCommand(i *discordgo.InteractionCreate) map[string]interface{} {
-	return ParseCommand(i, i.ApplicationCommandData().Options[0].Options[0].Options)
-}
-
-func ParseCommand(i *discordgo.InteractionCreate, data []*discordgo.ApplicationCommandInteractionDataOption) map[string]any {
-	options := make(map[string]interface{})
-	for _, option := range data {
+	var options = make(map[string]interface{})
+	for _, option := range i.ApplicationCommandData().Options[0].Options[0].Options {
 		options[option.Name] = option.Value
 	}
-	if options["image"] != nil {
-		options["image"] = ImageToURL(i, options)
-	}
+
 	return options
 }
 
@@ -49,8 +52,4 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 
 func Ptr[T any](v T) *T {
 	return &v
-}
-
-func ImageToURL(i *discordgo.InteractionCreate, options map[string]interface{}) string {
-	return i.ApplicationCommandData().Resolved.Attachments[options["image"].(string)].URL
 }
