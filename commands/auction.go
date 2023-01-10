@@ -1205,6 +1205,8 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) er
 	return nil
 }
 
+
+
 func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	if i.Member.Permissions&(1<<3) != 8 {
