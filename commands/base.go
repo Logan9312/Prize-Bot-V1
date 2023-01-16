@@ -22,15 +22,10 @@ func AddCommand() {
 func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType string, guildID string) (h.PresetResponse, error) {
 
 	content := ""
-	//embedImage := &discordgo.MessageEmbedImage{}
 	embeds := []*discordgo.MessageEmbed{}
 
 	if data["item"] != nil && len(data["item"].(string)) > 100 {
 		return h.PresetResponse{}, fmt.Errorf("title cannot be over 100 characters long")
-	}
-
-	if data["image_url"] != nil {
-		//embedImage.URL = data["image_url"].(string)
 	}
 
 	description := fmt.Sprintf("**Host:** <@%s>.\n", data["host"])
@@ -190,17 +185,23 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 			},
 		}}
 	}
-
-	return h.PresetResponse{
-		Content:   content,
-		Title:     fmt.Sprintf("%s Item: __**%s**__", eventType, data["item"]),
-		Fields:    auctionfields,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{URL: guild.IconURL()},
-		//Image:      embedImage,
+	EventMessage := h.PresetResponse{
+		Content:    content,
+		Title:      fmt.Sprintf("%s Item: __**%s**__", eventType, data["item"]),
+		Fields:     auctionfields,
+		Thumbnail:  &discordgo.MessageEmbedThumbnail{URL: guild.IconURL()},
 		Components: components,
 		Embeds:     embeds,
 		Files:      []*discordgo.File{},
-	}, nil
+	}
+
+	if data["image_url"] != nil {
+		EventMessage.Image = &discordgo.MessageEmbedImage{
+			URL: data["image_url"].(string),
+		}
+	}
+
+	return EventMessage, nil
 }
 
 func HasRole(m *discordgo.Member, roleID string) bool {
