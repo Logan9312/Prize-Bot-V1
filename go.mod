@@ -3,7 +3,7 @@ module gitlab.com/logan9312/discord-auction-bot
 go 1.19
 
 require (
-	github.com/bwmarrin/discordgo v0.26.2-0.20230115225044-345a9d646660
+	github.com/bwmarrin/discordgo v0.26.2-0.20220929202427-e57064892a9b
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/stripe/stripe-go/v72 v72.122.0
