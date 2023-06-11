@@ -76,4 +76,8 @@ func CopyTablesToNewDB() {
 			fmt.Printf("Could not copy data to table %s: %s\n", reflect.TypeOf(table).Elem().Name(), err)
 		}
 	}
+
+	DB = targetDB
+
+	fmt.Println("Finished copying tables to new database")
 }
