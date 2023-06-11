@@ -1,56 +1,29 @@
 package routers
 
 import (
-	"embed"
-	"encoding/json"
-	"fmt"
-	"html/template"
-	"log"
 	"net/http"
+	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:embed embedded/*.html
-var templateFS embed.FS
+func HealthCheck() {
 
-func BotStatus() {
-	r := mux.NewRouter().StrictSlash(true)
-	HandleRequests(r)
-	log.Fatal(http.ListenAndServe(":8080", r))
-}
+	e := echo.New()
 
-type StatusOutput struct {
-	Message string `json:"message"`
-}
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-func HandleRequests(r *mux.Router) {
-	r.HandleFunc("/auction-bot/success", Success)
-	r.HandleFunc("/auction-bot/status", GetStatus).Methods("GET")
-}
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, struct{ Status string }{Status: "OK"})
+	})
 
-// GetStatus responds with the availability status of this service
-func GetStatus(w http.ResponseWriter, r *http.Request) {
-	status := StatusOutput{
-		Message: "Bot is available",
+	httpPort := os.Getenv("PORT")
+	if httpPort == "" {
+		httpPort = "8080"
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	err := json.NewEncoder(w).Encode(status)
-	if err != nil {
-		fmt.Println("Error encoding: ", err.Error())
-	}
+	e.Logger.Fatal(e.Start(":" + httpPort))
 }
 
-func Success(w http.ResponseWriter, r *http.Request) {
-	templates, err := template.ParseFS(templateFS, "embedded/*.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := templates.ExecuteTemplate(w, "success.html", nil); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
