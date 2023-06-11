@@ -77,7 +77,5 @@ func CopyTablesToNewDB() {
 		}
 	}
 
-	DB = targetDB
-
 	fmt.Println("Finished copying tables to new database")
 }
