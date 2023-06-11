@@ -81,5 +81,5 @@ func main() {
 
 	fmt.Println("Bot is running!")
 
-	routers.BotStatus()
+	routers.HealthCheck()
 }
