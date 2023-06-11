@@ -178,7 +178,7 @@ func DatabaseConnect(password, host, env string) {
 	} else if env == "local" {
 		DB = LocalDB()
 	}
-
+	
 	fmt.Println(DB)
 	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
 	if err != nil {

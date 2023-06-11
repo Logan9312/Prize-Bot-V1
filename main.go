@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/caarlos0/env"
+	"github.com/joho/godotenv"
 	"github.com/stripe/stripe-go/v72"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
@@ -20,11 +21,18 @@ type Environment struct {
 	Host         string `env:"DB_HOST"`
 	Password     string `env:"DB_PASSWORD"`
 	StripeToken  string `env:"STRIPE_TOKEN"`
+	NewHost      string `env:"NEW_HOST"`
+	NewPassword  string `env:"NEW_PASSWORD"`
 }
 
 func main() {
 
 	environment := Environment{}
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Println("Error loading .env file:", err)
+	}
 
 	if err := env.Parse(&environment); err != nil {
 		fmt.Println(err)
@@ -41,6 +49,9 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	database.NewDBConnect(environment.NewPassword, environment.NewHost)
+	database.CopyTablesToNewDB()
 
 	devData := database.DevSetup{
 		BotID: mainSession.State.User.ID,
