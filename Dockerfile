@@ -19,10 +19,8 @@ RUN go build -o ./main .
 
 FROM alpine:3.15
 RUN apk add ca-certificates
-RUN apk add jq
 
 COPY --from=build_base /tmp/app/main /main
-COPY --from=build_base /tmp/app/scripts/startup.sh /scripts/startup.sh
 
 # Run the startup script
-CMD ["sh", "/scripts/startup.sh"]
+CMD ["/main"]
