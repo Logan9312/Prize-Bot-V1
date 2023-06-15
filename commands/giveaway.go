@@ -312,9 +312,6 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		fmt.Println("Error saving giveaway finished status.", result.Error)
 	}
 
-	time.Sleep(24 * time.Hour)
-	database.DB.Delete(database.Giveaway{}, messageID)
-
 	return nil
 }
 
