@@ -334,8 +334,8 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 
 		entries[index] = entries[len(entries)-1]
 
-		if len(entries) >= 2 {
-			entries = entries[0 : len(entries)-2]
+		if len(entries) > 1 {
+			entries = append(entries[:index], entries[index+1:]...)
 		} else {
 			entries = []string{}
 		}
