@@ -1,9 +1,8 @@
 package commands
 
 import (
-	random "crypto/rand"
 	"fmt"
-	"math/big"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -329,15 +328,11 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 			break
 		}
 
-		bigInt, err := random.Int(random.Reader, big.NewInt(int64(len(entries))))
-		if err != nil {
-			fmt.Println("Random Error: ", err)
-			return winnerList, err
-		}
+		index := rand.Intn(len(entries))
 
-		winnerID := entries[bigInt.Int64()]
+		winnerID := entries[index]
 
-		entries[bigInt.Int64()] = entries[len(entries)-1]
+		entries[index] = entries[len(entries)-1]
 
 		if len(entries) >= 2 {
 			entries = entries[0 : len(entries)-2]
