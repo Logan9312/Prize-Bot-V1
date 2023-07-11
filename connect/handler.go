@@ -217,8 +217,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	args := strings.Split(strings.TrimPrefix(m.Content, "/"), " ")
 
-	defer DeleteCommandMessage(s, m.ChannelID, m.ID)
-
 	switch args[0] {
 	case "bid":
 		//FIXME This was just a quick fix to prevent both bots trying to place a bit. Rework if needed once I can save auctions with bot ID
@@ -240,7 +238,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println(err)
 				return
 			}
-			err = DeleteCommandMessage(s, m.ChannelID, message.ID)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -286,7 +283,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if message != nil {
-		err = DeleteCommandMessage(s, m.ChannelID, message.ID)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -307,9 +303,4 @@ func GuildMemberChunkHandler(s *discordgo.Session, g *discordgo.GuildMembersChun
 	} else {
 		fmt.Println("GuildMemberChunkHandler has not been set properly.")
 	}
-}
-
-func DeleteCommandMessage(s *discordgo.Session, channelID, messageID string) error {
-	time.Sleep(10 * time.Second)
-	return s.ChannelMessageDelete(channelID, messageID)
 }
