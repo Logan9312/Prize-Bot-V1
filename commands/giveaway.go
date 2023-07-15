@@ -323,7 +323,7 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 	}
 	fmt.Println("Rolling Giveaway:")
 	for i, v := range entries {
-		fmt.Printf("Entry %d: <@%s>\n", i+1, v)
+		fmt.Printf("Entry %d: <@%s>\n", i, v)
 	}
 
 	for n := float64(0); n < giveawayMap["winners"].(float64); {
