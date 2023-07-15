@@ -246,7 +246,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		afterID = users[len(users)-1].ID
 	}
 
-	winnerList, err := GiveawayRoll(entrants, giveawayMap)
+	winnerList, err := GiveawayRoll(s, entrants, giveawayMap)
 	if err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 	return nil
 }
 
-func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]string, error) {
+func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string]interface{}) ([]string, error) {
 
 	winnerList := []string{}
 
@@ -323,7 +323,12 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 	}
 	fmt.Println("Rolling Giveaway:")
 	for i, v := range entries {
-		fmt.Printf("Entry %d: <@%s>\n", i, v)
+		username := ""
+		u, err := s.User(v)
+		if err == nil {
+			username = u.Username
+		}
+		fmt.Printf("Entry %d: <@%s> (%s)\n", i, v, username)
 	}
 
 	for n := float64(0); n < giveawayMap["winners"].(float64); {
