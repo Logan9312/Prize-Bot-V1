@@ -322,14 +322,6 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 		return winnerList, fmt.Errorf("No entries found.")
 	}
 	fmt.Println("Rolling Giveaway:")
-	for i, v := range entries {
-		username := ""
-		u, err := s.User(v)
-		if err == nil {
-			username = u.Username
-		}
-		fmt.Printf("Entry %d: <@%s> (%s)\n", i, v, username)
-	}
 
 	for n := float64(0); n < giveawayMap["winners"].(float64); {
 
@@ -337,11 +329,20 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 			break
 		}
 
+		for i, v := range entries {
+			username := ""
+			u, err := s.User(v)
+			if err == nil {
+				username = u.Username
+			}
+			fmt.Printf("Entry %d: <@%s> (%s)", i, v, username)
+		}
+
+		fmt.Println("")
+
 		index := rand.Intn(len(entries))
 		fmt.Println("Index:", index)
 		winnerID := entries[index]
-
-		entries[index] = entries[len(entries)-1]
 
 		if len(entries) > 1 {
 			entries = append(entries[:index], entries[index+1:]...)
