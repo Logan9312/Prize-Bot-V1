@@ -329,16 +329,17 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 			break
 		}
 
+		printlist := ""
 		for i, v := range entries {
 			username := ""
 			u, err := s.User(v)
 			if err == nil {
 				username = u.Username
 			}
-			fmt.Printf("Entry %d: <@%s> (%s)", i, v, username)
+			printlist += fmt.Sprintf("Entry %d: <@%s> (%s)", i, v, username)
 		}
 
-		fmt.Println("")
+		fmt.Println(printlist)
 
 		index := rand.Intn(len(entries))
 		fmt.Println("Index:", index)
