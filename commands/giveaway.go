@@ -321,6 +321,10 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 	if len(entries) == 0 {
 		return winnerList, fmt.Errorf("No entries found.")
 	}
+	fmt.Println("Rolling Giveaway:")
+	for i, v := range entries {
+		fmt.Printf("Entry %d: <@%s>\n", i+1, v)
+	}
 
 	for n := float64(0); n < giveawayMap["winners"].(float64); {
 
@@ -329,7 +333,7 @@ func GiveawayRoll(entries []string, giveawayMap map[string]interface{}) ([]strin
 		}
 
 		index := rand.Intn(len(entries))
-
+		fmt.Println("Index:", index)
 		winnerID := entries[index]
 
 		entries[index] = entries[len(entries)-1]
