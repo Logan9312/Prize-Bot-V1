@@ -626,7 +626,6 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 			return fmt.Errorf("You do not have enough currency to bid on this auction. You need %s and you have %s", PriceFormat(amount, guildID, auctionMap["currency"]), PriceFormat(userMap["balance"].(float64), guildID, auctionMap["currency"]))
 		}
 	}
-	
 
 	//Checking if the auction has ended.
 	if auctionMap["end_time"].(time.Time).Before(time.Now()) {
@@ -1025,12 +1024,12 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 	message := discordgo.NewMessageEdit(channelID, auctionMap["message_id"].(string))
 	messageEmbeds, err := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
 	if err != nil {
-		result = database.DB.Delete(database.Auction{
+		/*result = database.DB.Delete(database.Auction{
 			ChannelID: channelID,
 		})
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
-		}
+		}*/
 		return err
 	}
 
@@ -1332,8 +1331,6 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) er
 	}
 	return nil
 }
-
-
 
 func DeleteAuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
