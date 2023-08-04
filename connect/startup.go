@@ -79,11 +79,10 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 		}
 
 		//Builds dev commands
-		if s.State.User.ID == "880507494248615999" {
-			_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", BotCommands.Dev)
-			if err != nil {
-				return s, fmt.Errorf("Bulk Overwrite Dev Command Error: %w", err)
-			}
+
+		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", BotCommands.Dev)
+		if err != nil {
+			return s, fmt.Errorf("Bulk Overwrite Dev Command Error: %w", err)
 		}
 
 	}
