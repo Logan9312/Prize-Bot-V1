@@ -273,6 +273,10 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				fmt.Println(err)
 			}
+			err = s.ChannelMessageDelete(m.ChannelID, m.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
 		} else {
 			message, err = h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
 				Title:     "Bid has been successfully placed!",
@@ -283,6 +287,10 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			time.Sleep(30 * time.Second)
 			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = s.ChannelMessageDelete(m.ChannelID, m.ID)
 			if err != nil {
 				fmt.Println(err)
 			}
