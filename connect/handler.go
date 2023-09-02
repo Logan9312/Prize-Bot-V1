@@ -231,7 +231,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		}
-		
+
 		if len(args) != 2 {
 			message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
 			if err != nil {
@@ -268,11 +268,21 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				fmt.Println(err)
 			}
+			time.Sleep(30 * time.Second)
+			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
 		} else {
 			message, err = h.SuccessMessage(s, m.ChannelID, h.PresetResponse{
 				Title:     "Bid has been successfully placed!",
 				Reference: m.Reference(),
 			})
+			if err != nil {
+				fmt.Println(err)
+			}
+			time.Sleep(30 * time.Second)
+			err = s.ChannelMessageDelete(m.ChannelID, message.ID)
 			if err != nil {
 				fmt.Println(err)
 			}
