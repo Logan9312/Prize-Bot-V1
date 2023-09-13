@@ -244,6 +244,12 @@ var AuctionCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
+		{
+			Type:              discordgo.ApplicationCommandOptionSubCommand,
+			Name:              "end",
+			NameLocalizations: map[discordgo.Locale]string{},
+			Description:       "Ends an auction in the current channel.",
+		},
 	},
 }
 
@@ -268,6 +274,8 @@ func Auction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return AuctionQueue(s, i)
 	case "edit":
 		return AuctionEdit(s, i)
+	case "end":
+		return AuctionEndButton(s, i)
 	}
 	return fmt.Errorf("Unknown Auction command, please contact support")
 }
