@@ -1032,13 +1032,13 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 	message := discordgo.NewMessageEdit(channelID, auctionMap["message_id"].(string))
 	messageEmbeds, err := s.ChannelMessage(channelID, auctionMap["message_id"].(string))
 	if err != nil {
-		/*result = database.DB.Delete(database.Auction{
+		result = database.DB.Delete(database.Auction{
 			ChannelID: channelID,
 		})
 		if result.Error != nil {
 			fmt.Println(result.Error.Error())
-		}*/
-		return err
+		}
+		return fmt.Errorf("Error fetching auction message. Deleting auction from database: %w", err)
 	}
 
 	if auctionSetup["log_channel"] == nil {
