@@ -543,13 +543,11 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 					discordgo.Button{
 						Label:    "Complete",
 						Style:    3,
-						Emoji:    discordgo.ComponentEmoji{},
 						CustomID: fmt.Sprintf("claim_complete:%s:%s", i.ChannelID, i.Message.ID),
 					},
 					discordgo.Button{
 						Label:    "Cancel",
 						Style:    4,
-						Emoji:    discordgo.ComponentEmoji{},
 						CustomID: fmt.Sprintf("claim_cancel:%s", i.Message.ID),
 					},
 				},
