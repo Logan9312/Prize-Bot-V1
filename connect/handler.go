@@ -192,10 +192,10 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 			Description: "The bot has joined a new discord within the last 5 minutes.",
 			Fields:      fields,
 			Thumbnail: &discordgo.MessageEmbedThumbnail{
-				URL: g.IconURL(),
+				URL: g.IconURL(""),
 			},
 			Image: &discordgo.MessageEmbedImage{
-				URL: g.BannerURL(),
+				URL: g.BannerURL(""),
 			},
 		})
 		if err != nil {

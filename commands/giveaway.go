@@ -278,7 +278,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 					Label:    "Reroll",
 					Style:    1,
 					Disabled: false,
-					Emoji: discordgo.ComponentEmoji{
+					Emoji: &discordgo.ComponentEmoji{
 						Name:     "🔄",
 						ID:       "",
 						Animated: false,

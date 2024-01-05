@@ -86,7 +86,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		buttons = append(buttons, discordgo.Button{
 			Label: "Customer Portal",
 			Style: discordgo.LinkButton,
-			Emoji: discordgo.ComponentEmoji{},
+			Emoji: &discordgo.ComponentEmoji{},
 			URL:   portal.URL,
 		})
 	}

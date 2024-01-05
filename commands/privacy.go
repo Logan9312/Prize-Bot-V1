@@ -41,7 +41,7 @@ func Privacy(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 					discordgo.Button{
 						Label: "Support Server",
 						Style: discordgo.LinkButton,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name:     "logo",
 							ID:       "889025400120950804",
 							Animated: false,

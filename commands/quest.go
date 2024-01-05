@@ -62,7 +62,7 @@ func QuestCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 						Label:    "Claim",
 						Style:    discordgo.SuccessButton,
 						Disabled: false,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "🐛",
 						},
 						CustomID: "questbutton2",

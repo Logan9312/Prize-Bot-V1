@@ -138,7 +138,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 					discordgo.Button{
 						Label: "End Auction",
 						Style: 4,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "🛑",
 						},
 						CustomID: "endauction",
@@ -147,7 +147,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 						Label:    "Clear Chat",
 						Style:    3,
 						CustomID: "clearauction",
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "restart",
 							ID:   "835685528917114891",
 						},
@@ -189,7 +189,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 		Content:    content,
 		Title:      fmt.Sprintf("%s Item: __**%s**__", eventType, data["item"]),
 		Fields:     auctionfields,
-		Thumbnail:  &discordgo.MessageEmbedThumbnail{URL: guild.IconURL()},
+		Thumbnail:  &discordgo.MessageEmbedThumbnail{URL: guild.IconURL("")},
 		Components: components,
 		Embeds:     embeds,
 		Files:      []*discordgo.File{},

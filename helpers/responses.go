@@ -48,7 +48,7 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 						discordgo.Button{
 							Label: "Support Server",
 							Style: discordgo.LinkButton,
-							Emoji: discordgo.ComponentEmoji{
+							Emoji: &discordgo.ComponentEmoji{
 								Name:     "logo",
 								ID:       "889025400120950804",
 								Animated: false,
@@ -92,7 +92,7 @@ func FollowUpErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 					discordgo.Button{
 						Label: "Support Server",
 						Style: discordgo.LinkButton,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name:     "logo",
 							ID:       "889025400120950804",
 							Animated: false,
@@ -144,7 +144,7 @@ func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Messa
 					discordgo.Button{
 						Label: "Support Server",
 						Style: discordgo.LinkButton,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name:     "logo",
 							ID:       "889025400120950804",
 							Animated: false,
@@ -289,7 +289,7 @@ func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 					discordgo.Button{
 						Label: "Support Server",
 						Style: discordgo.LinkButton,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name:     "logo",
 							ID:       "889025400120950804",
 							Animated: false,
@@ -403,7 +403,7 @@ func ExperimentalResponse(s *discordgo.Session, i *discordgo.InteractionCreate, 
 						discordgo.Button{
 							Label: "Support Server",
 							Style: discordgo.LinkButton,
-							Emoji: discordgo.ComponentEmoji{
+							Emoji: &discordgo.ComponentEmoji{
 								Name:     "logo",
 								ID:       "889025400120950804",
 								Animated: false,

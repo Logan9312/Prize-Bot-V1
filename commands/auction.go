@@ -802,7 +802,7 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 		}
 		_, err = s.ChannelEditComplex(channelID, &discordgo.ChannelEdit{
 			Name:     "💸│" + options["item"].(string),
-			Position: channel.Position,
+			Position: &channel.Position,
 		})
 		if err != nil {
 			fmt.Println(err)
@@ -1097,7 +1097,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 					discordgo.Button{
 						Label: "Support Server",
 						Style: discordgo.LinkButton,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name:     "logo",
 							ID:       "889025400120950804",
 							Animated: false,
@@ -1212,7 +1212,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 							discordgo.Button{
 								Label: "Delete Auction Channel",
 								Style: 4,
-								Emoji: discordgo.ComponentEmoji{
+								Emoji: &discordgo.ComponentEmoji{
 									Name: "🛑",
 								},
 								CustomID: "delete_auction_channel",
@@ -1220,7 +1220,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 							discordgo.Button{
 								Label: "Support Server",
 								Style: discordgo.LinkButton,
-								Emoji: discordgo.ComponentEmoji{
+								Emoji: &discordgo.ComponentEmoji{
 									Name:     "logo",
 									ID:       "889025400120950804",
 									Animated: false,

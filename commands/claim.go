@@ -266,7 +266,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		buttons = append(buttons, discordgo.Button{
 			Label: "Bids",
 			Style: 2,
-			Emoji: discordgo.ComponentEmoji{
+			Emoji: &discordgo.ComponentEmoji{
 				Name: "📜",
 			},
 			CustomID: "bid_history",
@@ -284,7 +284,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 			buttons = append(buttons, discordgo.Button{
 				Label: "Claim!",
 				Style: 3,
-				Emoji: discordgo.ComponentEmoji{
+				Emoji: &discordgo.ComponentEmoji{
 					Name: "cryopod",
 					ID:   "889307390690885692",
 				},
@@ -809,7 +809,7 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 					discordgo.Button{
 						Label: "Re-Open",
 						Style: discordgo.SuccessButton,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name: "🔄",
 						},
 						Disabled: true,
@@ -927,7 +927,7 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 						Label:    "▶",
 						Style:    0,
 						Disabled: false,
-						Emoji: discordgo.ComponentEmoji{
+						Emoji: &discordgo.ComponentEmoji{
 							Name:     "",
 							ID:       "",
 							Animated: false,

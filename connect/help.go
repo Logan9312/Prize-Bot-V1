@@ -56,7 +56,7 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 								Label:       "Auctions",
 								Value:       c.EventTypeAuction,
 								Description: "Auction off prizes!",
-								Emoji: discordgo.ComponentEmoji{
+								Emoji: &discordgo.ComponentEmoji{
 									Name: "💸",
 								},
 							},
