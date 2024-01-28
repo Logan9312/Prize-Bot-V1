@@ -180,9 +180,6 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 			Title:       "**Bid History**",
 			Description: data["bid_history"].(string),
 			Color:       0x8073ff,
-			Image: &discordgo.MessageEmbedImage{
-				URL: "https://i.imgur.com/9wo7diC.png",
-			},
 		}}
 	}
 	EventMessage := h.PresetResponse{

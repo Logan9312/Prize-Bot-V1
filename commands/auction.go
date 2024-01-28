@@ -879,9 +879,6 @@ func AuctionBidHistory(s *discordgo.Session, i *discordgo.InteractionCreate) err
 	return h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Bid History**",
 		Description: bidHistory,
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://i.imgur.com/9wo7diC.png",
-		},
 	})
 }
 
