@@ -359,9 +359,6 @@ func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate, message 
 							Inline: false,
 						},
 					},
-					Thumbnail: &discordgo.MessageEmbedThumbnail{
-						URL: "https://i.imgur.com/SjJT2xp.png",
-					},
 				},
 			},
 			Flags: 64,

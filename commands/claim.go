@@ -347,9 +347,6 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		/*Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: claimMap["image_url"].(string),
 		},*/
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://i.imgur.com/9wo7diC.png",
-		},
 		Components: components,
 	})
 
@@ -692,9 +689,6 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 		Description: "This prize has been claimed successfully, soon I should have a transcript of the ticket saved as well.",
 		Fields:      fields,
 		//Thumbnail:   thumbnailImage,
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://i.imgur.com/9wo7diC.png",
-		},
 		Components: []discordgo.MessageComponent{
 			/*discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
@@ -800,9 +794,6 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		Title:       "**Ticket Log**",
 		Description: "Prize claiming was cancelled!",
 		Fields:      fields,
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://i.imgur.com/9wo7diC.png",
-		},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
