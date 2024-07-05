@@ -676,7 +676,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 
 	auctionMap["bid"] = amount
 	auctionMap["winner"] = member.User.ID
-	auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + member.User.Username + ": " + strings.TrimRight(strings.TrimRight(p.Sprintf("%f", amount), "0"), ".") + " at " + time.Now().Format("2006-01-02 15:04:05")
+	auctionMap["bid_history"] = auctionMap["bid_history"].(string) + "\n-> " + member.User.Username + ": " + strings.TrimRight(strings.TrimRight(p.Sprintf("%f", amount), "0"), ".") + " at `" + time.Now().Format("2006-01-02 15:04:05") + "`"
 
 	if auctionMap["buyout"] != nil && amount >= auctionMap["buyout"].(float64) {
 		auctionMap["end_time"] = time.Now()
