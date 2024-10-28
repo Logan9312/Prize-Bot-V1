@@ -506,7 +506,7 @@ func AuctionHostCheck(auctionSetup map[string]any, member *discordgo.Member) boo
 		}
 	}
 
-	return member.Permissions&discordgo.PermissionManageServer == 8
+	return member.Permissions&discordgo.PermissionManageServer == discordgo.PermissionManageServer
 }
 
 func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (string, error) {
