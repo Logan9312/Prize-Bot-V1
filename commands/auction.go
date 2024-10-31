@@ -497,6 +497,8 @@ func AuctionEndTimer(s *discordgo.Session, auctionMap map[string]any) {
 }
 
 func AuctionHostCheck(auctionSetup map[string]any, member *discordgo.Member) bool {
+	fmt.Println("HOST ROLE", auctionSetup["host_role"])
+	fmt.Println("Host Roles", member.Roles)
 	if auctionSetup["host_role"] == nil {
 		return true
 	}

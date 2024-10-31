@@ -238,9 +238,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println(err)
 				return
 			}
-			if err != nil {
-				fmt.Println(err)
-			}
 			return
 		}
 
