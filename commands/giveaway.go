@@ -64,6 +64,29 @@ var GiveawayCommand = discordgo.ApplicationCommand{
 				},
 			},
 		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "delete",
+			Description: "Delete a giveaway",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "message_id",
+					Description: "The message ID of the giveaway to delete",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "channel",
+					Description: "The channel containing the giveaway",
+					Required:    false,
+					ChannelTypes: []discordgo.ChannelType{
+						discordgo.ChannelTypeGuildText,
+						5,
+					},
+				},
+			},
+		},
 	},
 }
 
@@ -71,6 +94,8 @@ func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
 		return GiveawayCreate(s, i)
+	case "delete":
+		return GiveawayDelete(s, i)
 	}
 	return fmt.Errorf("Unknown Giveaway command, please contact support")
 }
@@ -164,6 +189,75 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	if err != nil {
 		h.ErrorMessage(s, giveawayMap["channel_id"].(string), err.Error())
 	}
+	return nil
+}
+
+func GiveawayDelete(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	// Check permissions - must be admin or have host role
+	canDelete := false
+	
+	giveawaySetup := map[string]interface{}{}
+	result := database.DB.Model(database.GiveawaySetup{}).First(&giveawaySetup, i.GuildID)
+	if result.Error != nil {
+		fmt.Println("Error fetching Giveaway Setup DB")
+	}
+	
+	if giveawaySetup["host_role"] != "" && giveawaySetup["host_role"] != nil {
+		for _, v := range i.Member.Roles {
+			if v == giveawaySetup["host_role"].(string) {
+				canDelete = true
+			}
+		}
+	}
+	
+	if i.Member.Permissions&(1<<3) == 8 {
+		canDelete = true
+	}
+	
+	if !canDelete {
+		return fmt.Errorf("User must be administrator or have the host role to delete giveaways.")
+	}
+	
+	// Parse command options
+	options := h.ParseSubCommand(i)
+	messageID := options["message_id"].(string)
+	channelID := options["channel"]
+	
+	if channelID == nil {
+		channelID = i.ChannelID
+	} else {
+		channelID = channelID.(string)
+	}
+	
+	// Find giveaway in database
+	giveawayInfo := database.Giveaway{
+		MessageID: messageID,
+	}
+	
+	result = database.DB.First(&giveawayInfo)
+	if result.Error != nil {
+		return fmt.Errorf("Giveaway not found. Please check the message ID and try again.")
+	}
+	
+	// Delete the giveaway message if possible
+	err := s.ChannelMessageDelete(channelID.(string), messageID)
+	if err != nil {
+		fmt.Println("Error deleting giveaway message:", err)
+		// Continue even if message delete fails - we still want to remove from DB
+	}
+	
+	// Delete from database
+	result = database.DB.Delete(&giveawayInfo)
+	if result.Error != nil {
+		return fmt.Errorf("Error deleting giveaway from database: %s", result.Error.Error())
+	}
+	
+	// Send success response
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "**Giveaway Deleted!**",
+		Description: "The giveaway has been successfully deleted.",
+	})
+	
 	return nil
 }
 
