@@ -322,9 +322,11 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 		return winnerList, fmt.Errorf("No entries found.")
 	}
 	fmt.Println("Rolling Giveaway:")
-	
-	// Seed the random number generator with the current time
-	rand.Seed(time.Now().UnixNano())
+
+	// Create a new random source with a time-based seed
+	// This is the modern approach as of Go 1.20+ (rand.Seed is deprecated)
+	rSource := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(rSource)
 
 	for n := float64(0); n < giveawayMap["winners"].(float64); {
 
@@ -344,7 +346,8 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 
 		fmt.Println(printlist)
 
-		index := rand.Intn(len(entries))
+		// Use the local random generator instance instead of the global one
+		index := rng.Intn(len(entries))
 		fmt.Println("Index:", index)
 		winnerID := entries[index]
 
