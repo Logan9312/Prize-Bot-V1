@@ -322,6 +322,9 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 		return winnerList, fmt.Errorf("No entries found.")
 	}
 	fmt.Println("Rolling Giveaway:")
+	
+	// Seed the random number generator with the current time
+	rand.Seed(time.Now().UnixNano())
 
 	for n := float64(0); n < giveawayMap["winners"].(float64); {
 
