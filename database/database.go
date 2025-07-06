@@ -174,7 +174,7 @@ func DatabaseConnect(password, host, env string) {
 	defer fmt.Println("Bot has finished attempting to connect to the database!")
 	fmt.Println(env)
 	if env == "prod" {
-		DB = ProdDB(password, host)
+		DB = ProdDB()
 	} else if env == "local" {
 		DB = LocalDB()
 	}

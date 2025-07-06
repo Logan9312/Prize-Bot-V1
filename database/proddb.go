@@ -8,10 +8,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func ProdDB(password, host string) *gorm.DB {
-	dbURL := os.Getenv("DATABASE_URL")
+func ProdDB() *gorm.DB {
+	databaseURL := os.Getenv("DATABASE_URL")
 
-	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
 	}
