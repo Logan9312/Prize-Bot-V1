@@ -21,8 +21,7 @@ type Environment struct {
 	Host         string `env:"DB_HOST"`
 	Password     string `env:"DB_PASSWORD"`
 	StripeToken  string `env:"STRIPE_TOKEN"`
-	NewHost      string `env:"NEW_HOST"`
-	NewPassword  string `env:"NEW_PASSWORD"`
+
 }
 
 func main() {
@@ -50,8 +49,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	database.NewDBConnect(environment.NewPassword, environment.NewHost)
-	database.CopyTablesToNewDB()
+
 
 	devData := database.DevSetup{
 		BotID: mainSession.State.User.ID,

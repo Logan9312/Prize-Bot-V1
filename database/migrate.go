@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"gorm.io/driver/postgres"
@@ -23,12 +24,10 @@ func NewDBConnect(password, host string) {
 }
 
 func NewDB(password, host string) *gorm.DB {
-	dbuser := "postgres"
-	port := "5527"
-	dbname := "railway"
-
-	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", host, port, dbuser, dbname, password)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// Use the same DATABASE_URL as ProdDB for Neon compatibility
+	databaseURL := os.Getenv("DATABASE_URL")
+	
+	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
 	}
