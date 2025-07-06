@@ -615,10 +615,12 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 		//0x14f7b2 0x50c878
 		message.Embeds[0].Color = 0x00c940
 
+		components := []discordgo.MessageComponent{}
+		embeds := message.Embeds
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Content:         &message.Content,
-			Components:      []discordgo.MessageComponent{},
-			Embeds:          message.Embeds,
+			Components:      &components,
+			Embeds:          &embeds,
 			AllowedMentions: &discordgo.MessageAllowedMentions{},
 			ID:              customID[2],
 			Channel:         customID[1],
@@ -627,9 +629,10 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 			return fmt.Errorf("There was an issue editing the old log embed: %w", err)
 		}
 	} else if message != nil {
+		components := []discordgo.MessageComponent{}
 		_, err = s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 			Content:    &message.Content,
-			Components: []discordgo.MessageComponent{},
+			Components: &components,
 			ID:         customID[2],
 			Channel:    customID[1],
 		})

@@ -1082,7 +1082,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 	}
 
 	if message != nil {
-		message.Embeds = append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
+		embeds := append(messageEmbeds.Embeds, &discordgo.MessageEmbed{
 			Title:       "Auction has ended!",
 			Description: "Thank you for participating!",
 			Color:       0x32CD32,
@@ -1090,7 +1090,8 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 				URL: "https://c.tenor.com/MvFFZxXwdpwAAAAC/sold-ray.gif",
 			},
 		})
-		message.Components = []discordgo.MessageComponent{
+		message.Embeds = &embeds
+		components := []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
@@ -1106,6 +1107,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 				},
 			},
 		}
+		message.Components = &components
 		_, err = s.ChannelMessageEditComplex(message)
 		if err != nil {
 			fmt.Println(err)

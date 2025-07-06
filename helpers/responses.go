@@ -252,8 +252,8 @@ func SuccessMessageEdit(s *discordgo.Session, channelID, messageID string, r Pre
 
 	return s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		Content:    &r.Content,
-		Components: r.Components,
-		Embeds:     embed,
+		Components: &r.Components,
+		Embeds:     &embed,
 		ID:         messageID,
 		Channel:    channelID,
 	})
