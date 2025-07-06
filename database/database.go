@@ -179,6 +179,11 @@ func DatabaseConnect(password, host, env string) {
 		DB = LocalDB()
 	}
 	
+	if DB == nil {
+		fmt.Println("ERROR: Failed to initialize database connection!")
+		return
+	}
+	
 	fmt.Println(DB)
 	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
 	if err != nil {
