@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
@@ -72,19 +73,28 @@ func main() {
 
 	connect.Timers(mainSession)
 
-	for _, v := range WhiteLabels {
-		s, err := connect.BotConnect(v["bot_token"].(string), environment.Environment)
-		if err != nil {
-			fmt.Println("Error connecting bot: %w", err)
-		}
-		if s.State.User.ID == "995022149226082324" {
-			err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
-			if err != nil {
-				fmt.Println("Error setting status", err)
+	// Start whitelabel bots with delay to avoid rate limiting
+	go func() {
+		for i, v := range WhiteLabels {
+			// Add 2 second delay between each whitelabel bot connection
+			if i > 0 {
+				time.Sleep(2 * time.Second)
 			}
+			
+			s, err := connect.BotConnect(v["bot_token"].(string), environment.Environment)
+			if err != nil {
+				fmt.Printf("Error connecting whitelabel bot: %v\n", err)
+				continue
+			}
+			if s.State.User.ID == "995022149226082324" {
+				err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
+				if err != nil {
+					fmt.Println("Error setting status", err)
+				}
+			}
+			connect.Timers(s)
 		}
-		connect.Timers(s)
-	}
+	}()
 
 	go commands.SetRoles(mainSession)
 
