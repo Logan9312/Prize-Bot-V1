@@ -2,7 +2,6 @@ module gitlab.com/logan9312/discord-auction-bot
 
 go 1.24
 
-
 require (
 	github.com/bwmarrin/discordgo v0.27.2-0.20240104191117-afc57886f91a
 	github.com/caarlos0/env v3.5.0+incompatible
@@ -10,7 +9,7 @@ require (
 	github.com/stripe/stripe-go/v72 v72.122.0
 	golang.org/x/text v0.26.0
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/driver/sqlite v1.3.6
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 )
 
@@ -31,7 +30,7 @@ require (
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mattn/go-sqlite3 v1.14.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
