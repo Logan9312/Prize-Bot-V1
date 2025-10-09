@@ -425,7 +425,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 		auctionMap["currency"] = currencyMap["currency"]
 	}
 
-	for _, key := range []string{"category", "snipe_extension", "snipe_range", "currency_side", "integer_only", "alert_role", "channel_lock", "use_currency", "channel_prefix"} {
+	for _, key := range []string{"category", "snipe_extension", "snipe_range", "snipe_limit", "currency_side", "integer_only", "alert_role", "channel_lock", "use_currency", "channel_prefix"} {
 		if auctionMap[key] == nil {
 			auctionMap[key] = auctionSetup[key]
 		}
@@ -529,6 +529,7 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 	delete(auctionMap, "alert_role")
 	delete(auctionMap, "snipe_extension")
 	delete(auctionMap, "snipe_range")
+	delete(auctionMap, "snipe_limit")
 
 	if auctionMap["category"] == nil {
 		auctionMap["category"] = ""
@@ -613,11 +614,46 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 
 	if auctionSetup["snipe_range"] != nil && auctionSetup["snipe_extension"] != nil {
 		if time.Until(auctionMap["end_time"].(time.Time)) < auctionSetup["snipe_range"].(time.Duration) {
-			auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(auctionSetup["snipe_extension"].(time.Duration))
-			h.SuccessMessage(s, channelID, h.PresetResponse{
-				Title:       "**Anti-Snipe Activated!**",
-				Description: fmt.Sprintf("New End Time: <t:%d>", auctionMap["end_time"].(time.Time).Unix()),
-			})
+			// Get the current total snipe extension
+			totalSnipeExtension := time.Duration(0)
+			if auctionMap["total_snipe_extension"] != nil {
+				totalSnipeExtension = auctionMap["total_snipe_extension"].(time.Duration)
+			}
+
+			// Calculate how much time to add
+			snipeExtension := auctionSetup["snipe_extension"].(time.Duration)
+			
+			// If snipe_limit is set, check if we've reached the limit
+			if auctionSetup["snipe_limit"] != nil {
+				snipeLimit := auctionSetup["snipe_limit"].(time.Duration)
+				
+				// Calculate remaining allowed extension
+				remainingAllowedExtension := snipeLimit - totalSnipeExtension
+				
+				if remainingAllowedExtension > 0 {
+					// Use the smaller of: snipeExtension or remainingAllowedExtension
+					if snipeExtension > remainingAllowedExtension {
+						snipeExtension = remainingAllowedExtension
+					}
+					
+					auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(snipeExtension)
+					auctionMap["total_snipe_extension"] = totalSnipeExtension + snipeExtension
+					
+					h.SuccessMessage(s, channelID, h.PresetResponse{
+						Title:       "**Anti-Snipe Activated!**",
+						Description: fmt.Sprintf("New End Time: <t:%d>", auctionMap["end_time"].(time.Time).Unix()),
+					})
+				}
+			} else {
+				// No limit set, add full extension
+				auctionMap["end_time"] = auctionMap["end_time"].(time.Time).Add(snipeExtension)
+				auctionMap["total_snipe_extension"] = totalSnipeExtension + snipeExtension
+				
+				h.SuccessMessage(s, channelID, h.PresetResponse{
+					Title:       "**Anti-Snipe Activated!**",
+					Description: fmt.Sprintf("New End Time: <t:%d>", auctionMap["end_time"].(time.Time).Unix()),
+				})
+			}
 		}
 	}
 
@@ -697,6 +733,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 
 	auctionMap["snipe_extension"] = auctionSetup["snipe_extension"]
 	auctionMap["snipe_range"] = auctionSetup["snipe_range"]
+	auctionMap["snipe_limit"] = auctionSetup["snipe_limit"]
 
 	m, err := EventFormat(s, auctionMap, EventTypeAuction, guildID)
 	if err != nil {

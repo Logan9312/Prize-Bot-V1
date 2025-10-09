@@ -55,7 +55,11 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 	}
 
 	if data["snipe_extension"] != nil && data["snipe_range"] != nil {
-		description += fmt.Sprintf("**Anti Snipe:** If a bid is placed within the last %s, the auction will be extended by %s.\n", data["snipe_range"], data["snipe_extension"].(time.Duration).String())
+		antiSnipeDesc := fmt.Sprintf("**Anti Snipe:** If a bid is placed within the last %s, the auction will be extended by %s", data["snipe_range"], data["snipe_extension"].(time.Duration).String())
+		if data["snipe_limit"] != nil {
+			antiSnipeDesc += fmt.Sprintf(", up to a maximum total extension of %s", data["snipe_limit"].(time.Duration).String())
+		}
+		description += antiSnipeDesc + ".\n"
 	}
 
 	if data["buyout"] != nil {

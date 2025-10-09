@@ -2,3 +2,4 @@ scripts/env_vars.json
 staticcheck.conf
 .env
 .DS_Store
+discord-auction-bot
