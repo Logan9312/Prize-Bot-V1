@@ -219,7 +219,13 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 }
 
 // ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
+// If tx is nil, uses the global database connection. Otherwise, uses the provided transaction.
 func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventType string) error {
+	return ClaimOutputWithTx(s, claimMap, eventType, nil)
+}
+
+// ClaimOutputWithTx allows passing a transaction for atomic operations
+func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, eventType string, tx *gorm.DB) error {
 
 	p := message.NewPrinter(language.English)
 	mentionUser := ""
@@ -364,7 +370,13 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 	claimMap["type"] = eventType
 	claimMap["message_id"] = message.ID
 
-	result = database.DB.Clauses(clause.OnConflict{
+	// Use transaction if provided, otherwise use global DB
+	db := database.DB
+	if tx != nil {
+		db = tx
+	}
+
+	result = db.Clauses(clause.OnConflict{
 		DoNothing: true,
 	}).Model(database.Claim{}).Create(map[string]interface{}{
 		"message_id": primaryKey,
@@ -373,7 +385,7 @@ func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventTyp
 		return result.Error
 	}
 
-	result = database.DB.Model(database.Claim{
+	result = db.Model(database.Claim{
 		MessageID: primaryKey,
 	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "description"}).Updates(claimMap)
 	if result.Error != nil {
