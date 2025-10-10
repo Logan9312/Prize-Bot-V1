@@ -22,7 +22,6 @@ type Environment struct {
 	Host         string `env:"DB_HOST"`
 	Password     string `env:"DB_PASSWORD"`
 	StripeToken  string `env:"STRIPE_TOKEN"`
-
 }
 
 func main() {
@@ -49,8 +48,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-
 
 	devData := database.DevSetup{
 		BotID: mainSession.State.User.ID,
@@ -80,7 +77,7 @@ func main() {
 			if i > 0 {
 				time.Sleep(2 * time.Second)
 			}
-			
+
 			s, err := connect.BotConnect(v["bot_token"].(string), environment.Environment)
 			if err != nil {
 				fmt.Printf("Error connecting whitelabel bot: %v\n", err)

@@ -233,7 +233,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		if len(args) != 2 {
-			message, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
+			_, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
 			if err != nil {
 				fmt.Println(err)
 				return

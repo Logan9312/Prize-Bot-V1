@@ -100,17 +100,20 @@ func Timers(s *discordgo.Session) {
 	fmt.Println("Beginning Startup Timers")
 
 	database.DB.Model([]database.Auction{}).Find(&Auctions)
+	fmt.Printf("Found %d active auctions to process\n", len(Auctions))
 	for _, v := range Auctions {
 		go AuctionEndHandler(v, s)
 	}
 
 	//TODO Fix this with whitelabels
 	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
+	fmt.Printf("Found %d queued auctions to process\n", len(AuctionQueue))
 	for _, v := range AuctionQueue {
 		go AuctionStartHandler(v, s)
 	}
 
 	database.DB.Model([]database.Giveaway{}).Find(&Giveaways)
+	fmt.Printf("Found %d active giveaways to process\n", len(Giveaways))
 	for _, v := range Giveaways {
 		go GiveawayEndHandler(v, s)
 	}
@@ -118,6 +121,22 @@ func Timers(s *discordgo.Session) {
 
 func AuctionEndHandler(v map[string]interface{}, s *discordgo.Session) {
 	fmt.Println("Auction Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
+
+	// Check if the auction has already ended or is still active
+	endTime, ok := v["end_time"].(time.Time)
+	if !ok {
+		fmt.Println("Error: Invalid end_time for auction", v["channel_id"])
+		return
+	}
+
+	// If auction hasn't ended yet, wait until end time before making any Discord API calls
+	if endTime.After(time.Now()) {
+		timeUntilEnd := time.Until(endTime)
+		fmt.Printf("Auction '%s' will end in %s\n", v["item"], timeUntilEnd)
+		time.Sleep(timeUntilEnd)
+	}
+
+	// Now the auction has ended, proceed with ending logic
 	c.AuctionEnd(s, v["channel_id"].(string), v["guild_id"].(string))
 }
 
@@ -133,15 +152,22 @@ func AuctionStartHandler(v map[string]interface{}, s *discordgo.Session) {
 
 func GiveawayEndHandler(v map[string]interface{}, s *discordgo.Session) {
 	fmt.Println("Giveaway Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
-	if v["end_time"].(time.Time).Before(time.Now()) {
+
+	endTime, ok := v["end_time"].(time.Time)
+	if !ok {
+		fmt.Println("Error: Invalid end_time for giveaway", v["message_id"])
+		return
+	}
+
+	if endTime.Before(time.Now()) {
 		if v["finished"] == true {
-			time.Sleep(time.Until(v["end_time"].(time.Time).Add(24 * time.Hour)))
+			time.Sleep(time.Until(endTime.Add(24 * time.Hour)))
 			database.DB.Delete(database.Giveaway{}, v["message_id"].(string))
 		} else {
 			c.GiveawayEnd(s, v["message_id"].(string))
 		}
 	} else {
-		time.Sleep(time.Until(v["end_time"].(time.Time)))
+		time.Sleep(time.Until(endTime))
 		c.GiveawayEnd(s, v["message_id"].(string))
 	}
 }
