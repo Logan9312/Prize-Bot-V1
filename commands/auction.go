@@ -1113,9 +1113,26 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 
 	auctionMap["log_channel"] = auctionSetup["log_channel"]
 
-	err = ClaimOutput(s, auctionMap, "Auction")
+	// Use a transaction to ensure atomicity of claim creation and auction deletion
+	// The Discord message posting and database operations happen together, but if either fails,
+	// the database transaction will be rolled back
+	err = database.DB.Transaction(func(tx *gorm.DB) error {
+		// Post the claim message and save to claims table within transaction
+		err := ClaimOutputWithTx(s, auctionMap, "Auction", tx)
+		if err != nil {
+			return fmt.Errorf("Claim Output Error: " + err.Error())
+		}
+
+		// Delete the auction from the database
+		result := tx.Delete(database.Auction{}, channelID)
+		if result.Error != nil {
+			return result.Error
+		}
+
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("Claim Output Error: " + err.Error())
+		return err
 	}
 
 	if message != nil {
@@ -1157,11 +1174,6 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		if err != nil {
 			fmt.Println(err)
 		}
-	}
-
-	result = database.DB.Delete(database.Auction{}, channelID)
-	if result.Error != nil {
-		fmt.Println(result.Error.Error())
 	}
 
 	return nil
