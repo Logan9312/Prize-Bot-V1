@@ -120,7 +120,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 		})
 	}
 
-	guild, err := s.Guild(guildID)
+	guild, err := s.State.Guild(guildID)
 	if err != nil {
 		fmt.Println("Error fetching guild: ", err)
 		return h.PresetResponse{}, err
