@@ -29,6 +29,7 @@ type AuctionSetup struct {
 	SnipeExtension  time.Duration
 	SnipeRange      time.Duration
 	SnipeLimit      time.Duration
+	SnipeCap        time.Duration
 	CurrencySide    string
 	IntegerOnly     bool
 	ChannelOverride string
@@ -41,6 +42,7 @@ type Auction struct {
 	ChannelID            string `gorm:"primaryKey"`
 	Bid                  float64
 	MessageID            string
+	StartTime            time.Time
 	EndTime              time.Time
 	Winner               string
 	GuildID              string
@@ -85,6 +87,7 @@ type AuctionQueue struct {
 	SnipeExtension  time.Duration
 	SnipeRange      time.Duration
 	SnipeLimit      time.Duration
+	SnipeCap        time.Duration
 	AlertRole       string
 	Note            string
 	ChannelOverride string
