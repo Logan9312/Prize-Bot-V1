@@ -50,6 +50,17 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 
 	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
 
+	// Create a channel to wait for the READY event
+	ready := make(chan bool)
+	readyHandler := func(s *discordgo.Session, r *discordgo.Ready) {
+		select {
+		case ready <- true:
+		default:
+		}
+	}
+	removeHandler := s.AddHandlerOnce(readyHandler)
+	defer removeHandler()
+
 	RegisterHandlers(s)
 
 	err = s.Open()
@@ -59,15 +70,38 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 
 	fmt.Println(s.State.User.Username, " Starting Up...")
 
+	// Wait for READY event with timeout
+	select {
+	case <-ready:
+		fmt.Println("Bot received READY event")
+	case <-time.After(30 * time.Second):
+		return s, fmt.Errorf("Timeout waiting for READY event")
+	}
+
+	// Give Discord more time to send all GUILD_CREATE events
+	// This prevents rate limiting by not trying to access guilds before they're fully loaded
+	time.Sleep(2 * time.Second)
+
 	//Builds local commands
 	if environment == "local" {
 		s.LogLevel = discordgo.LogInformational
-		for _, v := range s.State.Guilds {
-			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, BotCommands.Local)
-			fmt.Println("Commands added to guild: " + v.Name)
-			if err != nil {
-				return s, fmt.Errorf("Bulk Overwrite Local Command Error: %w", err)
+		guildCount := len(s.State.Guilds)
+		fmt.Printf("Registering commands to %d guilds...\n", guildCount)
+
+		for i, v := range s.State.Guilds {
+			// Add a delay every 5 guilds to avoid rate limiting
+			if i > 0 && i%5 == 0 {
+				fmt.Printf("Processed %d/%d guilds, pausing to avoid rate limits...\n", i, guildCount)
+				time.Sleep(2 * time.Second)
 			}
+
+			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, BotCommands.Local)
+			if err != nil {
+				fmt.Printf("Warning: Failed to add commands to guild %s: %v\n", v.Name, err)
+				// Don't return error, just log and continue with other guilds
+				continue
+			}
+			fmt.Printf("Commands added to guild: %s (%d/%d)\n", v.Name, i+1, guildCount)
 		}
 	}
 
