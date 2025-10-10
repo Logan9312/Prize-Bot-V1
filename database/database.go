@@ -39,30 +39,30 @@ type AuctionSetup struct {
 }
 
 type Auction struct {
-	ChannelID            string `gorm:"primaryKey"`
-	Bid                  float64
-	MessageID            string
-	StartTime            time.Time
-	EndTime              time.Time
-	Winner               string
-	GuildID              string
-	Item                 string
-	Host                 string
-	Currency             string
-	IncrementMin         float64
-	IncrementMax         float64
-	Description          string
-	ImageURL             string
-	TargetPrice          float64
-	Buyout               float64
-	CurrencySide         string
-	IntegerOnly          bool
-	BidHistory           string
-	Note                 string
-	ChannelOverride      string
-	ChannelLock          bool
-	UseCurrency          bool
-	TotalSnipeExtension  time.Duration
+	ChannelID           string `gorm:"primaryKey"`
+	Bid                 float64
+	MessageID           string `gorm:"index"`
+	StartTime           time.Time
+	EndTime             time.Time `gorm:"index"`
+	Winner              string
+	GuildID             string `gorm:"index"`
+	Item                string
+	Host                string
+	Currency            string
+	IncrementMin        float64
+	IncrementMax        float64
+	Description         string
+	ImageURL            string
+	TargetPrice         float64
+	Buyout              float64
+	CurrencySide        string
+	IntegerOnly         bool
+	BidHistory          string
+	Note                string
+	ChannelOverride     string
+	ChannelLock         bool
+	UseCurrency         bool
+	TotalSnipeExtension time.Duration
 }
 
 type AuctionQueue struct {
@@ -71,7 +71,7 @@ type AuctionQueue struct {
 	Bid             float64
 	StartTime       time.Time
 	EndTime         time.Time
-	GuildID         string
+	GuildID         string `gorm:"index"`
 	Item            string
 	Host            string
 	Currency        string
@@ -111,10 +111,10 @@ type ClaimSetup struct {
 type Claim struct {
 	MessageID   string `gorm:"primaryKey"`
 	ChannelID   string
-	GuildID     string
+	GuildID     string `gorm:"index"`
 	Item        string
 	Type        string
-	Winner      string
+	Winner      string `gorm:"index"`
 	Cost        float64
 	Host        string
 	BidHistory  string
@@ -128,14 +128,14 @@ type Claim struct {
 type Giveaway struct {
 	MessageID   string `gorm:"primaryKey"`
 	ChannelID   string
-	GuildID     string
+	GuildID     string `gorm:"index"`
 	Item        string
-	EndTime     time.Time
+	EndTime     time.Time `gorm:"index"`
 	Description string
 	Host        string
 	Winners     float64
 	ImageURL    string
-	Finished    bool
+	Finished    bool `gorm:"index"`
 }
 
 type GiveawaySetup struct {
@@ -185,12 +185,12 @@ func DatabaseConnect(password, host, env string) {
 	case "local":
 		DB = LocalDB()
 	}
-	
+
 	if DB == nil {
 		fmt.Println("ERROR: Failed to initialize database connection!")
 		return
 	}
-	
+
 	fmt.Println(DB)
 	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
 	if err != nil {
