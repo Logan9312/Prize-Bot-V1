@@ -75,7 +75,7 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 	case <-ready:
 		fmt.Println("Bot received READY event")
 	case <-time.After(30 * time.Second):
-		return s, fmt.Errorf("Timeout waiting for READY event")
+		return s, fmt.Errorf("timeout waiting for READY event")
 	}
 
 	// Give Discord more time to send all GUILD_CREATE events
