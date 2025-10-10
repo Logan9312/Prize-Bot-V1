@@ -122,6 +122,12 @@ var SettingsCommand = discordgo.ApplicationCommand{
 					//Autocomplete: true,
 				},
 				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "snipe_cap",
+					Description: "Maximum running time of the auction after snipe extensions (Example: 6h)",
+					//Autocomplete: true,
+				},
+				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "channel_lock",
 					Description: "Enabling this starts the auction in the channel where you run the auction create command.",
@@ -256,7 +262,7 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		content += fmt.Sprintf("• %s has been successfully set.\n", cases.Title(language.English).String(strings.ReplaceAll(key, "_", " ")))
 
 		switch key {
-		case "snipe_extension", "snipe_range", "snipe_limit":
+		case "snipe_extension", "snipe_range", "snipe_limit", "snipe_cap":
 			options[key], err = h.ParseTime(options[key].(string))
 		}
 		if err != nil {
@@ -318,6 +324,9 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			antiSnipeDescription = fmt.Sprintf("If a bid is placed within %s of the auction ending, it will be extended by %s.", options["snipe_range"].(time.Duration).String(), options["snipe_extension"].(time.Duration).String())
 			if options["snipe_limit"] != nil {
 				antiSnipeDescription += fmt.Sprintf(" Max total extension: %s.", options["snipe_limit"].(time.Duration).String())
+			}
+			if options["snipe_cap"] != nil {
+				antiSnipeDescription += fmt.Sprintf(" Max auction duration: %s.", options["snipe_cap"].(time.Duration).String())
 			}
 		} else {
 			antiSnipeDescription = "Anti Snipe Disabled. To enable, set both snipe_extension and snipe_range"
