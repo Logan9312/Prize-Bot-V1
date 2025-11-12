@@ -112,9 +112,14 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	}
 
 	if GiveawaySetup["host_role"] != "" && GiveawaySetup["host_role"] != nil {
-		for _, v := range i.Member.Roles {
-			if v == GiveawaySetup["host_role"].(string) {
-				canHost = true
+		// If host_role equals guild_id, it represents @everyone role, so anyone can host
+		if GiveawaySetup["host_role"].(string) == i.GuildID {
+			canHost = true
+		} else {
+			for _, v := range i.Member.Roles {
+				if v == GiveawaySetup["host_role"].(string) {
+					canHost = true
+				}
 			}
 		}
 		if i.Member.Permissions&(1<<3) == 8 {
@@ -203,9 +208,14 @@ func GiveawayDelete(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	}
 	
 	if giveawaySetup["host_role"] != "" && giveawaySetup["host_role"] != nil {
-		for _, v := range i.Member.Roles {
-			if v == giveawaySetup["host_role"].(string) {
-				canDelete = true
+		// If host_role equals guild_id, it represents @everyone role, so anyone can delete
+		if giveawaySetup["host_role"].(string) == i.GuildID {
+			canDelete = true
+		} else {
+			for _, v := range i.Member.Roles {
+				if v == giveawaySetup["host_role"].(string) {
+					canDelete = true
+				}
 			}
 		}
 	}

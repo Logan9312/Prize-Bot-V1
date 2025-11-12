@@ -404,13 +404,16 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 	auctionSetup := map[string]interface{}{}
 	currencyMap := map[string]interface{}{}
 
-	if !AuctionHostCheck(auctionMap, member) {
-		return "", fmt.Errorf("User must be administrator or have the role <@&" + auctionSetup["host_role"].(string) + "> to host auctions.")
-	}
-
 	result := database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, guildID)
 	if result.Error != nil {
 		fmt.Println(result.Error)
+	}
+	
+	// Add guild_id to auctionSetup for host check
+	auctionSetup["guild_id"] = guildID
+
+	if !AuctionHostCheck(auctionSetup, member) {
+		return "", fmt.Errorf("User must be administrator or have the role <@&" + auctionSetup["host_role"].(string) + "> to host auctions.")
 	}
 
 	result = database.DB.Model(database.CurrencySetup{}).First(&currencyMap, guildID)
@@ -503,6 +506,12 @@ func AuctionHostCheck(auctionSetup map[string]any, member *discordgo.Member) boo
 	if auctionSetup["host_role"] == nil {
 		return true
 	}
+	
+	// If host_role equals guild_id, it represents @everyone role, so anyone can host
+	if auctionSetup["guild_id"] != nil && auctionSetup["host_role"].(string) == auctionSetup["guild_id"].(string) {
+		return true
+	}
+	
 	for _, v := range member.Roles {
 		if v == auctionSetup["host_role"].(string) {
 			return true
