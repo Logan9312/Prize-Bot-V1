@@ -282,7 +282,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 	}
 
 	result = database.DB.Model(database.GiveawaySetup{}).First(&giveawaySetup, giveawayMap["guild_id"].(string))
-	if result.Error != nil {
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		logger.Sugar.Warnw("error fetching giveaway setups", "error", result.Error)
 	}
 

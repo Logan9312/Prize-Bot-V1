@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -139,7 +141,7 @@ func PriceFormat(price float64, guildID string, override interface{}) string {
 	priceString := strings.TrimRight(strings.TrimRight(p.Sprintf("%f", price), "0"), ".")
 
 	result := database.DB.Model(database.CurrencySetup{}).First(&currencyMap, guildID)
-	if result.Error != nil {
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		logger.Sugar.Warnw("error getting currency setup", "error", result.Error)
 	}
 
