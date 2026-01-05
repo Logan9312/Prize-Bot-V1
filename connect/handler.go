@@ -207,7 +207,6 @@ func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
 func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var message *discordgo.Message
-	var err error
 	auctionMap := map[string]any{}
 	re := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
 
@@ -233,7 +232,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		if len(args) != 2 {
-			_, err = h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
+			_, err := h.ErrorMessage(s, m.ChannelID, fmt.Sprintf("Invalid number of arguments passed. Need 2, used %d", len(args)))
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -295,12 +294,6 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	default:
 		return
-	}
-
-	if message != nil {
-		if err != nil {
-			fmt.Println(err)
-		}
 	}
 }
 
