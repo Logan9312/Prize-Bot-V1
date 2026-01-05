@@ -132,7 +132,7 @@ type Giveaway struct {
 	EndTime     time.Time `gorm:"index"`
 	Description string
 	Host        string
-	Winners     float64
+	Winners     int // Changed from float64 - winner count should be an integer
 	ImageURL    string
 	Finished    bool `gorm:"index"`
 }

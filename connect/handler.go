@@ -2,14 +2,14 @@ package connect
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"regexp"
-
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
@@ -183,15 +183,20 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func ReadyHandler(s *discordgo.Session, i *discordgo.Ready) {
 	log := logger.Bot(s.State.User.ID, s.State.User.Username)
-	_, err := s.ChannelMessageSend("943175605858496602", "Bot has finished restarting")
-	if err != nil {
-		log.Warnw("failed to send restart notification", "error", err)
+	if config.C.RestartChannelID != "" {
+		_, err := s.ChannelMessageSend(config.C.RestartChannelID, "Bot has finished restarting")
+		if err != nil {
+			log.Warnw("failed to send restart notification", "error", err)
+		}
 	}
 	log.Info("bot is ready")
 }
 
 func GuildCreateHandler(s *discordgo.Session, g *discordgo.GuildCreate) {
-	channelID := "1005255087200948234"
+	channelID := config.C.GuildJoinChannel
+	if channelID == "" {
+		return // No channel configured for guild join notifications
+	}
 
 	fields := []*discordgo.MessageEmbedField{
 		{

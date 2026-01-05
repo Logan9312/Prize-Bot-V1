@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -9,6 +10,7 @@ import (
 	"github.com/stripe/stripe-go/v72/billingportal/session"
 	checkout "github.com/stripe/stripe-go/v72/checkout/session"
 	"github.com/stripe/stripe-go/v72/sub"
+	"gitlab.com/logan9312/discord-auction-bot/config"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
@@ -31,13 +33,23 @@ var PremiumCommand = discordgo.ApplicationCommand{
 	DMPermission: new(bool),
 }
 
-var PremiumServers = map[string]string{
-	"915767892467920967": "Testing",
-	"626094990984216586": "Aftermath",
+// discordIDRegex validates Discord snowflake IDs (numeric strings)
+var discordIDRegex = regexp.MustCompile(`^\d{17,20}$`)
+
+// validateDiscordID ensures a Discord ID is safe for use in queries
+func validateDiscordID(id string) error {
+	if !discordIDRegex.MatchString(id) {
+		return fmt.Errorf("invalid Discord ID format")
+	}
+	return nil
 }
 
-var PremiumUsers = map[string]string{
-	"280812467775471627": "Logan",
+// buildStripeQuery safely builds a Stripe search query with validated Discord ID
+func buildStripeQuery(field, discordID string) (string, error) {
+	if err := validateDiscordID(discordID); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("status:'active' AND metadata['%s']:'%s'", field, discordID), nil
 }
 
 func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -52,11 +64,20 @@ func Premium(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 }
 
 func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	if i.Member == nil || i.Member.User == nil {
+		return fmt.Errorf("this command cannot be used in DMs")
+	}
 
 	customerID := ""
 
+	// Build query with validated Discord ID to prevent injection
+	query, err := buildStripeQuery("discord_id", i.Member.User.ID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
 	params := &stripe.SubscriptionSearchParams{}
-	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['discord_id']:'%s'", i.Member.User.ID))
+	params.Query = *stripe.String(query)
 	iter := sub.Search(params)
 
 	for iter.Next() {
@@ -79,7 +100,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	if customerID != "" {
 		portal, err := session.New(&stripe.BillingPortalSessionParams{
 			Customer:  &customerID,
-			ReturnURL: stripe.String("http://www.aftmgaming.com/auction-bot/success"),
+			ReturnURL: stripe.String(config.C.SuccessURL),
 		})
 		if err != nil {
 			return err
@@ -142,8 +163,9 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 }
 
 func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	//TODO Turn this into a confirmation modal
+	if i.Member == nil || i.Member.User == nil {
+		return fmt.Errorf("this command cannot be used in DMs")
+	}
 
 	if CheckPremiumGuild(i.GuildID) {
 		h.SuccessResponse(s, i, h.PresetResponse{
@@ -153,8 +175,14 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 		return nil
 	}
 
+	// Build query with validated Discord ID to prevent injection
+	query, err := buildStripeQuery("discord_id", i.Member.User.ID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
 	params := &stripe.SubscriptionSearchParams{}
-	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['discord_id']:'%s'", i.Member.User.ID))
+	params.Query = *stripe.String(query)
 	iter := sub.Search(params)
 
 	for iter.Next() {
@@ -176,7 +204,7 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 		}
 	}
 
-	err := h.ErrorResponse(s, i, "No unlinked subscription found! Please subscribe to premium first using `/premium info`")
+	err = h.ErrorResponse(s, i, "No unlinked subscription found! Please subscribe to premium first using `/premium info`")
 	if err != nil {
 		logger.Sugar.Warnw("premium operation error", "error", err)
 		return err
@@ -185,14 +213,13 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 }
 
 func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) {
-
 	params := &stripe.CheckoutSessionParams{
-		CancelURL:  stripe.String("https://discord.gg/YBRvZ3mRtb"),
-		SuccessURL: stripe.String("http://www.aftmgaming.com/auction-bot/success"),
+		CancelURL:  stripe.String(config.C.CancelURL),
+		SuccessURL: stripe.String(config.C.SuccessURL),
 		Mode:       stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String("price_1KYE0EKpOiJyve6nT9Qo9IfN"),
+				Price:    stripe.String(config.C.StripePriceID),
 				Quantity: stripe.Int64(1),
 			},
 		},
@@ -210,9 +237,16 @@ func PremiumSession(userID, customerID string) (*stripe.CheckoutSession, error) 
 }
 
 func SetRoles(s *discordgo.Session) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Sugar.Errorw("panic in SetRoles goroutine",
+				"panic", r,
+			)
+		}
+	}()
 
-	const premiumRole = "942927890100682752"
-	const supportServer = "885228283573178408"
+	premiumRole := config.C.PremiumRoleID
+	supportServer := config.C.SupportServerID
 
 	for {
 		params := &stripe.SubscriptionListParams{}
@@ -259,12 +293,20 @@ func SetRoles(s *discordgo.Session) {
 }
 
 func CheckPremiumUser(userID string) bool {
-	if PremiumUsers[userID] != "" {
+	// Check hardcoded premium users from config
+	if config.IsPremiumUser(userID) {
 		return true
 	}
 
+	// Validate user ID before using in query
+	query, err := buildStripeQuery("discord_id", userID)
+	if err != nil {
+		logger.Sugar.Warnw("invalid user ID for premium check", "user_id", userID, "error", err)
+		return false
+	}
+
 	params := &stripe.SubscriptionSearchParams{}
-	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['discord_id']:'%s'", userID))
+	params.Query = *stripe.String(query)
 	iter := sub.Search(params)
 
 	for iter.Next() {
@@ -277,14 +319,21 @@ func CheckPremiumUser(userID string) bool {
 	return false
 }
 
-func CheckPremiumGuild(guildID string) (status bool) {
-
-	if PremiumServers[guildID] != "" {
+func CheckPremiumGuild(guildID string) bool {
+	// Check hardcoded premium servers from config
+	if config.IsPremiumServer(guildID) {
 		return true
 	}
 
+	// Validate guild ID before using in query
+	query, err := buildStripeQuery("guild_id", guildID)
+	if err != nil {
+		logger.Sugar.Warnw("invalid guild ID for premium check", "guild_id", guildID, "error", err)
+		return false
+	}
+
 	params := &stripe.SubscriptionSearchParams{}
-	params.Query = *stripe.String(fmt.Sprintf("status:'active' AND metadata['guild_id']:'%s'", guildID))
+	params.Query = *stripe.String(query)
 	iter := sub.Search(params)
 
 	for iter.Next() {

@@ -6,7 +6,16 @@
       "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && grep \"\"\"\"^func\\|^type\\|^var\"\"\"\" \"\"\"\"{}\"\"\"\" | head -10')",
       "WebSearch",
       "Bash(go build:*)",
-      "Bash(go get:*)"
+      "Bash(go get:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(go mod graph:*)",
+      "Bash(go list:*)",
+      "Bash(wc:*)",
+      "Bash(go mod verify:*)",
+      "Bash(go vet:*)",
+      "Bash(go version:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

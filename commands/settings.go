@@ -11,7 +11,6 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -363,35 +362,8 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 }
 
 func CurrencySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	options := i.MessageComponentData().Values
-	clearedMap := map[string]interface{}{}
-
-	info := database.CurrencySetup{
-		GuildID: i.GuildID,
-	}
-
-	clearedSettings := "No Settings Cleared!"
-	if len(options) > 0 {
-		clearedSettings = ""
-	}
-
-	for _, v := range options {
-		clearedSettings += fmt.Sprintf("• %s\n", strings.Title(strings.ReplaceAll(v, "_", " ")))
-		clearedMap[v] = gorm.Expr("NULL")
-	}
-
-	database.DB.Model(&info).Updates(clearedMap)
-
-	h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "**Cleared Auction Settings**",
-		Description: "You have successfully cleared the following settings. Run `/settings auction` to see your changes.",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:  "**Cleared Settings**",
-				Value: clearedSettings,
-			},
-		},
+	return GenericSetupClear(s, i, &database.CurrencySetup{GuildID: i.GuildID}, SetupClearConfig{
+		SetupType: "Currency",
+		SetupCmd:  "/settings currency",
 	})
-	return nil
 }

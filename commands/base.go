@@ -6,9 +6,28 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"gorm.io/gorm"
 )
+
+// getWinnersCount safely extracts the winners count from an interface{}
+// It handles both int (from database) and float64 (from JSON parsing)
+func getWinnersCount(v interface{}) int {
+	switch val := v.(type) {
+	case int:
+		return val
+	case int64:
+		return int(val)
+	case float64:
+		return int(val)
+	default:
+		return 0
+	}
+}
 
 const (
 	EventTypeAuction  = "Auction"
@@ -36,7 +55,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 	}
 
 	if data["winners"] != nil {
-		description += fmt.Sprintf("**Winners:** %d\n", int(data["winners"].(float64)))
+		description += fmt.Sprintf("**Winners:** %d\n", getWinnersCount(data["winners"]))
 	}
 
 	if data["increment_min"] != nil {
@@ -213,4 +232,97 @@ func HasRole(m *discordgo.Member, roleID string) bool {
 		}
 	}
 	return false
+}
+
+// CheckHostPermission checks if a member has permission to host events (auctions, giveaways, etc.)
+// It checks:
+// 1. If no host_role is set, returns true (anyone can host)
+// 2. If host_role equals guildID, it represents @everyone, so anyone can host
+// 3. If the member has the host_role
+// 4. If the member has administrator permissions
+func CheckHostPermission(member *discordgo.Member, hostRole interface{}, guildID string) bool {
+	// If member is nil, deny permission
+	if member == nil {
+		return false
+	}
+
+	// If no host role is configured, anyone can host
+	if hostRole == nil || hostRole == "" {
+		return true
+	}
+
+	hostRoleStr, ok := hostRole.(string)
+	if !ok || hostRoleStr == "" {
+		return true
+	}
+
+	// If host_role equals guildID, it represents @everyone role
+	if hostRoleStr == guildID {
+		return true
+	}
+
+	// Check if member has the host role
+	if HasRole(member, hostRoleStr) {
+		return true
+	}
+
+	// Check if member has administrator permissions (1<<3 == 8)
+	if member.Permissions&(1<<3) != 0 {
+		return true
+	}
+
+	return false
+}
+
+// GetHostRoleErrorMessage returns a formatted error message for when a user lacks host permission
+func GetHostRoleErrorMessage(hostRole interface{}, actionType string) string {
+	hostRoleStr, ok := hostRole.(string)
+	if !ok || hostRoleStr == "" {
+		return fmt.Sprintf("User must have permission to %s", actionType)
+	}
+	return fmt.Sprintf("User must be administrator or have the role <@&%s> to %s", hostRoleStr, actionType)
+}
+
+// SetupClearConfig holds the configuration for a setup clear operation
+type SetupClearConfig struct {
+	SetupType   string // e.g., "Auction", "Giveaway", "Claim", "Currency"
+	SetupCmd    string // e.g., "/settings auction", "/giveaway setup"
+}
+
+// GenericSetupClear handles clearing settings for any setup type
+// model should be a pointer to the database struct (e.g., &database.AuctionSetup{GuildID: guildID})
+func GenericSetupClear(s *discordgo.Session, i *discordgo.InteractionCreate, model interface{}, config SetupClearConfig) error {
+	options := i.MessageComponentData().Values
+	clearedMap := map[string]interface{}{}
+
+	clearedSettings := "No Settings Cleared!"
+	if len(options) > 0 {
+		clearedSettings = ""
+	}
+
+	for _, v := range options {
+		clearedSettings += fmt.Sprintf("• %s\n", cases.Title(language.English).String(strings.ReplaceAll(v, "_", " ")))
+		clearedMap[v] = gorm.Expr("NULL")
+	}
+
+	result := database.DB.Model(model).Updates(clearedMap)
+	if result.Error != nil {
+		logger.Sugar.Errorw("failed to clear settings",
+			"setup_type", config.SetupType,
+			"guild_id", i.GuildID,
+			"error", result.Error,
+		)
+		return fmt.Errorf("failed to clear settings. Please try again or contact support")
+	}
+
+	return h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       fmt.Sprintf("**Cleared %s Settings**", config.SetupType),
+		Description: fmt.Sprintf("You have successfully cleared the following settings. Run `%s` to see your changes.", config.SetupCmd),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "**Cleared Settings**",
+				Value: clearedSettings,
+			},
+		},
+	})
 }

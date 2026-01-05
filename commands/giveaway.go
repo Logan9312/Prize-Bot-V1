@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -102,33 +103,17 @@ func Giveaway(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 }
 
 func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	canHost := false
-
 	GiveawaySetup := map[string]interface{}{}
 
 	result := database.DB.Model(database.GiveawaySetup{}).First(&GiveawaySetup, i.GuildID)
-	if result.Error != nil {
-		logger.Sugar.Warnw("error fetching giveaway setup", "error", result.Error)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		logger.Sugar.Errorw("failed to fetch giveaway setup", "guild_id", i.GuildID, "error", result.Error)
+		return fmt.Errorf("failed to load giveaway settings. Please try again or contact support")
 	}
 
-	if GiveawaySetup["host_role"] != "" && GiveawaySetup["host_role"] != nil {
-		// If host_role equals guild_id, it represents @everyone role, so anyone can host
-		if GiveawaySetup["host_role"].(string) == i.GuildID {
-			canHost = true
-		} else {
-			for _, v := range i.Member.Roles {
-				if v == GiveawaySetup["host_role"].(string) {
-					canHost = true
-				}
-			}
-		}
-		if i.Member.Permissions&(1<<3) == 8 {
-			canHost = true
-		}
-		if !canHost {
-			return fmt.Errorf("User must be administrator or have the role <@&" + GiveawaySetup["host_role"].(string) + "> to host giveaways.")
-		}
+	// Check if user has permission to host giveaways
+	if !CheckHostPermission(i.Member, GiveawaySetup["host_role"], i.GuildID) {
+		return errors.New(GetHostRoleErrorMessage(GiveawaySetup["host_role"], "host giveaways"))
 	}
 
 	giveawayMap := h.ParseSubCommand(i)
@@ -153,7 +138,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	delete(giveawayMap, "duration")
 	delete(giveawayMap, "image")
 
-	if giveawayMap["winners"].(float64) < 1 {
+	if getWinnersCount(giveawayMap["winners"]) < 1 {
 		return fmt.Errorf("Must have 1 or more winners.")
 	}
 
@@ -201,34 +186,16 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 }
 
 func GiveawayDelete(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	// Check permissions - must be admin or have host role
-	canDelete := false
-	
 	giveawaySetup := map[string]interface{}{}
 	result := database.DB.Model(database.GiveawaySetup{}).First(&giveawaySetup, i.GuildID)
-	if result.Error != nil {
-		logger.Sugar.Warnw("error fetching giveaway setup", "error", result.Error)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		logger.Sugar.Errorw("failed to fetch giveaway setup for delete", "guild_id", i.GuildID, "error", result.Error)
+		return fmt.Errorf("failed to load giveaway settings. Please try again or contact support")
 	}
-	
-	if giveawaySetup["host_role"] != "" && giveawaySetup["host_role"] != nil {
-		// If host_role equals guild_id, it represents @everyone role, so anyone can delete
-		if giveawaySetup["host_role"].(string) == i.GuildID {
-			canDelete = true
-		} else {
-			for _, v := range i.Member.Roles {
-				if v == giveawaySetup["host_role"].(string) {
-					canDelete = true
-				}
-			}
-		}
-	}
-	
-	if i.Member.Permissions&(1<<3) == 8 {
-		canDelete = true
-	}
-	
-	if !canDelete {
-		return fmt.Errorf("User must be administrator or have the host role to delete giveaways.")
+
+	// Check if user has permission to delete giveaways
+	if !CheckHostPermission(i.Member, giveawaySetup["host_role"], i.GuildID) {
+		return errors.New(GetHostRoleErrorMessage(giveawaySetup["host_role"], "delete giveaways"))
 	}
 	
 	// Parse command options
@@ -370,8 +337,9 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		formattedWinnerList += fmt.Sprintf("• %s (%s#%s)\n", user.Mention(), user.Username, user.Discriminator)
 	}
 
-	if len(entrants) < int(giveawayMap["winners"].(float64)) {
-		formattedWinnerList += fmt.Sprintf("• Only %d users entered out of a maximum of %d winners.\n", len(entrants), int(giveawayMap["winners"].(float64)))
+	winnersCount := getWinnersCount(giveawayMap["winners"])
+	if len(entrants) < winnersCount {
+		formattedWinnerList += fmt.Sprintf("• Only %d users entered out of a maximum of %d winners.\n", len(entrants), winnersCount)
 	}
 
 	fm.Fields = append(fm.Fields, &discordgo.MessageEmbedField{
@@ -405,20 +373,28 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 
 	giveawayMap["log_channel"] = giveawaySetup["log_channel"]
 
+	// Process claims for each winner (not in transaction since we want partial success)
 	for _, v := range winnerList {
-		giveawayMap["winner"] = v
-		err = ClaimOutput(s, giveawayMap, "Giveaway")
-		if err != nil {
-			logger.Sugar.Errorw("failed to create claim for giveaway winner", "winner", v, "message_id", messageID, "error", err)
-			h.ErrorMessage(s, giveawayMap["channel_id"].(string), "An error occurred creating a claim for a winner. Please contact support.")
+		// Create a copy of the map for each winner to avoid race conditions
+		winnerMap := make(map[string]interface{})
+		for k, val := range giveawayMap {
+			winnerMap[k] = val
+		}
+		winnerMap["winner"] = v
+		claimErr := ClaimOutput(s, winnerMap, "Giveaway")
+		if claimErr != nil {
+			logger.Sugar.Errorw("failed to create claim for giveaway winner", "winner", v, "message_id", messageID, "error", claimErr)
+			h.ErrorMessage(s, giveawayMap["channel_id"].(string), fmt.Sprintf("An error occurred creating a claim for winner <@%s>. Please contact support.", v))
 		}
 	}
 
+	// Update giveaway as finished
 	result = database.DB.Model(database.Giveaway{
 		MessageID: messageID,
 	}).Update("finished", true)
 	if result.Error != nil {
-		logger.Sugar.Warnw("error saving giveaway finished status", "error", result.Error)
+		logger.Sugar.Errorw("error saving giveaway finished status", "message_id", messageID, "error", result.Error)
+		return result.Error
 	}
 
 	return nil
@@ -438,7 +414,8 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 	rSource := rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(rSource)
 
-	for n := float64(0); n < giveawayMap["winners"].(float64); {
+	winnersCount := getWinnersCount(giveawayMap["winners"])
+	for n := 0; n < winnersCount; {
 
 		if len(entries) == 0 {
 			break
@@ -486,7 +463,7 @@ func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return result.Error
 	}
 
-	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != giveawayInfo.Host {
+	if i.Member.Permissions&(1<<3) == 0 && i.Member.User.ID != giveawayInfo.Host {
 		return fmt.Errorf("User must be host or have administrator permissions to run this command")
 	}
 
@@ -503,38 +480,8 @@ func RerollGiveawayButton(s *discordgo.Session, i *discordgo.InteractionCreate) 
 }
 
 func GiveawaySetupClearButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	options := i.MessageComponentData().Values
-
-	clearedValues := map[string]interface{}{}
-
-	clearedValues["guild_id"] = i.GuildID
-	info := database.GiveawaySetup{
-		GuildID: i.GuildID,
-	}
-
-	clearedSettings := "No Settings Cleared!"
-	if len(options) > 0 {
-		clearedSettings = ""
-	}
-
-	//Might need editing
-	for _, v := range options {
-		clearedValues[v] = gorm.Expr("NULL")
-		clearedSettings += fmt.Sprintf("• %s\n", strings.Title(strings.ReplaceAll(v, "_", " ")))
-	}
-
-	database.DB.Model(&info).Updates(clearedValues)
-
-	h.SuccessResponse(s, i, h.PresetResponse{
-		Title:       "**Cleared Giveaway Settings**",
-		Description: "You have successfully cleared the following settings. Run `/giveaway setup` to see your changes.",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:  "**Cleared Settings**",
-				Value: clearedSettings,
-			},
-		},
+	return GenericSetupClear(s, i, &database.GiveawaySetup{GuildID: i.GuildID}, SetupClearConfig{
+		SetupType: "Giveaway",
+		SetupCmd:  "/giveaway setup",
 	})
-	return nil
 }

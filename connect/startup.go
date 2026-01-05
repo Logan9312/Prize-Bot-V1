@@ -1,10 +1,12 @@
 package connect
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
@@ -75,7 +77,7 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 	case <-ready:
 		log.Info("bot received READY event")
 	case <-time.After(30 * time.Second):
-		return s, err
+		return s, fmt.Errorf("timed out waiting for READY event after 30 seconds")
 	}
 
 	// Give Discord more time to send all GUILD_CREATE events
@@ -120,7 +122,7 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 		}
 
 		// Builds dev commands
-		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", BotCommands.Dev)
+		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, config.C.DevCommandsGuild, BotCommands.Dev)
 		if err != nil {
 			return s, err
 		}
@@ -175,11 +177,32 @@ func Timers(s *discordgo.Session) {
 }
 
 func AuctionEndHandler(v map[string]interface{}, s *discordgo.Session) {
-	channelID := v["channel_id"].(string)
-	guildID := v["guild_id"].(string)
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Sugar.Errorw("panic in AuctionEndHandler",
+				"panic", r,
+			)
+		}
+	}()
+
+	// Safe type assertions for required fields
+	channelID, ok := v["channel_id"].(string)
+	if !ok {
+		logger.Sugar.Error("invalid or missing channel_id in auction data")
+		return
+	}
+
+	guildID, ok := v["guild_id"].(string)
+	if !ok {
+		logger.Sugar.Error("invalid or missing guild_id in auction data")
+		return
+	}
+
 	item := ""
 	if v["item"] != nil {
-		item = v["item"].(string)
+		if itemStr, ok := v["item"].(string); ok {
+			item = itemStr
+		}
 	}
 
 	log := logger.Auction(channelID, guildID, item)
@@ -207,10 +230,26 @@ func AuctionEndHandler(v map[string]interface{}, s *discordgo.Session) {
 }
 
 func AuctionStartHandler(v map[string]interface{}, s *discordgo.Session) {
-	guildID := v["guild_id"].(string)
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Sugar.Errorw("panic in AuctionStartHandler",
+				"panic", r,
+			)
+		}
+	}()
+
+	// Safe type assertion for guild_id
+	guildID, ok := v["guild_id"].(string)
+	if !ok {
+		logger.Sugar.Error("invalid or missing guild_id in auction queue data")
+		return
+	}
+
 	item := ""
 	if v["item"] != nil {
-		item = v["item"].(string)
+		if itemStr, ok := v["item"].(string); ok {
+			item = itemStr
+		}
 	}
 
 	log := logger.Timer("auction_queue", guildID)
@@ -220,10 +259,17 @@ func AuctionStartHandler(v map[string]interface{}, s *discordgo.Session) {
 		"start_time", v["start_time"],
 	)
 
-	if v["start_time"].(time.Time).Before(time.Now()) {
+	// Safe type assertion for start_time
+	startTime, ok := v["start_time"].(time.Time)
+	if !ok {
+		log.Error("invalid or missing start_time in auction queue data")
+		return
+	}
+
+	if startTime.Before(time.Now()) {
 		c.AuctionStart(s, v)
 	} else {
-		timeUntilStart := time.Until(v["start_time"].(time.Time))
+		timeUntilStart := time.Until(startTime)
 		log.Infow("auction scheduled to start", "time_until_start", timeUntilStart.String())
 		time.Sleep(timeUntilStart)
 		c.AuctionStart(s, v)
@@ -231,11 +277,32 @@ func AuctionStartHandler(v map[string]interface{}, s *discordgo.Session) {
 }
 
 func GiveawayEndHandler(v map[string]interface{}, s *discordgo.Session) {
-	messageID := v["message_id"].(string)
-	guildID := v["guild_id"].(string)
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Sugar.Errorw("panic in GiveawayEndHandler",
+				"panic", r,
+			)
+		}
+	}()
+
+	// Safe type assertions for required fields
+	messageID, ok := v["message_id"].(string)
+	if !ok {
+		logger.Sugar.Error("invalid or missing message_id in giveaway data")
+		return
+	}
+
+	guildID, ok := v["guild_id"].(string)
+	if !ok {
+		logger.Sugar.Error("invalid or missing guild_id in giveaway data")
+		return
+	}
+
 	item := ""
 	if v["item"] != nil {
-		item = v["item"].(string)
+		if itemStr, ok := v["item"].(string); ok {
+			item = itemStr
+		}
 	}
 
 	log := logger.Giveaway(messageID, guildID, item)

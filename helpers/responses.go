@@ -2,8 +2,32 @@ package helpers
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
+
+// GetSupportButton returns the standard support server button
+func GetSupportButton() discordgo.Button {
+	return discordgo.Button{
+		Label: "Support Server",
+		Style: discordgo.LinkButton,
+		Emoji: &discordgo.ComponentEmoji{
+			Name:     config.C.SupportButtonEmojiName,
+			ID:       config.C.SupportButtonEmojiID,
+			Animated: false,
+		},
+		URL: config.C.SupportServerURL,
+	}
+}
+
+// GetSupportButtonRow returns an action row containing the support button
+func GetSupportButtonRow() discordgo.ActionsRow {
+	return discordgo.ActionsRow{
+		Components: []discordgo.MessageComponent{
+			GetSupportButton(),
+		},
+	}
+}
 
 /*type PresetMessageComplex struct {
 	Content     string `json:"content,omitempty"`
@@ -40,20 +64,7 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label: "Support Server",
-							Style: discordgo.LinkButton,
-							Emoji: &discordgo.ComponentEmoji{
-								Name:     "logo",
-								ID:       "889025400120950804",
-								Animated: false,
-							},
-							URL: "https://discord.gg/RxP2z5NGtj",
-						},
-					},
-				},
+				GetSupportButtonRow(),
 			},
 			Embeds: []*discordgo.MessageEmbed{
 				{
@@ -66,10 +77,6 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 							Value: errorText,
 						},
 					},
-					//Footer: &discordgo.MessageEmbedFooter{
-					//	Text:    "Aftermath Auction Bot",
-					//	IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
-					//},
 				},
 			},
 			Flags: 64,
@@ -83,20 +90,7 @@ func FollowUpErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 		TTS:   false,
 		Files: []*discordgo.File{},
 		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label: "Support Server",
-						Style: discordgo.LinkButton,
-						Emoji: &discordgo.ComponentEmoji{
-							Name:     "logo",
-							ID:       "889025400120950804",
-							Animated: false,
-						},
-						URL: "https://discord.gg/RxP2z5NGtj",
-					},
-				},
-			},
+			GetSupportButtonRow(),
 		},
 		Embeds: []*discordgo.MessageEmbed{
 			{
@@ -109,10 +103,6 @@ func FollowUpErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 						Value: errorText,
 					},
 				},
-				//Footer: &discordgo.MessageEmbedFooter{
-				//	Text:    "Aftermath Auction Bot",
-				//	IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
-				//},
 			},
 		},
 		Flags: 64,
@@ -134,20 +124,7 @@ func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Messa
 			},
 		},
 		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label: "Support Server",
-						Style: discordgo.LinkButton,
-						Emoji: &discordgo.ComponentEmoji{
-							Name:     "logo",
-							ID:       "889025400120950804",
-							Animated: false,
-						},
-						URL: "https://discord.gg/RxP2z5NGtj",
-					},
-				},
-			},
+			GetSupportButtonRow(),
 		},
 	})
 }
@@ -277,22 +254,10 @@ func DeferredResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r Pr
 }
 
 func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) (*discordgo.Message, error) {
+	supportRow := GetSupportButtonRow()
 	return s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 		Components: &[]discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label: "Support Server",
-						Style: discordgo.LinkButton,
-						Emoji: &discordgo.ComponentEmoji{
-							Name:     "logo",
-							ID:       "889025400120950804",
-							Animated: false,
-						},
-						URL: "https://discord.gg/RxP2z5NGtj",
-					},
-				},
-			},
+			supportRow,
 		},
 		Embeds: &[]*discordgo.MessageEmbed{
 			{
@@ -305,10 +270,6 @@ func DeferredErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 						Value: errorText,
 					},
 				},
-				//Footer: &discordgo.MessageEmbedFooter{
-				//	Text:    "Aftermath Auction Bot",
-				//	IconURL: "https://media.discordapp.net/attachments/859271759920234518/859951197795123261/final_logo.png?width=473&height=473",
-				//},
 			},
 		},
 	})
@@ -362,7 +323,6 @@ func PremiumError(s *discordgo.Session, i *discordgo.InteractionCreate, message 
 }
 
 func ExperimentalResponse(s *discordgo.Session, i *discordgo.InteractionCreate, r PresetResponse) error {
-
 	r.Fields = append(r.Fields, &discordgo.MessageEmbedField{
 		Name:   "**Experimental Feature!**",
 		Value:  "This feature is highly experimental, and for that reason may not function perfectly as intended. Often problems with this command are more frequent in large servers.",
@@ -390,20 +350,7 @@ func ExperimentalResponse(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		Data: &discordgo.InteractionResponseData{
 			Content: r.Content,
 			Components: []discordgo.MessageComponent{
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label: "Support Server",
-							Style: discordgo.LinkButton,
-							Emoji: &discordgo.ComponentEmoji{
-								Name:     "logo",
-								ID:       "889025400120950804",
-								Animated: false,
-							},
-							URL: "https://discord.gg/RxP2z5NGtj",
-						},
-					},
-				},
+				GetSupportButtonRow(),
 			},
 			Embeds: embed,
 			Flags:  64,

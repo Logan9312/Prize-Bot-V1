@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
@@ -28,14 +29,14 @@ var StatsCommand = discordgo.ApplicationCommand{
 }
 
 func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-
-	devUsers := map[string]interface{}{
-		"280812467775471627": "Logan",
-	}
-
 	options := h.ParseSlashCommand(i)
 
-	if devUsers[i.Member.User.ID] == nil {
+	// Check for nil Member (DM context)
+	if i.Member == nil || i.Member.User == nil {
+		return fmt.Errorf("this command cannot be used in DMs")
+	}
+
+	if !config.IsDevUser(i.Member.User.ID) {
 		return fmt.Errorf("User must be a developer to run this command")
 	}
 

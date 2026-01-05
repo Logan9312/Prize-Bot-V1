@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stripe/stripe-go/v72"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
@@ -39,6 +40,9 @@ func main() {
 		os.Stderr.WriteString("FATAL: Failed to load environment variables: " + err.Error() + "\n")
 		os.Exit(1)
 	}
+
+	// Initialize config from environment variables
+	config.Init()
 
 	// Initialize logger as early as possible
 	if err := logger.Init(environment.Environment, environment.LogLevel); err != nil {
@@ -86,13 +90,30 @@ func main() {
 
 	// Start whitelabel bots with delay to avoid rate limiting
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Sugar.Errorw("panic in whitelabel bot goroutine",
+					"panic", r,
+				)
+			}
+		}()
+
 		for i, v := range WhiteLabels {
 			// Add 2 second delay between each whitelabel bot connection
 			if i > 0 {
 				time.Sleep(2 * time.Second)
 			}
 
-			s, err := connect.BotConnect(v["bot_token"].(string), environment.Environment)
+			// Safe type assertion for bot_token
+			botToken, ok := v["bot_token"].(string)
+			if !ok {
+				logger.Sugar.Errorw("invalid bot_token type in whitelabel config",
+					"index", i,
+				)
+				continue
+			}
+
+			s, err := connect.BotConnect(botToken, environment.Environment)
 			if err != nil {
 				logger.Sugar.Errorw("failed to connect whitelabel bot",
 					"error", err,
@@ -102,7 +123,7 @@ func main() {
 			}
 			logger.Bot(s.State.User.ID, s.State.User.Username).Info("whitelabel bot connected")
 
-			if s.State.User.ID == "995022149226082324" {
+			if s.State.User.ID == config.C.WhitelabelBotID {
 				err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
 				if err != nil {
 					logger.Sugar.Warnw("failed to set whitelabel status", "error", err)
