@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -142,7 +143,11 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 
 	guild, err := s.State.Guild(guildID)
 	if err != nil {
-		logger.Sugar.Warnw("error fetching guild", "error", err)
+		// Don't log for expected "state cache not found" - happens during startup
+		// or when bot was removed from guild but still has giveaway data
+		if !errors.Is(err, discordgo.ErrStateNotFound) {
+			logger.Sugar.Warnw("error fetching guild", "error", err)
+		}
 		return h.PresetResponse{}, err
 	}
 
