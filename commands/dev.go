@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gorm.io/gorm/clause"
 )
 
@@ -44,7 +45,7 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		"bot_id": s.State.User.ID,
 	})
 	if result.Error != nil {
-		fmt.Println(result.Error.Error())
+		logger.Sugar.Warnw("dev command database error", "error", result.Error)
 		return result.Error
 	}
 
@@ -59,7 +60,7 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		BotID: s.State.User.ID,
 	}).Updates(options)
 	if result.Error != nil {
-		fmt.Println(result.Error.Error())
+		logger.Sugar.Warnw("dev command database error", "error", result.Error)
 		return result.Error
 	}
 

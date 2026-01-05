@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"os"
 	"time"
 
 	"github.com/caarlos0/env"
@@ -11,6 +10,7 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
 	"gitlab.com/logan9312/discord-auction-bot/database"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gitlab.com/logan9312/discord-auction-bot/routers"
 )
 
@@ -22,31 +22,45 @@ type Environment struct {
 	Host         string `env:"DB_HOST"`
 	Password     string `env:"DB_PASSWORD"`
 	StripeToken  string `env:"STRIPE_TOKEN"`
+	LogLevel     string `env:"LOG_LEVEL" envDefault:"info"`
 }
 
 func main() {
-
 	environment := Environment{}
 
+	// Load .env file first (before logger init so we can get ENVIRONMENT)
 	err := godotenv.Load(".env")
 	if err != nil {
-		fmt.Println("Error loading .env file:", err)
+		// Can't use logger yet, use stderr
+		os.Stderr.WriteString("Warning: Error loading .env file: " + err.Error() + "\n")
 	}
 
 	if err := env.Parse(&environment); err != nil {
-		fmt.Println(err)
-		log.Fatal("FAILED TO LOAD ENVIRONMENT VARIABLES")
+		os.Stderr.WriteString("FATAL: Failed to load environment variables: " + err.Error() + "\n")
+		os.Exit(1)
 	}
+
+	// Initialize logger as early as possible
+	if err := logger.Init(environment.Environment, environment.LogLevel); err != nil {
+		os.Stderr.WriteString("FATAL: Failed to initialize logger: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+	defer logger.Sync()
+
+	logger.Sugar.Infow("starting bot",
+		"environment", environment.Environment,
+		"log_level", environment.LogLevel,
+	)
 
 	stripe.Key = environment.StripeToken
 
-	//Connects database
+	// Connects database
 	database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
 
-	//Connects main bot
+	// Connects main bot
 	mainSession, err := connect.BotConnect(environment.DiscordToken, environment.Environment)
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Fatalw("failed to connect main bot", "error", err)
 	}
 
 	devData := database.DevSetup{
@@ -54,18 +68,18 @@ func main() {
 	}
 	result := database.DB.First(&devData)
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		logger.Sugar.Warnw("failed to fetch dev setup", "error", result.Error)
 	}
 
 	err = mainSession.UpdateGameStatus(0, "Bot Version "+devData.Version)
 	if err != nil {
-		fmt.Println("Error setting status", err)
+		logger.Sugar.Warnw("failed to set game status", "error", err)
 	}
 
 	WhiteLabels := []map[string]any{}
 	result = database.DB.Model([]database.WhiteLabels{}).Find(&WhiteLabels)
 	if result.Error != nil {
-		fmt.Println("Error fetching whitelabels:", result.Error)
+		logger.Sugar.Errorw("failed to fetch whitelabels", "error", result.Error)
 	}
 
 	connect.Timers(mainSession)
@@ -80,13 +94,18 @@ func main() {
 
 			s, err := connect.BotConnect(v["bot_token"].(string), environment.Environment)
 			if err != nil {
-				fmt.Printf("Error connecting whitelabel bot: %v\n", err)
+				logger.Sugar.Errorw("failed to connect whitelabel bot",
+					"error", err,
+					"index", i,
+				)
 				continue
 			}
+			logger.Bot(s.State.User.ID, s.State.User.Username).Info("whitelabel bot connected")
+
 			if s.State.User.ID == "995022149226082324" {
 				err = s.UpdateGameStatus(0, "Bot Version "+devData.Version)
 				if err != nil {
-					fmt.Println("Error setting status", err)
+					logger.Sugar.Warnw("failed to set whitelabel status", "error", err)
 				}
 			}
 			connect.Timers(s)
@@ -95,7 +114,10 @@ func main() {
 
 	go commands.SetRoles(mainSession)
 
-	fmt.Println("Bot is running!")
+	logger.Sugar.Infow("bot is running",
+		"bot_id", mainSession.State.User.ID,
+		"bot_name", mainSession.State.User.Username,
+	)
 
 	routers.HealthCheck()
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 func ParseSlashCommand(i *discordgo.InteractionCreate) map[string]interface{} {
@@ -41,7 +42,7 @@ func ParseTime(inputDuration string) (time.Duration, error) {
 		inputDuration = strings.TrimSuffix(strings.ToLower(inputDuration), "d")
 		float, err := strconv.ParseFloat(inputDuration, 64)
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("failed to parse duration", "input", inputDuration, "error", err)
 			return 0, err
 		}
 		inputDuration = fmt.Sprint(float*24) + "h"

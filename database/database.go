@@ -1,10 +1,9 @@
 package database
 
 import (
-	"fmt"
-
 	"time"
 
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gorm.io/gorm"
 )
 
@@ -176,9 +175,9 @@ type Errors struct {
 var DB *gorm.DB
 
 func DatabaseConnect(password, host, env string) {
-	fmt.Println("Connecting to Database...")
-	defer fmt.Println("Bot has finished attempting to connect to the database!")
-	fmt.Println(env)
+	log := logger.Database("connect")
+	log.Infow("connecting to database", "environment", env)
+
 	switch env {
 	case "prod":
 		DB = ProdDB()
@@ -187,14 +186,16 @@ func DatabaseConnect(password, host, env string) {
 	}
 
 	if DB == nil {
-		fmt.Println("ERROR: Failed to initialize database connection!")
+		log.Fatal("failed to initialize database connection")
 		return
 	}
 
-	fmt.Println(DB)
+	log.Info("database connection established")
+
 	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
 	if err != nil {
-		fmt.Println(err)
+		log.Errorw("database migration failed", "error", err)
+	} else {
+		log.Info("database migration completed")
 	}
-
 }

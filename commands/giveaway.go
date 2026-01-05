@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gorm.io/gorm"
 )
 
@@ -108,7 +109,7 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 
 	result := database.DB.Model(database.GiveawaySetup{}).First(&GiveawaySetup, i.GuildID)
 	if result.Error != nil {
-		fmt.Println("Error fetching Giveaway Setup DB")
+		logger.Sugar.Warnw("error fetching giveaway setup", "error", result.Error)
 	}
 
 	if GiveawaySetup["host_role"] != "" && GiveawaySetup["host_role"] != nil {
@@ -181,7 +182,8 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 
 	result = database.DB.Model(database.Giveaway{}).Create(giveawayMap)
 	if result.Error != nil {
-		return fmt.Errorf("Giveaway was not saved in database. Please contact support so I can fix this issue as your giveaway will not function properly. The error is: %s", result.Error.Error())
+		logger.Sugar.Errorw("failed to save giveaway to database", "guild_id", giveawayMap["guild_id"], "item", giveawayMap["item"], "error", result.Error)
+		return fmt.Errorf("giveaway could not be saved. Please contact support - your giveaway may not function properly")
 	}
 
 	h.SuccessResponse(s, i, h.PresetResponse{
@@ -192,7 +194,8 @@ func GiveawayCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	time.Sleep(endTimeDuration)
 	err = GiveawayEnd(s, message.ID)
 	if err != nil {
-		h.ErrorMessage(s, giveawayMap["channel_id"].(string), err.Error())
+		logger.Sugar.Errorw("giveaway end failed", "message_id", message.ID, "error", err)
+		h.ErrorMessage(s, giveawayMap["channel_id"].(string), "An error occurred ending the giveaway. Please contact support.")
 	}
 	return nil
 }
@@ -204,7 +207,7 @@ func GiveawayDelete(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	giveawaySetup := map[string]interface{}{}
 	result := database.DB.Model(database.GiveawaySetup{}).First(&giveawaySetup, i.GuildID)
 	if result.Error != nil {
-		fmt.Println("Error fetching Giveaway Setup DB")
+		logger.Sugar.Warnw("error fetching giveaway setup", "error", result.Error)
 	}
 	
 	if giveawaySetup["host_role"] != "" && giveawaySetup["host_role"] != nil {
@@ -252,14 +255,15 @@ func GiveawayDelete(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	// Delete the giveaway message if possible
 	err := s.ChannelMessageDelete(channelID.(string), messageID)
 	if err != nil {
-		fmt.Println("Error deleting giveaway message:", err)
+		logger.Sugar.Warnw("error deleting giveaway message", "error", err)
 		// Continue even if message delete fails - we still want to remove from DB
 	}
 	
 	// Delete from database
 	result = database.DB.Delete(&giveawayInfo)
 	if result.Error != nil {
-		return fmt.Errorf("Error deleting giveaway from database: %s", result.Error.Error())
+		logger.Sugar.Errorw("failed to delete giveaway from database", "message_id", messageID, "error", result.Error)
+		return fmt.Errorf("failed to delete giveaway. Please try again or contact support")
 	}
 	
 	// Send success response
@@ -312,7 +316,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 
 	result = database.DB.Model(database.GiveawaySetup{}).First(&giveawaySetup, giveawayMap["guild_id"].(string))
 	if result.Error != nil {
-		fmt.Println("Error fetching giveaway setups", result.Error)
+		logger.Sugar.Warnw("error fetching giveaway setups", "error", result.Error)
 	}
 
 	fm, err := EventFormat(s, giveawayMap, EventTypeGiveaway, giveawayMap["guild_id"].(string))
@@ -405,7 +409,8 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		giveawayMap["winner"] = v
 		err = ClaimOutput(s, giveawayMap, "Giveaway")
 		if err != nil {
-			h.ErrorMessage(s, giveawayMap["channel_id"].(string), err.Error())
+			logger.Sugar.Errorw("failed to create claim for giveaway winner", "winner", v, "message_id", messageID, "error", err)
+			h.ErrorMessage(s, giveawayMap["channel_id"].(string), "An error occurred creating a claim for a winner. Please contact support.")
 		}
 	}
 
@@ -413,7 +418,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 		MessageID: messageID,
 	}).Update("finished", true)
 	if result.Error != nil {
-		fmt.Println("Error saving giveaway finished status.", result.Error)
+		logger.Sugar.Warnw("error saving giveaway finished status", "error", result.Error)
 	}
 
 	return nil
@@ -426,7 +431,7 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 	if len(entries) == 0 {
 		return winnerList, fmt.Errorf("No entries found.")
 	}
-	fmt.Println("Rolling Giveaway:")
+	logger.Sugar.Debug("rolling giveaway")
 
 	// Create a new random source with a time-based seed
 	// This is the modern approach as of Go 1.20+ (rand.Seed is deprecated)
@@ -449,11 +454,11 @@ func GiveawayRoll(s *discordgo.Session, entries []string, giveawayMap map[string
 			printlist += fmt.Sprintf("Entry %d: <@%s> (%s)", i, v, username)
 		}
 
-		fmt.Println(printlist)
+		logger.Sugar.Debugw("giveaway entries", "entries", printlist)
 
 		// Use the local random generator instance instead of the global one
 		index := rng.Intn(len(entries))
-		fmt.Println("Index:", index)
+		logger.Sugar.Debugw("giveaway winner selected", "index", index)
 		winnerID := entries[index]
 
 		if len(entries) > 1 {

@@ -1,12 +1,12 @@
 package connect
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 type slashCommands struct {
@@ -39,13 +39,12 @@ var BotCommands = slashCommands{
 }
 
 func BotConnect(token, environment string) (*discordgo.Session, error) {
-
 	BotCommands.Local = append(BotCommands.Local, BotCommands.Prod...)
 	BotCommands.Local = append(BotCommands.Local, BotCommands.Dev...)
 
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
-		return s, fmt.Errorf("Discordgo.New Error: %w", err)
+		return s, err
 	}
 
 	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
@@ -65,143 +64,208 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 
 	err = s.Open()
 	if err != nil {
-		return s, fmt.Errorf("Failed to open a websocket connection with discord. Likely due to an invalid token. %w", err)
+		return s, err
 	}
 
-	fmt.Println(s.State.User.Username, " Starting Up...")
+	log := logger.Bot(s.State.User.ID, s.State.User.Username)
+	log.Info("bot starting up")
 
 	// Wait for READY event with timeout
 	select {
 	case <-ready:
-		fmt.Println("Bot received READY event")
+		log.Info("bot received READY event")
 	case <-time.After(30 * time.Second):
-		return s, fmt.Errorf("timeout waiting for READY event")
+		return s, err
 	}
 
 	// Give Discord more time to send all GUILD_CREATE events
 	// This prevents rate limiting by not trying to access guilds before they're fully loaded
 	time.Sleep(2 * time.Second)
 
-	//Builds local commands
+	// Builds local commands
 	if environment == "local" {
 		s.LogLevel = discordgo.LogInformational
 		guildCount := len(s.State.Guilds)
-		fmt.Printf("Registering commands to %d guilds...\n", guildCount)
+		log.Infow("registering commands to guilds", "guild_count", guildCount)
 
 		for i, v := range s.State.Guilds {
 			// Add a delay every 5 guilds to avoid rate limiting
 			if i > 0 && i%5 == 0 {
-				fmt.Printf("Processed %d/%d guilds, pausing to avoid rate limits...\n", i, guildCount)
+				log.Infow("pausing to avoid rate limits", "processed", i, "total", guildCount)
 				time.Sleep(2 * time.Second)
 			}
 
 			_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, v.ID, BotCommands.Local)
 			if err != nil {
-				fmt.Printf("Warning: Failed to add commands to guild %s: %v\n", v.Name, err)
-				// Don't return error, just log and continue with other guilds
+				log.Warnw("failed to add commands to guild",
+					"guild_name", v.Name,
+					"guild_id", v.ID,
+					"error", err,
+				)
 				continue
 			}
-			fmt.Printf("Commands added to guild: %s (%d/%d)\n", v.Name, i+1, guildCount)
+			log.Debugw("commands added to guild",
+				"guild_name", v.Name,
+				"progress", i+1,
+				"total", guildCount,
+			)
 		}
 	}
 
-	//Builds prod commands
+	// Builds prod commands
 	if environment == "prod" {
 		_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, "", BotCommands.Prod)
 		if err != nil {
-			return s, fmt.Errorf("Bulk Overwrite Prod Command Error: %w", err)
+			return s, err
 		}
 
-		//Builds dev commands
-
+		// Builds dev commands
 		_, err = s.ApplicationCommandBulkOverwrite(s.State.User.ID, "915767892467920967", BotCommands.Dev)
 		if err != nil {
-			return s, fmt.Errorf("Bulk Overwrite Dev Command Error: %w", err)
+			return s, err
 		}
-
 	}
 
-	fmt.Println(s.State.User.Username + " bot startup complete!")
-
+	log.Info("bot startup complete")
 	return s, nil
 }
 
 func Timers(s *discordgo.Session) {
+	log := logger.Bot(s.State.User.ID, s.State.User.Username)
+	log.Info("initializing startup timers")
 
 	Auctions := []map[string]interface{}{}
 	AuctionQueue := []map[string]interface{}{}
 	Giveaways := []map[string]interface{}{}
-	fmt.Println("Beginning Startup Timers")
 
-	database.DB.Model([]database.Auction{}).Find(&Auctions)
-	fmt.Printf("Found %d active auctions to process\n", len(Auctions))
-	for _, v := range Auctions {
-		go AuctionEndHandler(v, s)
+	// Load active auctions with error checking
+	result := database.DB.Model([]database.Auction{}).Find(&Auctions)
+	if result.Error != nil {
+		log.Errorw("failed to load active auctions", "error", result.Error)
+	} else {
+		log.Infow("loaded active auctions", "count", len(Auctions))
+		for _, v := range Auctions {
+			go AuctionEndHandler(v, s)
+		}
 	}
 
-	//TODO Fix this with whitelabels
-	database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
-	fmt.Printf("Found %d queued auctions to process\n", len(AuctionQueue))
-	for _, v := range AuctionQueue {
-		go AuctionStartHandler(v, s)
+	// Load queued auctions with error checking
+	result = database.DB.Model([]database.AuctionQueue{}).Find(&AuctionQueue)
+	if result.Error != nil {
+		log.Errorw("failed to load queued auctions", "error", result.Error)
+	} else {
+		log.Infow("loaded queued auctions", "count", len(AuctionQueue))
+		for _, v := range AuctionQueue {
+			go AuctionStartHandler(v, s)
+		}
 	}
 
-	database.DB.Model([]database.Giveaway{}).Find(&Giveaways)
-	fmt.Printf("Found %d active giveaways to process\n", len(Giveaways))
-	for _, v := range Giveaways {
-		go GiveawayEndHandler(v, s)
+	// Load active giveaways with error checking
+	result = database.DB.Model([]database.Giveaway{}).Find(&Giveaways)
+	if result.Error != nil {
+		log.Errorw("failed to load active giveaways", "error", result.Error)
+	} else {
+		log.Infow("loaded active giveaways", "count", len(Giveaways))
+		for _, v := range Giveaways {
+			go GiveawayEndHandler(v, s)
+		}
 	}
+
+	log.Info("startup timers initialized")
 }
 
 func AuctionEndHandler(v map[string]interface{}, s *discordgo.Session) {
-	fmt.Println("Auction Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
+	channelID := v["channel_id"].(string)
+	guildID := v["guild_id"].(string)
+	item := ""
+	if v["item"] != nil {
+		item = v["item"].(string)
+	}
+
+	log := logger.Auction(channelID, guildID, item)
+	log.Infow("auction timer restarted",
+		"host", v["host"],
+		"end_time", v["end_time"],
+	)
 
 	// Check if the auction has already ended or is still active
 	endTime, ok := v["end_time"].(time.Time)
 	if !ok {
-		fmt.Println("Error: Invalid end_time for auction", v["channel_id"])
+		log.Error("invalid end_time for auction")
 		return
 	}
 
 	// If auction hasn't ended yet, wait until end time before making any Discord API calls
 	if endTime.After(time.Now()) {
 		timeUntilEnd := time.Until(endTime)
-		fmt.Printf("Auction '%s' will end in %s\n", v["item"], timeUntilEnd)
+		log.Infow("auction scheduled to end", "time_until_end", timeUntilEnd.String())
 		time.Sleep(timeUntilEnd)
 	}
 
 	// Now the auction has ended, proceed with ending logic
-	c.AuctionEnd(s, v["channel_id"].(string), v["guild_id"].(string))
+	c.AuctionEnd(s, channelID, guildID)
 }
 
 func AuctionStartHandler(v map[string]interface{}, s *discordgo.Session) {
-	fmt.Println("Auction Re-Queued: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "Start Time", v["start_time"].(time.Time).String())
+	guildID := v["guild_id"].(string)
+	item := ""
+	if v["item"] != nil {
+		item = v["item"].(string)
+	}
+
+	log := logger.Timer("auction_queue", guildID)
+	log.Infow("auction re-queued",
+		"item", item,
+		"host", v["host"],
+		"start_time", v["start_time"],
+	)
+
 	if v["start_time"].(time.Time).Before(time.Now()) {
 		c.AuctionStart(s, v)
 	} else {
-		time.Sleep(time.Until(v["start_time"].(time.Time)))
+		timeUntilStart := time.Until(v["start_time"].(time.Time))
+		log.Infow("auction scheduled to start", "time_until_start", timeUntilStart.String())
+		time.Sleep(timeUntilStart)
 		c.AuctionStart(s, v)
 	}
 }
 
 func GiveawayEndHandler(v map[string]interface{}, s *discordgo.Session) {
-	fmt.Println("Giveaway Timer Re-Started: ", v["item"], "GuildID: ", v["guild_id"], "ImageURL", v["image_url"], "Host", v["host"], "End Time", v["end_time"].(time.Time).String())
+	messageID := v["message_id"].(string)
+	guildID := v["guild_id"].(string)
+	item := ""
+	if v["item"] != nil {
+		item = v["item"].(string)
+	}
+
+	log := logger.Giveaway(messageID, guildID, item)
+	log.Infow("giveaway timer restarted",
+		"host", v["host"],
+		"end_time", v["end_time"],
+	)
 
 	endTime, ok := v["end_time"].(time.Time)
 	if !ok {
-		fmt.Println("Error: Invalid end_time for giveaway", v["message_id"])
+		log.Error("invalid end_time for giveaway")
 		return
 	}
 
 	if endTime.Before(time.Now()) {
 		if v["finished"] == true {
-			time.Sleep(time.Until(endTime.Add(24 * time.Hour)))
-			database.DB.Delete(database.Giveaway{}, v["message_id"].(string))
+			cleanupTime := time.Until(endTime.Add(24 * time.Hour))
+			log.Infow("giveaway finished, scheduling cleanup", "cleanup_in", cleanupTime.String())
+			time.Sleep(cleanupTime)
+			result := database.DB.Delete(database.Giveaway{}, messageID)
+			if result.Error != nil {
+				log.Errorw("failed to delete finished giveaway", "error", result.Error)
+			}
 		} else {
-			c.GiveawayEnd(s, v["message_id"].(string))
+			c.GiveawayEnd(s, messageID)
 		}
 	} else {
-		time.Sleep(time.Until(endTime))
-		c.GiveawayEnd(s, v["message_id"].(string))
+		timeUntilEnd := time.Until(endTime)
+		log.Infow("giveaway scheduled to end", "time_until_end", timeUntilEnd.String())
+		time.Sleep(timeUntilEnd)
+		c.GiveawayEnd(s, messageID)
 	}
 }

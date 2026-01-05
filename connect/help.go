@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 type CommandInfo struct {
@@ -31,7 +32,7 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	fields := []*discordgo.MessageEmbedField{}
 
 	for _, c := range BotCommands.Prod {
-		fmt.Println(c.Name, c.DefaultMemberPermissions)
+		logger.Sugar.Debugw("loading help for command", "name", c.Name, "permissions", c.DefaultMemberPermissions)
 		perms := ParsePerms(c.DefaultMemberPermissions)
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:  fmt.Sprintf("**%s**", strings.Title(c.Name)),

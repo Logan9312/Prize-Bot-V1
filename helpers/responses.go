@@ -1,10 +1,8 @@
 package helpers
 
 import (
-	"fmt"
-	"runtime"
-
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 /*type PresetMessageComplex struct {
@@ -36,8 +34,7 @@ type PresetResponse struct {
 }
 
 func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) error {
-	_, file, line, _ := runtime.Caller(1)
-	fmt.Println(file, line, errorText)
+	logger.Sugar.Errorw("error response sent to user", "error", errorText, "guild_id", i.GuildID)
 
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -81,8 +78,7 @@ func ErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorTe
 }
 
 func FollowUpErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate, errorText string) (*discordgo.Message, error) {
-	_, file, line, _ := runtime.Caller(1)
-	fmt.Println(file, line, errorText)
+	logger.Sugar.Errorw("followup error response sent to user", "error", errorText, "guild_id", i.GuildID)
 	return s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
 		TTS:   false,
 		Files: []*discordgo.File{},
@@ -124,8 +120,7 @@ func FollowUpErrorResponse(s *discordgo.Session, i *discordgo.InteractionCreate,
 }
 
 func ErrorMessage(s *discordgo.Session, channelID, err string) (*discordgo.Message, error) {
-	_, file, line, _ := runtime.Caller(1)
-	fmt.Println(file, line, err)
+	logger.Sugar.Errorw("error message sent to channel", "error", err, "channel_id", channelID)
 	return s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Error",

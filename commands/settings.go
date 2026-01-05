@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/gorm"
@@ -301,8 +302,8 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			case strings.Contains(v.Name, "category"):
 				category, err := s.Channel(options[v.Name].(string))
 				if err != nil {
-					fmt.Println("Category Error:", err)
-					options[v.Name] = "Error Displaying Category: " + err.Error()
+					logger.Sugar.Warnw("category fetch error", "category_id", options[v.Name], "error", err)
+					options[v.Name] = "Unable to display category (may have been deleted)"
 				} else {
 					options[v.Name] = category.Name
 				}
@@ -356,7 +357,7 @@ func Settings(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		},
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("settings error", "error", err)
 	}
 	return nil
 }

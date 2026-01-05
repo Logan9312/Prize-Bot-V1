@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 const (
@@ -122,7 +123,7 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 
 	guild, err := s.State.Guild(guildID)
 	if err != nil {
-		fmt.Println("Error fetching guild: ", err)
+		logger.Sugar.Warnw("error fetching guild", "error", err)
 		return h.PresetResponse{}, err
 	}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 var ShopCommand = discordgo.ApplicationCommand{
@@ -45,7 +46,7 @@ func ShopCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	response, err := EventFormat(s, shopMap, EventTypeShop, i.GuildID)
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("shop operation error", "error", err)
 	}
 	h.SuccessResponse(s, i, response)
 	return nil
@@ -66,7 +67,7 @@ func AddItem(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("shop operation error", "error", err)
 	}
 	return nil
 }

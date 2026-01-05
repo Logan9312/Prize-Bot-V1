@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 var FeedbackCommand = discordgo.ApplicationCommand{
@@ -62,7 +63,7 @@ func FeedbackSuggestion(s *discordgo.Session, i *discordgo.InteractionCreate) er
 		},
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("feedback operation error", "error", err)
 	}
 	return nil
 }

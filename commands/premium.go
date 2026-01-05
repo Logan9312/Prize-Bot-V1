@@ -10,6 +10,7 @@ import (
 	checkout "github.com/stripe/stripe-go/v72/checkout/session"
 	"github.com/stripe/stripe-go/v72/sub"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 var PremiumCommand = discordgo.ApplicationCommand{
@@ -136,7 +137,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return err
 	}
 
-	fmt.Println("Current Subscriptions")
+	logger.Sugar.Debug("checking current subscriptions")
 	return nil
 }
 
@@ -177,7 +178,7 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 
 	err := h.ErrorResponse(s, i, "No unlinked subscription found! Please subscribe to premium first using `/premium info`")
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("premium operation error", "error", err)
 		return err
 	}
 	return nil
@@ -240,16 +241,16 @@ func SetRoles(s *discordgo.Session) {
 			}
 
 			if active && !hasRole {
-				fmt.Println("Adding role for:", userID)
+				logger.Sugar.Debugw("adding premium role", "user_id", userID)
 				err := s.GuildMemberRoleAdd(supportServer, userID, premiumRole)
 				if err != nil {
-					fmt.Println(err)
+					logger.Sugar.Warnw("premium operation error", "error", err)
 				}
 			} else if !active && hasRole {
-				fmt.Println("Removing role for:", userID)
+				logger.Sugar.Debugw("removing premium role", "user_id", userID)
 				err := s.GuildMemberRoleRemove(supportServer, userID, premiumRole)
 				if err != nil {
-					fmt.Println(err)
+					logger.Sugar.Warnw("premium operation error", "error", err)
 				}
 			}
 		}

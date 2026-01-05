@@ -12,6 +12,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"gorm.io/gorm"
@@ -346,7 +347,7 @@ func AuctionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		} else {
 			exampleMessage, err := EventFormat(s, auctionMap, EventTypeAuction, i.GuildID)
 			if err != nil {
-				fmt.Println("Error formatting auction", err)
+				logger.Sugar.Warnw("error formatting auction", "error", err)
 				return err
 			}
 
@@ -406,7 +407,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 
 	result := database.DB.Model(&database.AuctionSetup{}).First(&auctionSetup, guildID)
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		logger.Sugar.Warnw("database error", "error", result.Error)
 	}
 	
 	// Add guild_id to auctionSetup for host check
@@ -418,7 +419,7 @@ func AuctionHandler(s *discordgo.Session, auctionMap map[string]any, member *dis
 
 	result = database.DB.Model(database.CurrencySetup{}).First(&currencyMap, guildID)
 	if result.Error != nil {
-		fmt.Println("Error getting currency setup: " + result.Error.Error())
+		logger.Sugar.Warnw("error getting currency setup", "error", result.Error)
 	}
 
 	auctionMap["guild_id"] = guildID
@@ -475,7 +476,8 @@ func AuctionSchedule(s *discordgo.Session, auctionMap map[string]any, duration t
 
 	result := database.DB.Model(database.AuctionQueue{}).Create(&auctionMap)
 	if result.Error != nil {
-		return fmt.Errorf("Error saving queued auction to database: %w", result.Error)
+		logger.Sugar.Errorw("failed to save queued auction", "guild_id", auctionMap["guild_id"], "error", result.Error)
+		return fmt.Errorf("failed to save queued auction. Please try again or contact support")
 	}
 
 	go AuctionStartTimer(s, auctionMap)
@@ -488,7 +490,7 @@ func AuctionStartTimer(s *discordgo.Session, auctionMap map[string]any) {
 
 	_, err := AuctionStart(s, auctionMap)
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 	}
 }
 
@@ -496,13 +498,15 @@ func AuctionEndTimer(s *discordgo.Session, auctionMap map[string]any) {
 	time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 	err := AuctionEnd(s, auctionMap["channel_id"].(string), auctionMap["guild_id"].(string))
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 	}
 }
 
 func AuctionHostCheck(auctionSetup map[string]any, member *discordgo.Member) bool {
-	fmt.Println("HOST ROLE", auctionSetup["host_role"])
-	fmt.Println("Host Roles", member.Roles)
+	logger.Sugar.Debugw("checking host role permissions",
+		"host_role", auctionSetup["host_role"],
+		"member_roles", member.Roles,
+	)
 	if auctionSetup["host_role"] == nil {
 		return true
 	}
@@ -525,7 +529,7 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 	if auctionMap["id"] != nil {
 		result := database.DB.Delete(database.AuctionQueue{}, auctionMap["id"])
 		if result.Error != nil {
-			fmt.Println(result.Error)
+			logger.Sugar.Warnw("database error", "error", result.Error)
 		}
 	}
 
@@ -572,7 +576,8 @@ func AuctionStart(s *discordgo.Session, auctionMap map[string]interface{}) (stri
 
 	result := database.DB.Model(database.Auction{}).Create(auctionMap)
 	if result.Error != nil {
-		return auctionMap["channel_id"].(string), fmt.Errorf("Error saving auction to database, auction will not work: %w", result.Error)
+		logger.Sugar.Errorw("failed to save auction to database", "channel_id", auctionMap["channel_id"], "error", result.Error)
+		return auctionMap["channel_id"].(string), fmt.Errorf("failed to save auction to database. The auction will not work properly - please contact support")
 	}
 
 	go AuctionEndTimer(s, auctionMap)
@@ -593,7 +598,7 @@ func AuctionBid(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		Title: "Bid has been successfully placed!",
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 	}
 	return nil
 }
@@ -607,11 +612,12 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, channelID)
 	if result.Error != nil {
-		return fmt.Errorf("Error fetching auction data from the database. Error Message: " + result.Error.Error())
+		logger.Sugar.Errorw("failed to fetch auction data", "channel_id", channelID, "error", result.Error)
+		return fmt.Errorf("unable to fetch auction data. Please try again or contact support if the issue persists")
 	}
 	result = database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, guildID)
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		logger.Sugar.Warnw("database error", "error", result.Error)
 	}
 
 	//FIXME This was just a quick fix to prevent both bots trying to place a bit. Rework if needed once I can save auctions with bot ID
@@ -691,7 +697,7 @@ func AuctionBidPlace(s *discordgo.Session, amount float64, member *discordgo.Mem
 			"user_id":  member.User.ID,
 		})
 		if result.Error != nil {
-			fmt.Println(result.Error)
+			logger.Sugar.Warnw("database error", "error", result.Error)
 		}
 		if userMap["balance"] == nil {
 			return fmt.Errorf("You have %s currency and cannot bid on this auction.", PriceFormat(0, guildID, auctionMap["currency"]))
@@ -866,14 +872,14 @@ func AuctionUpdate(s *discordgo.Session, options map[string]any, member *discord
 	if options["item"] != nil {
 		channel, err := s.Channel(channelID)
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("auction operation error", "error", err)
 		}
 		_, err = s.ChannelEditComplex(channelID, &discordgo.ChannelEdit{
 			Name:     "💸│" + options["item"].(string),
 			Position: &channel.Position,
 		})
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("auction operation error", "error", err)
 		}
 	}
 
@@ -1016,7 +1022,7 @@ func AuctionAutoComplete(s *discordgo.Session, i *discordgo.InteractionCreate) e
 		},
 	})
 	if err != nil {
-		fmt.Println("Response Error:", err)
+		logger.Sugar.Warnw("response error", "error", err)
 		return err
 	}
 
@@ -1034,7 +1040,7 @@ func TimeSuggestions(input string) []*discordgo.ApplicationCommandOptionChoice {
 
 	_, err := strconv.ParseFloat(input, 64)
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 		return nil
 	}
 
@@ -1066,12 +1072,12 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 
 	result := database.DB.Model(database.AuctionSetup{}).First(&auctionSetup, guildID)
 	if result.Error != nil {
-		fmt.Println(result.Error.Error())
+		logger.Sugar.Warnw("database error", "error", result.Error)
 	}
 
 	result = database.DB.Model(database.Auction{}).First(&auctionMap, channelID)
 	if result.Error != nil {
-		fmt.Println(result.Error.Error())
+		logger.Sugar.Warnw("database error", "error", result.Error)
 	}
 
 	if len(auctionMap) == 0 {
@@ -1084,7 +1090,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 
 	//Pause auction ending until end time if the auction is not over yet.
 	if auctionMap["end_time"] != nil && auctionMap["end_time"].(time.Time).After(time.Now()) {
-		fmt.Println(time.Until(auctionMap["end_time"].(time.Time)))
+		logger.Sugar.Debugw("auction time remaining", "time_until_end", time.Until(auctionMap["end_time"].(time.Time)))
 		time.Sleep(time.Until(auctionMap["end_time"].(time.Time)))
 		err := AuctionEnd(s, channelID, guildID)
 		return err
@@ -1101,13 +1107,13 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 			ChannelID: channelID,
 		})
 		if result.Error != nil {
-			fmt.Println(result.Error.Error())
+			logger.Sugar.Warnw("database error", "error", result.Error)
 		}
 		return fmt.Errorf("Error fetching auction message. Deleting auction from database: %w", err)
 	}
 
 	if auctionSetup["log_channel"] == nil {
-		fmt.Println("Log channel has not been set for guild: " + guildID)
+		logger.Sugar.Debugw("log channel not set for guild", "guild_id", guildID)
 		// TODO Instead of sending an error message, update the auction with the error
 		_, err := h.ErrorMessage(s, channelID, "Auction cannot end because log channel has not been set. Please setup an auction log using `/settings auction`. You might need to end the auction manually after setting the channel.")
 		if err != nil {
@@ -1149,13 +1155,15 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		// Post the claim message and save to claims table within transaction
 		err := ClaimOutputWithTx(s, auctionMap, "Auction", tx)
 		if err != nil {
-			return fmt.Errorf("Claim Output Error: " + err.Error())
+			logger.Sugar.Errorw("claim output failed", "channel_id", channelID, "error", err)
+			return fmt.Errorf("failed to create claim record. Please contact support")
 		}
 
 		// Delete the auction from the database
 		result := tx.Delete(database.Auction{}, channelID)
 		if result.Error != nil {
-			return result.Error
+			logger.Sugar.Errorw("failed to delete auction from database", "channel_id", channelID, "error", result.Error)
+			return fmt.Errorf("failed to complete auction. Please contact support")
 		}
 
 		return nil
@@ -1193,7 +1201,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		message.Components = &components
 		_, err = s.ChannelMessageEditComplex(message)
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("auction operation error", "error", err)
 		}
 	}
 
@@ -1201,7 +1209,7 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		time.Sleep(30 * time.Second)
 		_, err = s.ChannelDelete(channelID)
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("auction operation error", "error", err)
 		}
 	}
 
@@ -1269,7 +1277,7 @@ func AuctionQueue(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 	}
 
 	return nil
@@ -1281,7 +1289,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 
 	result := database.DB.Model(database.Auction{}).First(&auctionMap, i.ChannelID)
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		logger.Sugar.Warnw("database error", "error", result.Error)
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -1312,14 +1320,8 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 				Embeds: []*discordgo.MessageEmbed{
 					{
 						Title:       "Error",
-						Description: "There was an error. Please contact support if you need help.\n**If you would like to close this auction channel, press the button below.**",
+						Description: "There was an error retrieving auction data. Please contact support if you need help.\n**If you would like to close this auction channel, press the button below.**",
 						Color:       0xff0000,
-						Fields: []*discordgo.MessageEmbedField{
-							{
-								Name:  "**Error Message:**",
-								Value: result.Error.Error(),
-							},
-						},
 					},
 				},
 				Flags: 64,
@@ -1338,7 +1340,7 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 	}
 
 	result = database.DB.Model(database.Auction{
@@ -1358,8 +1360,8 @@ func AuctionEndButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 func DeleteAuctionChannel(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	_, err := s.ChannelDelete(i.ChannelID)
 	if err != nil {
-		fmt.Println(err)
-		h.ErrorResponse(s, i, err.Error())
+		logger.Sugar.Errorw("failed to delete auction channel", "channel_id", i.ChannelID, "error", err)
+		h.ErrorResponse(s, i, "Unable to delete this channel. Please check bot permissions or delete manually.")
 	}
 	return nil
 }
@@ -1370,7 +1372,7 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) er
 
 	result := database.DB.First(&auctionInfo, i.ChannelID)
 	if result.Error != nil {
-		fmt.Println("Error checking for auction. Auction has likely ended")
+		logger.Sugar.Warnw("error checking for auction, auction has likely ended", "channel_id", i.ChannelID)
 		auctionInfo.Host = ""
 	}
 
@@ -1387,7 +1389,8 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) er
 		messageIDs := make([]string, 0)
 		messages, err := s.ChannelMessages(i.ChannelID, 100, "", i.Message.ID, "")
 		if err != nil {
-			h.DeferredErrorResponse(s, i, err.Error())
+			logger.Sugar.Errorw("failed to fetch channel messages for clearing", "channel_id", i.ChannelID, "error", err)
+			h.DeferredErrorResponse(s, i, "Unable to fetch messages. Please check bot permissions.")
 			return nil
 		}
 
@@ -1403,7 +1406,8 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) er
 
 		err = s.ChannelMessagesBulkDelete(i.ChannelID, messageIDs)
 		if err != nil {
-			h.DeferredErrorResponse(s, i, err.Error())
+			logger.Sugar.Errorw("failed to bulk delete messages", "channel_id", i.ChannelID, "count", len(messageIDs), "error", err)
+			h.DeferredErrorResponse(s, i, "Unable to delete messages. Please check bot permissions.")
 			return nil
 		}
 	}
@@ -1414,7 +1418,7 @@ func ClearAuctionButton(s *discordgo.Session, i *discordgo.InteractionCreate) er
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("auction operation error", "error", err)
 	}
 	return nil
 }

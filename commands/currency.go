@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"gorm.io/gorm/clause"
@@ -87,7 +88,7 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		/*if !CheckPremiumGuild(i.GuildID) {
 			err := h.PremiumError(s, i, "Premium is needed to edit the currency of an entire role. Please select only an user or purchase premium to use this function.")
 			if err != nil {
-				fmt.Println(err)
+				logger.Sugar.Warnw("currency operation error", "error", err)
 			}
 			return nil
 		}*/
@@ -106,7 +107,7 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			Description: "This might take a while.",
 		})
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("currency operation error", "error", err)
 		}
 	}
 
@@ -116,7 +117,7 @@ func CurrencyEdit(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			Description: "",
 		})
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("currency operation error", "error", err)
 		}
 		switch action {
 		case "add":
@@ -139,7 +140,7 @@ func PriceFormat(price float64, guildID string, override interface{}) string {
 
 	result := database.DB.Model(database.CurrencySetup{}).First(&currencyMap, guildID)
 	if result.Error != nil {
-		fmt.Println("Error getting currency setup: " + result.Error.Error())
+		logger.Sugar.Warnw("error getting currency setup", "error", result.Error)
 	}
 
 	if override != nil {
@@ -209,16 +210,16 @@ func CurrencyEditRole(s *discordgo.Session, g *discordgo.GuildMembersChunk, role
 
 		if err != nil && errCount < 5 {
 			data := h.ReadChunkData(strings.Split(g.Nonce, ":")[1])
-			fmt.Println(err)
+			logger.Sugar.Warnw("currency operation error", "error", err)
 			_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue adding currency for <@%s>. Error Message: %s", v.User.ID, err))
 			if err != nil {
-				fmt.Println(err)
+				logger.Sugar.Warnw("currency operation error", "error", err)
 			}
 			errCount++
 			if errCount == 5 {
 				_, err = h.FollowUpErrorResponse(s, data["interaction"].(*discordgo.InteractionCreate), "**5 or more users have failed to update their currency.** Refer to previous errors for more information.")
 				if err != nil {
-					fmt.Println(err)
+					logger.Sugar.Warnw("currency operation error", "error", err)
 				}
 			}
 		} else {
@@ -281,7 +282,7 @@ func CurrencySetUser(guildID, userID string, amount float64) (err error) {
 		GuildID: guildID,
 	}).Updates(map[string]any{"balance": amount})
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		logger.Sugar.Warnw("database error", "error", result.Error)
 		return result.Error
 	}
 	return err
@@ -299,7 +300,7 @@ func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("currency operation error", "error", err)
 	}
 
 	currencyList := ""
@@ -307,10 +308,10 @@ func CurrencyList(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	for k, v := range userMapSlice {
 		member, err := s.State.Member(i.GuildID, v["user_id"].(string))
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("currency operation error", "error", err)
 			member, err = s.GuildMember(i.GuildID, v["user_id"].(string))
 			if err != nil {
-				fmt.Println(err)
+				logger.Sugar.Warnw("currency operation error", "error", err)
 				continue
 			}
 		}

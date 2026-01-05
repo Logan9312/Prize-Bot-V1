@@ -7,6 +7,7 @@ import (
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gorm.io/gorm/clause"
 )
 
@@ -80,14 +81,16 @@ func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		DoNothing: true,
 	}).Model(database.WhiteLabels{}).Create(whitelabelData)
 	if result.Error != nil {
-		return fmt.Errorf("Error creating database for bot: %w", result.Error)
+		logger.Sugar.Errorw("failed to create whitelabel database entry", "user_id", i.Member.User.ID, "error", result.Error)
+		return fmt.Errorf("failed to save bot configuration. Please try again or contact support")
 	}
 
 	result = database.DB.Model(database.WhiteLabels{}).Where(map[string]any{
 		"user_id": i.Member.User.ID,
 	}).Updates(whitelabelData)
 	if result.Error != nil {
-		return fmt.Errorf("Error saving bot data to database: %w", result.Error)
+		logger.Sugar.Errorw("failed to update whitelabel data", "user_id", i.Member.User.ID, "error", result.Error)
+		return fmt.Errorf("failed to save bot data. Please try again or contact support")
 	}
 
 	return h.SuccessResponse(s, i, h.PresetResponse{

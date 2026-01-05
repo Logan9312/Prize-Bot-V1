@@ -7,6 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"gorm.io/gorm"
@@ -87,7 +88,7 @@ var ClaimCommand = discordgo.ApplicationCommand{
 }
 
 func Claim(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	fmt.Println(i.ApplicationCommandData().Options[0].Name)
+	logger.Sugar.Debugw("claim subcommand invoked", "subcommand", i.ApplicationCommandData().Options[0].Name)
 	switch i.ApplicationCommandData().Options[0].Name {
 	case "create":
 		return ClaimCreate(s, i)
@@ -161,7 +162,7 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			Description: "Check out <#" + claimMap["log_channel"].(string) + "> to see the claims. This might take a while.",
 		})
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("claim operation error", "error", err)
 		}
 	}
 
@@ -176,7 +177,7 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			Description: "Check out <#" + claimMap["channel_id"].(string) + "> to see the claim",
 		})
 		if err != nil {
-			fmt.Println(err)
+			logger.Sugar.Warnw("claim operation error", "error", err)
 		}
 	}
 
@@ -236,7 +237,7 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 
 	result := database.DB.Model(database.ClaimSetup{}).First(&claimSetup, claimMap["guild_id"].(string))
 	if result.Error != nil {
-		fmt.Println("Claim Setup DB Err", result.Error.Error())
+		logger.Sugar.Warnw("claim setup database error", "error", result.Error)
 	}
 
 	if claimMap["formatted_price"] != nil {
@@ -389,7 +390,8 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 		MessageID: primaryKey,
 	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "description"}).Updates(claimMap)
 	if result.Error != nil {
-		return fmt.Errorf("CRITICAL ERROR " + result.Error.Error())
+		logger.Sugar.Errorw("critical error updating claim", "message_id", primaryKey, "error", result.Error)
+		return fmt.Errorf("failed to save claim data. Please contact support")
 	}
 
 	return err
@@ -445,7 +447,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 
 	category, err := s.Channel(claimSetup["category"].(string))
 	if err != nil {
-		fmt.Println("Error fetching category:", err)
+		logger.Sugar.Warnw("error fetching category", "error", err)
 		category = &discordgo.Channel{}
 	}
 
@@ -566,21 +568,21 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		Files:  []*discordgo.File{},
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("claim operation error", "error", err)
 	}
 
 	database.DB.Model(database.Claim{
 		MessageID: claimMap["message_id"].(string),
 	}).Update("ticket_id", channel.ID)
 
-	fmt.Println("channel ID 2", channel.ID)
+	logger.Sugar.Debugw("claim channel created", "channel_id", channel.ID)
 
 	err = h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Claim Prize",
 		Description: "Please visit the ticket channel to claim your prize. <#" + channel.ID + ">",
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("claim operation error", "error", err)
 	}
 	return nil
 }
@@ -600,14 +602,16 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[2])
 	if result.Error != nil {
-		return fmt.Errorf("Failed to find claim. Please contact __AFTM Prize Manager support__ and I can look into the issue. %w", result.Error)
+		logger.Sugar.Errorw("failed to find claim", "message_id", customID[2], "error", result.Error)
+		return fmt.Errorf("failed to find claim. Please contact support")
 	}
 
 	claimSetup := map[string]interface{}{}
 
 	result = database.DB.Model(database.ClaimSetup{}).First(claimSetup, i.GuildID)
 	if result.Error != nil {
-		return fmt.Errorf("Failed to find claim setup. Please make sure you have used `/settings claiming` at least once. %w", result.Error)
+		logger.Sugar.Errorw("failed to find claim setup", "guild_id", i.GuildID, "error", result.Error)
+		return fmt.Errorf("failed to find claim setup. Please use `/settings claiming` at least once")
 	}
 
 	if claimMap["image_url"] != nil {
@@ -620,7 +624,8 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 
 	message, err := s.ChannelMessage(customID[1], customID[2])
 	if err != nil {
-		issues += "Original message not found: " + err.Error()
+		logger.Sugar.Warnw("original claim message not found", "channel_id", customID[1], "message_id", customID[2], "error", err)
+		issues += "Original message not found (may have been deleted). "
 	}
 
 	if message != nil && message.Embeds != nil && len(message.Embeds) > 0 {
@@ -649,8 +654,8 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 			Channel:    customID[1],
 		})
 		if err != nil {
-			fmt.Println(err)
-			issues += "Original message buttons could not be removed due to an error. Error: " + err.Error()
+			logger.Sugar.Warnw("failed to remove original message buttons", "channel_id", customID[1], "message_id", customID[2], "error", err)
+			issues += "Original message buttons could not be removed. "
 		}
 	}
 
@@ -735,13 +740,13 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 		Description: "The ticket will now be closed, please reopen if you have any issues.",
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("claim operation error", "error", err)
 	}
 
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
-		h.ErrorMessage(s, i.ChannelID, "Ticket could not be closed: "+err.Error())
-		fmt.Println("Ticket could not be closed: " + err.Error())
+		logger.Sugar.Errorw("ticket could not be closed", "channel_id", i.ChannelID, "error", err)
+		h.ErrorMessage(s, i.ChannelID, "Ticket could not be closed. Please contact an administrator.")
 	}
 	return nil
 }
@@ -758,7 +763,8 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[1])
 	if result.Error != nil {
-		return fmt.Errorf("Error fetching claim settings. Please have an admin run `/settings claiming` at least once and set the log channel to fix. Error Message: %w", result.Error)
+		logger.Sugar.Errorw("failed to fetch claim data", "message_id", customID[1], "error", result.Error)
+		return fmt.Errorf("failed to fetch claim data. Please have an admin run `/settings claiming` at least once")
 	}
 
 	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != claimMap["host"] {
@@ -769,7 +775,8 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	result = database.DB.Model(database.ClaimSetup{}).First(claimSetup, i.GuildID)
 	if result.Error != nil {
-		return result.Error
+		logger.Sugar.Errorw("failed to fetch claim setup", "guild_id", i.GuildID, "error", result.Error)
+		return fmt.Errorf("failed to fetch claim settings. Please have an admin run `/settings claiming` at least once")
 	}
 
 	if claimSetup["log_channel"] == nil {
@@ -826,7 +833,7 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		},
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("claim operation error", "error", err)
 	}
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
@@ -849,7 +856,8 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		"guild_id": i.GuildID,
 	})
 	if result.Error != nil {
-		h.FollowUpErrorResponse(s, i, result.Error.Error())
+		logger.Sugar.Errorw("failed to fetch claims for refresh", "guild_id", i.GuildID, "error", result.Error)
+		h.FollowUpErrorResponse(s, i, "Failed to fetch claims. Please try again or contact support.")
 		return nil
 	}
 
@@ -865,12 +873,12 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
 			v["old_id"] = v["message_id"]
 			if err != nil {
-				fmt.Println("normal message ID", v["message_id"])
+				logger.Sugar.Debugw("processing claim message", "message_id", v["message_id"])
 				err = ClaimOutput(s, v, v["type"].(string))
 				restored++
 				if err != nil {
-					h.FollowUpErrorResponse(s, i, err.Error())
-					fmt.Println(err)
+					logger.Sugar.Warnw("claim restore failed", "message_id", v["message_id"], "error", err)
+					h.FollowUpErrorResponse(s, i, "Failed to restore a claim. Please try again or contact support.")
 				}
 			}
 		}
@@ -914,7 +922,7 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	userAvatar := ""
 	user, err := s.User(options["user"].(string))
 	if err != nil {
-		fmt.Println(err)
+		logger.Sugar.Warnw("claim operation error", "error", err)
 	} else {
 		userAvatar = user.AvatarURL("")
 	}
