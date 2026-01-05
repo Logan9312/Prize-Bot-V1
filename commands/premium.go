@@ -242,6 +242,9 @@ func SetRoles(s *discordgo.Session) {
 			logger.Sugar.Errorw("panic in SetRoles goroutine",
 				"panic", r,
 			)
+			// Restart the goroutine after a delay to avoid tight panic loops
+			time.Sleep(30 * time.Second)
+			go SetRoles(s)
 		}
 	}()
 

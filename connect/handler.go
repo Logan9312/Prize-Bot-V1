@@ -105,7 +105,18 @@ func InteractionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	case discordgo.InteractionMessageComponent:
 		buttonID := strings.Split(i.MessageComponentData().CustomID, ":")[0]
-		log := logger.Button(buttonID, i.GuildID, i.Member.User.ID, i.Member.User.Username)
+		// Safe access - buttons in DMs may not have Member
+		userID := ""
+		username := ""
+		if i.Member != nil && i.Member.User != nil {
+			userID = i.Member.User.ID
+			username = i.Member.User.Username
+		} else if i.User != nil {
+			// DM context - use User instead of Member
+			userID = i.User.ID
+			username = i.User.Username
+		}
+		log := logger.Button(buttonID, i.GuildID, userID, username)
 		log.Debug("button clicked")
 
 		if f, ok := buttonMap[buttonID]; ok {

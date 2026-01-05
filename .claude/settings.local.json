@@ -15,7 +15,8 @@
       "Bash(go mod verify:*)",
       "Bash(go vet:*)",
       "Bash(go version:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

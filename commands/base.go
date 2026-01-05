@@ -226,6 +226,9 @@ func EventFormat(s *discordgo.Session, data map[string]interface{}, eventType st
 }
 
 func HasRole(m *discordgo.Member, roleID string) bool {
+	if m == nil {
+		return false
+	}
 	for _, role := range m.Roles {
 		if role == roleID {
 			return true
