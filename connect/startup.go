@@ -51,8 +51,9 @@ func BotConnect(token, environment string) (*discordgo.Session, error) {
 
 	s.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages
 
-	// Create a channel to wait for the READY event
-	ready := make(chan bool)
+	// Create a buffered channel to wait for the READY event
+	// Buffer of 1 ensures the send succeeds even if we haven't reached the receive yet
+	ready := make(chan bool, 1)
 	readyHandler := func(s *discordgo.Session, r *discordgo.Ready) {
 		select {
 		case ready <- true:
