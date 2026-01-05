@@ -332,8 +332,9 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 	entrants := []string{}
 	afterID := ""
 	for {
-
-		users, err := s.MessageReactions(giveawayMap["channel_id"].(string), messageID, "🎁", 0, "", afterID)
+		// Fetch reactions in batches of 100 (Discord's max per request)
+		// Loop continues until all reactions are collected via pagination
+		users, err := s.MessageReactions(giveawayMap["channel_id"].(string), messageID, "🎁", 100, "", afterID)
 		if err != nil {
 			return err
 		}
