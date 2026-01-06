@@ -179,7 +179,7 @@ func DatabaseConnect(password, host, env string) {
 	log.Infow("connecting to database", "environment", env)
 
 	switch env {
-	case "prod":
+	case "prod", "dev":
 		DB = ProdDB()
 	case "local":
 		DB = LocalDB()

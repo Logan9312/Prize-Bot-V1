@@ -140,5 +140,5 @@ func main() {
 		"bot_name", mainSession.State.User.Username,
 	)
 
-	routers.HealthCheck()
+	routers.StartServer(mainSession)
 }

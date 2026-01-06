@@ -29,6 +29,13 @@ type Config struct {
 	// Support Button
 	SupportButtonEmojiName string
 	SupportButtonEmojiID   string
+
+	// OAuth2 / Dashboard
+	DiscordClientID     string // Discord OAuth2 client ID
+	DiscordClientSecret string // Discord OAuth2 client secret
+	JWTSecret           string // Secret for signing JWT tokens
+	FrontendURL         string // Frontend URL for CORS and redirects
+	APIBaseURL          string // API base URL
 }
 
 // Global config instance
@@ -59,6 +66,13 @@ func Init() {
 		// Support Button
 		SupportButtonEmojiName: getEnv("SUPPORT_BUTTON_EMOJI_NAME", "logo"),
 		SupportButtonEmojiID:   getEnv("SUPPORT_BUTTON_EMOJI_ID", "889025400120950804"),
+
+		// OAuth2 / Dashboard
+		DiscordClientID:     getEnv("DISCORD_CLIENT_ID", ""),
+		DiscordClientSecret: getEnv("DISCORD_CLIENT_SECRET", ""),
+		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production-32chars"),
+		FrontendURL:         getEnv("FRONTEND_URL", "http://localhost:5173"),
+		APIBaseURL:          getEnv("API_BASE_URL", "http://localhost:8080"),
 	}
 }
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(frontend-design)",
+      "Bash(cat:*)",
+      "Bash(bun run build)"
+    ]
+  }
+}

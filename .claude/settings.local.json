@@ -16,7 +16,8 @@
       "Bash(go vet:*)",
       "Bash(go version:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
