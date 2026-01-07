@@ -5,6 +5,7 @@ go 1.24
 require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/caarlos0/env v3.5.0+incompatible
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/stripe/stripe-go/v72 v72.122.0
 	go.uber.org/zap v1.27.1
@@ -15,7 +16,6 @@ require (
 )
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/jackc/pgx/v5 v5.7.5 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	go.uber.org/multierr v1.10.0 // indirect

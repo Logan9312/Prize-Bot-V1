@@ -411,11 +411,26 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	if claimMap["host"] == nil {
 		claimMap["host"] = "0"
 	}
-	if claimMap["ticket_id"] != nil {
+
+	// Check if claim has already been completed or cancelled
+	if claimMap["status"] != nil {
+		status := claimMap["status"].(string)
+		if status == database.ClaimStatusClaimed {
+			return fmt.Errorf("This prize has already been claimed.")
+		}
+		if status == database.ClaimStatusCancelled {
+			return fmt.Errorf("This claim was cancelled. Please contact the host if you believe this is an error.")
+		}
+	}
+
+	// Check for existing open ticket
+	if claimMap["ticket_id"] != nil && claimMap["ticket_id"].(string) != "" {
 		currentChannel, err := s.Channel(claimMap["ticket_id"].(string))
 		if err == nil {
 			return fmt.Errorf("You already have a ticket open for this prize. Please go to <#%s> to claim.", currentChannel.ID)
 		}
+		// If channel doesn't exist but ticket_id is set, clear it (orphaned reference)
+		database.DB.Model(&database.Claim{MessageID: claimMap["message_id"].(string)}).Update("ticket_id", "")
 	}
 
 	category, err := s.Channel(claimSetup["category"].(string))
@@ -572,11 +587,14 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	}
 
 	claimMap := map[string]interface{}{}
+	claimFound := true
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[2])
 	if result.Error != nil {
-		logger.Sugar.Errorw("failed to find claim", "message_id", customID[2], "error", result.Error)
-		return fmt.Errorf("failed to find claim. Please contact support")
+		logger.Sugar.Warnw("claim not found, will close ticket gracefully", "message_id", customID[2], "error", result.Error)
+		claimFound = false
+		// Set minimal data for orphaned ticket handling
+		claimMap["winner"] = i.Member.User.ID
 	}
 
 	claimSetup := map[string]interface{}{}
@@ -703,24 +721,36 @@ func CompleteButton(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 		return err
 	}
 
-	result = database.DB.Delete(database.Claim{}, customID[2])
-	if result.Error != nil {
-		return result.Error
-	}
-
+	// Respond to user before deleting channel
 	err = h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Prize Claimed Successfully",
-		Description: "The ticket will now be closed, please reopen if you have any issues.",
+		Description: "The ticket will now be closed.",
 	})
 	if err != nil {
 		logger.Sugar.Warnw("claim operation error", "error", err)
 	}
 
+	// Delete channel FIRST (before updating DB status)
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
 		logger.Sugar.Errorw("ticket could not be closed", "channel_id", i.ChannelID, "error", err)
-		h.ErrorMessage(s, i.ChannelID, "Ticket could not be closed. Please contact an administrator.")
+		// Don't update claim status if channel deletion failed
+		return fmt.Errorf("Ticket could not be closed: %w. Claim status was NOT updated.", err)
 	}
+
+	// Only update status AFTER successful channel deletion
+	if claimFound {
+		result = database.DB.Model(&database.Claim{MessageID: customID[2]}).Updates(map[string]interface{}{
+			"status":    database.ClaimStatusClaimed,
+			"ticket_id": "", // Clear ticket_id since channel is deleted
+		})
+		if result.Error != nil {
+			// Log error but don't fail - channel is already deleted, claim is functionally complete
+			logger.Sugar.Errorw("failed to update claim status after channel deletion",
+				"message_id", customID[2], "error", result.Error)
+		}
+	}
+
 	return nil
 }
 
@@ -733,15 +763,25 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	}
 
 	claimMap := map[string]interface{}{}
+	claimFound := true
 
 	result := database.DB.Model(database.Claim{}).First(claimMap, customID[1])
 	if result.Error != nil {
-		logger.Sugar.Errorw("failed to fetch claim data", "message_id", customID[1], "error", result.Error)
-		return fmt.Errorf("failed to fetch claim data. Please have an admin run `/settings claiming` at least once")
+		logger.Sugar.Warnw("claim not found, will attempt graceful close", "message_id", customID[1], "error", result.Error)
+		claimFound = false
+		// Set minimal data for orphaned ticket handling
+		claimMap["winner"] = i.Member.User.ID
 	}
 
-	if i.Member.Permissions&(1<<3) != 8 && i.Member.User.ID != claimMap["host"] {
-		return fmt.Errorf("User must have administrator permissions or be the host (<@%s>) to run this command", fmt.Sprint(claimMap["host"]))
+	// Permission check: admins can always close, hosts can close their own tickets
+	// For orphaned tickets (claimFound=false), only admins can close
+	isAdmin := i.Member.Permissions&(1<<3) == 8
+	isHost := claimFound && claimMap["host"] != nil && i.Member.User.ID == claimMap["host"]
+	if !isAdmin && !isHost {
+		if claimFound {
+			return fmt.Errorf("User must have administrator permissions or be the host (<@%s>) to run this command", fmt.Sprint(claimMap["host"]))
+		}
+		return fmt.Errorf("User must have administrator permissions to close orphaned tickets")
 	}
 
 	claimSetup := map[string]interface{}{}
@@ -808,10 +848,26 @@ func CancelButton(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	if err != nil {
 		logger.Sugar.Warnw("claim operation error", "error", err)
 	}
+
+	// Delete channel FIRST
 	_, err = s.ChannelDelete(i.ChannelID)
 	if err != nil {
-		return err
+		logger.Sugar.Errorw("ticket could not be closed", "channel_id", i.ChannelID, "error", err)
+		return fmt.Errorf("Ticket could not be closed: %w. Claim status was NOT updated.", err)
 	}
+
+	// Only update status AFTER successful channel deletion
+	if claimFound {
+		result = database.DB.Model(&database.Claim{MessageID: customID[1]}).Updates(map[string]interface{}{
+			"status":    database.ClaimStatusCancelled,
+			"ticket_id": "", // Clear ticket_id since channel is deleted
+		})
+		if result.Error != nil {
+			logger.Sugar.Errorw("failed to update claim status after cancel",
+				"message_id", customID[1], "error", result.Error)
+		}
+	}
+
 	return nil
 }
 
@@ -825,9 +881,11 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	})
 
 	claimMap := []map[string]interface{}{}
-	result := database.DB.Model([]database.Claim{}).Find(&claimMap, map[string]interface{}{
+	// Only refresh pending claims (not claimed or cancelled)
+	// Handle legacy data: status IS NULL OR status = '' OR status = 'pending'
+	result := database.DB.Model([]database.Claim{}).Where(map[string]interface{}{
 		"guild_id": i.GuildID,
-	})
+	}).Where("status = ? OR status IS NULL OR status = ''", database.ClaimStatusPending).Find(&claimMap)
 	if result.Error != nil {
 		logger.Sugar.Errorw("failed to fetch claims for refresh", "guild_id", i.GuildID, "error", result.Error)
 		h.FollowUpErrorResponse(s, i, "Failed to fetch claims. Please try again or contact support.")
@@ -872,10 +930,12 @@ func ClaimInventory(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 
 	options["guild_id"] = i.GuildID
 
+	// Only show pending claims (not claimed or cancelled)
+	// Handle legacy data: status IS NULL OR status = '' OR status = 'pending'
 	result := database.DB.Model(database.Claim{}).Where(map[string]interface{}{
 		"winner":   options["user"],
 		"guild_id": options["guild_id"],
-	}).Limit(25).Find(&claimSlice)
+	}).Where("status = ? OR status IS NULL OR status = ''", database.ClaimStatusPending).Limit(25).Find(&claimSlice)
 	if result.Error != nil {
 		return result.Error
 	}

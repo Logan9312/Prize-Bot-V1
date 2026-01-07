@@ -122,7 +122,15 @@ type Claim struct {
 	TicketID    string
 	Description string
 	UseCurrency bool
+	Status      string `gorm:"index;default:pending"` // "pending", "claimed", "cancelled"
 }
+
+// Claim status constants
+const (
+	ClaimStatusPending   = "pending"
+	ClaimStatusClaimed   = "claimed"
+	ClaimStatusCancelled = "cancelled"
+)
 
 type Giveaway struct {
 	MessageID   string `gorm:"primaryKey"`
