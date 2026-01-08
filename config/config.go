@@ -36,6 +36,7 @@ type Config struct {
 	JWTSecret           string // Secret for signing JWT tokens
 	FrontendURL         string // Frontend URL for CORS and redirects
 	APIBaseURL          string // API base URL
+	SecureCookies       bool   // Whether to set Secure flag on cookies (true in prod)
 }
 
 // Global config instance
@@ -73,6 +74,7 @@ func Init() {
 		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production-32chars"),
 		FrontendURL:         getEnv("FRONTEND_URL", "http://localhost:5173"),
 		APIBaseURL:          getEnv("API_BASE_URL", "http://localhost:8080"),
+		SecureCookies:       getEnv("ENVIRONMENT", "") == "prod",
 	}
 }
 
