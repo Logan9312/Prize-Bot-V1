@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/labstack/echo/v4"
+	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
 
 // BotSession holds the Discord bot session for fetching guild data
@@ -217,30 +218,90 @@ func GetGuildRoles(c echo.Context) error {
 func verifyGuildAccess(c echo.Context, guildID string) error {
 	accessToken := c.Get("access_token").(string)
 
-	// Fetch user's guilds from Discord
-	req, err := http.NewRequest("GET", "https://discord.com/api/v10/users/@me/guilds", nil)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to verify access"})
-	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-
+	// Retry logic for handling transient rate limits
+	maxRetries := 2
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to verify access"})
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Discord API error: %s", string(body))})
-	}
-
 	var guilds []DiscordGuild
-	if err := json.NewDecoder(resp.Body).Decode(&guilds); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse guilds"})
+
+	for attempt := range maxRetries {
+		// Fetch user's guilds from Discord
+		req, err := http.NewRequest("GET", "https://discord.com/api/v10/users/@me/guilds", nil)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to verify access"})
+		}
+		req.Header.Set("Authorization", "Bearer "+accessToken)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to verify access"})
+		}
+
+		// Handle rate limiting with automatic retry
+		if resp.StatusCode == http.StatusTooManyRequests {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			// Log the actual Discord rate limit response
+			logger.Sugar.Warnw("Discord OAuth rate limit hit",
+				"guild_id", guildID,
+				"attempt", attempt+1,
+				"max_retries", maxRetries,
+				"response_body", string(body),
+			)
+
+			// Parse retry_after from response
+			var rateLimitResponse struct {
+				RetryAfter float64 `json:"retry_after"`
+				Global     bool    `json:"global"`
+				Message    string  `json:"message"`
+			}
+
+			if json.Unmarshal(body, &rateLimitResponse) == nil && attempt < maxRetries-1 {
+				// Wait for the retry_after duration plus a small buffer, then retry
+				waitDuration := time.Duration(rateLimitResponse.RetryAfter*1000) * time.Millisecond
+				logger.Sugar.Infow("Retrying after rate limit wait",
+					"guild_id", guildID,
+					"wait_duration_ms", waitDuration.Milliseconds(),
+					"retry_after", rateLimitResponse.RetryAfter,
+					"global", rateLimitResponse.Global,
+				)
+				time.Sleep(waitDuration + 100*time.Millisecond)
+				continue
+			}
+
+			// All retries exhausted
+			logger.Sugar.Errorw("Rate limit retries exhausted",
+				"guild_id", guildID,
+				"attempts", attempt+1,
+			)
+			return c.JSON(http.StatusTooManyRequests, map[string]string{"error": "Rate limited, please try again in a moment"})
+		}
+
+		// Handle other non-success status codes
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Discord API error: %s", string(body))})
+		}
+
+		// Success - parse the guilds
+		if err := json.NewDecoder(resp.Body).Decode(&guilds); err != nil {
+			resp.Body.Close()
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse guilds"})
+		}
+		resp.Body.Close()
+
+		// Log successful verification (especially useful if it was after a retry)
+		if attempt > 0 {
+			logger.Sugar.Infow("Guild access verification succeeded after retry",
+				"guild_id", guildID,
+				"attempt", attempt+1,
+			)
+		}
+		break
 	}
 
+	// Check if user has access to the requested guild
 	for _, g := range guilds {
 		if g.ID == guildID {
 			var perms int64
