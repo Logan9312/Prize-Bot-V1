@@ -231,6 +231,11 @@ func verifyGuildAccess(c echo.Context, guildID string) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Discord API error: %s", string(body))})
+	}
+
 	var guilds []DiscordGuild
 	if err := json.NewDecoder(resp.Body).Decode(&guilds); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse guilds"})
