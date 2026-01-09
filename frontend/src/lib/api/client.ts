@@ -47,7 +47,8 @@ export const authAPI = {
 export const guildsAPI = {
 	list: () => api.get<{ guilds: Guild[] }>('/guilds'),
 	getChannels: (guildId: string) => api.get<{ channels: Channel[] }>(`/guilds/${guildId}/channels`),
-	getRoles: (guildId: string) => api.get<{ roles: Role[] }>(`/guilds/${guildId}/roles`)
+	getRoles: (guildId: string) => api.get<{ roles: Role[] }>(`/guilds/${guildId}/roles`),
+	getStats: (guildId: string) => api.get<GuildStats>(`/guilds/${guildId}/stats`)
 };
 
 // Settings API
@@ -165,4 +166,11 @@ export interface ShopSettings {
 	host_role?: string;
 	alert_role?: string;
 	log_channel?: string;
+}
+
+export interface GuildStats {
+	active_auctions: number;
+	running_giveaways: number;
+	open_claims: number;
+	shop_items: number;
 }

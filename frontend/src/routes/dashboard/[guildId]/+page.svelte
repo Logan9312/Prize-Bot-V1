@@ -1,7 +1,32 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import { guildsAPI, type GuildStats } from '$lib/api/client';
 
 	$: guildId = $page.params.guildId;
+
+	let stats: GuildStats | null = null;
+	let loading = true;
+
+	onMount(async () => {
+		await loadStats();
+	});
+
+	$: if (guildId) {
+		loadStats();
+	}
+
+	async function loadStats() {
+		loading = true;
+		try {
+			stats = await guildsAPI.getStats(guildId);
+		} catch (e) {
+			console.error('Failed to load stats:', e);
+			stats = null;
+		} finally {
+			loading = false;
+		}
+	}
 
 	const features = [
 		{
@@ -77,19 +102,43 @@
 		<h3 class="text-xs font-medium text-text-secondary uppercase tracking-wide mb-4">Quick Stats</h3>
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">-</p>
+				<p class="text-2xl font-semibold text-text-primary">
+					{#if loading}
+						<span class="animate-pulse">-</span>
+					{:else}
+						{stats?.active_auctions ?? 0}
+					{/if}
+				</p>
 				<p class="text-xs text-text-muted mt-1">Active Auctions</p>
 			</div>
 			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">-</p>
+				<p class="text-2xl font-semibold text-text-primary">
+					{#if loading}
+						<span class="animate-pulse">-</span>
+					{:else}
+						{stats?.running_giveaways ?? 0}
+					{/if}
+				</p>
 				<p class="text-xs text-text-muted mt-1">Running Giveaways</p>
 			</div>
 			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">-</p>
+				<p class="text-2xl font-semibold text-text-primary">
+					{#if loading}
+						<span class="animate-pulse">-</span>
+					{:else}
+						{stats?.open_claims ?? 0}
+					{/if}
+				</p>
 				<p class="text-xs text-text-muted mt-1">Open Claims</p>
 			</div>
 			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">-</p>
+				<p class="text-2xl font-semibold text-text-primary">
+					{#if loading}
+						<span class="animate-pulse">-</span>
+					{:else}
+						{stats?.shop_items ?? 0}
+					{/if}
+				</p>
 				<p class="text-xs text-text-muted mt-1">Shop Items</p>
 			</div>
 		</div>

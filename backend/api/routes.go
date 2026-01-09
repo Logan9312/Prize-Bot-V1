@@ -33,6 +33,7 @@ func RegisterRoutes(e *echo.Echo, botSession *discordgo.Session) {
 	protected.GET("/guilds", handlers.ListUserGuilds)
 	protected.GET("/guilds/:guildId/channels", handlers.GetGuildChannels)
 	protected.GET("/guilds/:guildId/roles", handlers.GetGuildRoles)
+	protected.GET("/guilds/:guildId/stats", handlers.GetGuildStats)
 
 	// Auction Settings
 	protected.GET("/guilds/:guildId/settings/auction", handlers.GetAuctionSettings)

@@ -8,6 +8,45 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/database"
 )
 
+// GuildStatsResponse represents the response for guild statistics
+type GuildStatsResponse struct {
+	ActiveAuctions   int64 `json:"active_auctions"`
+	RunningGiveaways int64 `json:"running_giveaways"`
+	OpenClaims       int64 `json:"open_claims"`
+	ShopItems        int64 `json:"shop_items"`
+}
+
+// GetGuildStats returns statistics for a guild
+func GetGuildStats(c echo.Context) error {
+	guildID := c.Param("guildId")
+
+	if err := verifyGuildAccess(c, guildID); err != nil {
+		return err
+	}
+
+	var stats GuildStatsResponse
+
+	// Count active auctions (end time in the future)
+	database.DB.Model(&database.Auction{}).
+		Where("guild_id = ? AND end_time > ?", guildID, time.Now()).
+		Count(&stats.ActiveAuctions)
+
+	// Count running giveaways (not finished)
+	database.DB.Model(&database.Giveaway{}).
+		Where("guild_id = ? AND finished = ?", guildID, false).
+		Count(&stats.RunningGiveaways)
+
+	// Count open claims (status = pending)
+	database.DB.Model(&database.Claim{}).
+		Where("guild_id = ? AND status = ?", guildID, database.ClaimStatusPending).
+		Count(&stats.OpenClaims)
+
+	// Shop items - currently no ShopItem model exists, so return 0
+	stats.ShopItems = 0
+
+	return c.JSON(http.StatusOK, stats)
+}
+
 // AuctionSettingsRequest represents the request body for auction settings
 type AuctionSettingsRequest struct {
 	Category        string `json:"category"`
