@@ -20,7 +20,13 @@
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
       "Bash(bun add:*)",
-      "Bash(bun run build)"
+      "Bash(bun run build)",
+      "Bash(npm run check:*)",
+      "Bash(git mv:*)",
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

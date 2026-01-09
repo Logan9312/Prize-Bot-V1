@@ -6,6 +6,26 @@ Your Prize Bot consists of two parts:
 - **Backend (Go)**: Handles Discord bot logic and API endpoints
 - **Frontend (SvelteKit)**: Dashboard UI
 
+## Project Structure
+
+This repository is organized as follows:
+
+```
+Prize-Bot-V1/
+├── backend/              # Go backend (Discord bot + API)
+│   ├── api/
+│   ├── commands/
+│   ├── database/
+│   ├── main.go
+│   ├── go.mod
+│   ├── Dockerfile        # Docker build config
+│   └── scripts/          # Deployment scripts
+├── frontend/             # SvelteKit dashboard
+└── .env                  # Environment variables (not committed)
+```
+
+**Important**: The Dockerfile is located in the `backend/` directory. When deploying via Docker, make sure to set the build context appropriately.
+
 ## Deployment Steps
 
 ### 1. Deploy Backend
@@ -40,6 +60,8 @@ Your backend needs to be hosted on a service that supports Go applications. Reco
 2. Create a new "Web Service"
 3. Connect your GitHub repository
 4. Configure:
+   - Root Directory: `backend`
+   - Dockerfile Path: `backend/Dockerfile`
    - Build Command: `go build -o main`
    - Start Command: `./main`
    - Add the same environment variables as above
