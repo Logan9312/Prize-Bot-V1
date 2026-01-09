@@ -9,7 +9,7 @@
 	const roles = getContext<Writable<Role[]>>('roles');
 	let isOpen = false;
 	let dropdownElement: HTMLDivElement;
-	const dropdownId = `role-select-${Math.random().toString(36).substr(2, 9)}`;
+	const dropdownId = `role-select-${Math.random().toString(36).substring(2, 11)}`;
 
 	function intToHex(color: number): string {
 		if (!color) return '#99aab5';
