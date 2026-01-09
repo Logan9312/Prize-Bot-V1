@@ -7,23 +7,75 @@
 	export let label: string = '';
 
 	const roles = getContext<Writable<Role[]>>('roles');
+	let isOpen = false;
+	let dropdownElement: HTMLDivElement;
+	const dropdownId = `role-select-${Math.random().toString(36).substr(2, 9)}`;
 
 	function intToHex(color: number): string {
 		if (!color) return '#99aab5';
 		return '#' + color.toString(16).padStart(6, '0');
 	}
+
+	function toggleDropdown() {
+		isOpen = !isOpen;
+	}
+
+	function selectRole(roleId: string) {
+		value = roleId;
+		isOpen = false;
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+			isOpen = false;
+		}
+	}
+
+	$: selectedRole = $roles.find(r => r.id === value);
 </script>
 
-<div>
+<svelte:window on:click={handleClickOutside} />
+
+<div bind:this={dropdownElement}>
 	{#if label}
-		<label class="label">{label}</label>
+		<label for={dropdownId} class="label block text-sm font-medium mb-1">{label}</label>
 	{/if}
-	<select bind:value class="select">
-		<option value="">None</option>
-		{#each $roles as role}
-			<option value={role.id} style="color: {intToHex(role.color)}">
-				@ {role.name}
-			</option>
-		{/each}
-	</select>
+	<div class="relative">
+		<button
+			id={dropdownId}
+			type="button"
+			onclick={toggleDropdown}
+			class="select w-full text-left px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+		>
+			{#if selectedRole}
+				<span style="color: {intToHex(selectedRole.color)}">
+					@ {selectedRole.name}
+				</span>
+			{:else}
+				<span class="text-gray-500">None</span>
+			{/if}
+		</button>
+
+		{#if isOpen}
+			<div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+				<button
+					type="button"
+					onclick={() => selectRole('')}
+					class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+				>
+					None
+				</button>
+				{#each $roles as role}
+					<button
+						type="button"
+						onclick={() => selectRole(role.id)}
+						class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+						style="color: {intToHex(role.color)}"
+					>
+						@ {role.name}
+					</button>
+				{/each}
+			</div>
+		{/if}
+	</div>
 </div>
