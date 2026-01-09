@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,6 +18,21 @@ import (
 
 // BotSession holds the Discord bot session for fetching guild data
 var BotSession *discordgo.Session
+
+// accessVerificationCache caches OAuth guild access verification to prevent rate limiting
+var accessVerificationCache = &sync.Map{} // map[string]cacheEntry
+
+type cacheEntry struct {
+	hasAccess bool
+	expiresAt time.Time
+}
+
+// getCacheKey generates a cache key from the access token and guild ID
+func getCacheKey(accessToken, guildID string) string {
+	// Hash the token to avoid storing full tokens in memory
+	hash := sha256.Sum256([]byte(accessToken + ":" + guildID))
+	return hex.EncodeToString(hash[:16]) // Use first 16 bytes for shorter key
+}
 
 // Guild represents a Discord guild for the API response
 type Guild struct {
@@ -119,7 +137,7 @@ func ListUserGuilds(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]any{
 		"guilds": guilds,
 	})
 }
@@ -164,7 +182,7 @@ func GetGuildChannels(c echo.Context) error {
 		return channels[i].Position < channels[j].Position
 	})
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]any{
 		"channels": channels,
 	})
 }
@@ -209,7 +227,7 @@ func GetGuildRoles(c echo.Context) error {
 		return roles[i].Position > roles[j].Position
 	})
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]any{
 		"roles": roles,
 	})
 }
@@ -217,6 +235,21 @@ func GetGuildRoles(c echo.Context) error {
 // verifyGuildAccess checks if the user has admin access to the guild
 func verifyGuildAccess(c echo.Context, guildID string) error {
 	accessToken := c.Get("access_token").(string)
+	cacheKey := getCacheKey(accessToken, guildID)
+
+	// Check cache first to avoid rate limiting
+	if cached, ok := accessVerificationCache.Load(cacheKey); ok {
+		entry := cached.(cacheEntry)
+		if time.Now().Before(entry.expiresAt) {
+			// Cache hit and still valid
+			if !entry.hasAccess {
+				return c.JSON(http.StatusForbidden, map[string]string{"error": "You don't have access to this guild"})
+			}
+			return nil
+		}
+		// Cache expired, remove it
+		accessVerificationCache.Delete(cacheKey)
+	}
 
 	// Retry logic for handling transient rate limits
 	maxRetries := 2
@@ -306,11 +339,25 @@ func verifyGuildAccess(c echo.Context, guildID string) error {
 		if g.ID == guildID {
 			var perms int64
 			fmt.Sscanf(g.Permissions, "%d", &perms)
-			if (perms&0x8) == 0x8 || (perms&0x20) == 0x20 || g.Owner {
+			hasAccess := (perms&0x8) == 0x8 || (perms&0x20) == 0x20 || g.Owner
+
+			// Cache the result for 10 seconds to prevent rate limiting on subsequent requests
+			accessVerificationCache.Store(cacheKey, cacheEntry{
+				hasAccess: hasAccess,
+				expiresAt: time.Now().Add(10 * time.Second),
+			})
+
+			if hasAccess {
 				return nil
 			}
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "You don't have access to this guild"})
 		}
 	}
 
+	// Guild not found in user's guilds - cache as no access
+	accessVerificationCache.Store(cacheKey, cacheEntry{
+		hasAccess: false,
+		expiresAt: time.Now().Add(10 * time.Second),
+	})
 	return c.JSON(http.StatusForbidden, map[string]string{"error": "You don't have access to this guild"})
 }
