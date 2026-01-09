@@ -3,7 +3,8 @@
     "allow": [
       "Skill(frontend-design)",
       "Bash(cat:*)",
-      "Bash(bun run build)"
+      "Bash(bun run build)",
+      "Bash(find:*)"
     ]
   }
 }

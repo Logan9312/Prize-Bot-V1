@@ -45,23 +45,23 @@
 			id={dropdownId}
 			type="button"
 			onclick={toggleDropdown}
-			class="select w-full text-left px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+			class="select w-full text-left"
 		>
 			{#if selectedRole}
 				<span style="color: {intToHex(selectedRole.color)}">
 					@ {selectedRole.name}
 				</span>
 			{:else}
-				<span class="text-gray-500">None</span>
+				<span class="text-text-muted">None</span>
 			{/if}
 		</button>
 
 		{#if isOpen}
-			<div class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+			<div class="absolute z-10 w-full mt-1 bg-surface-700 border border-surface-600 rounded-lg shadow-lg max-h-60 overflow-auto">
 				<button
 					type="button"
 					onclick={() => selectRole('')}
-					class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+					class="w-full text-left px-4 py-3 sm:px-3 sm:py-2.5 hover:bg-surface-600 text-text-muted transition-colors min-h-[44px]"
 				>
 					None
 				</button>
@@ -69,7 +69,7 @@
 					<button
 						type="button"
 						onclick={() => selectRole(role.id)}
-						class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+						class="w-full text-left px-4 py-3 sm:px-3 sm:py-2.5 hover:bg-surface-600 transition-colors min-h-[44px]"
 						style="color: {intToHex(role.color)}"
 					>
 						@ {role.name}

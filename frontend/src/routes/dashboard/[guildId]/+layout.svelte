@@ -4,6 +4,7 @@
 	import { guildsAPI, type Channel, type Role } from '$lib/api/client';
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
+	import MobileNav from '$lib/components/MobileNav.svelte';
 
 	$: guildId = $page.params.guildId;
 
@@ -38,9 +39,14 @@
 	$: currentPath = $page.url.pathname;
 </script>
 
-<div class="flex gap-6">
-	<!-- Sidebar -->
-	<nav class="w-44 flex-shrink-0">
+<div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
+	<!-- Mobile: Hamburger + Drawer -->
+	<div class="lg:hidden">
+		<MobileNav {navItems} {currentPath} {guildId} />
+	</div>
+
+	<!-- Desktop: Fixed Sidebar -->
+	<nav class="hidden lg:block w-44 flex-shrink-0">
 		<a
 			href="/dashboard"
 			class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mb-5"
@@ -67,7 +73,7 @@
 	</nav>
 
 	<!-- Content -->
-	<div class="flex-1 min-w-0">
+	<div class="flex-1">
 		<slot />
 	</div>
 </div>

@@ -32,6 +32,19 @@ export default {
 					danger: '#da373c'
 				}
 			},
+			fontSize: {
+				'fluid-xs': 'clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem)',
+				'fluid-sm': 'clamp(0.875rem, 0.8rem + 0.375vw, 1rem)',
+				'fluid-base': 'clamp(1rem, 0.95rem + 0.25vw, 1.125rem)',
+				'fluid-lg': 'clamp(1.125rem, 1rem + 0.5vw, 1.25rem)',
+				'fluid-xl': 'clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem)'
+			},
+			minHeight: {
+				'touch': '44px'
+			},
+			minWidth: {
+				'touch': '44px'
+			},
 			borderRadius: {
 				DEFAULT: '8px'
 			},

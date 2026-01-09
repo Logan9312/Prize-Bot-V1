@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { settingsAPI, type CurrencySettings } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
+	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
 
 	$: guildId = $page.params.guildId;
 
@@ -45,14 +46,10 @@
 </script>
 
 <div>
-	<div class="flex items-center justify-between mb-6">
-		<h1 class="text-xl font-semibold text-text-primary">Currency Settings</h1>
-		<div class="flex gap-2">
-			<button on:click={reset} class="btn btn-secondary">Reset</button>
-			<button on:click={save} disabled={saving} class="btn btn-primary">
-				{saving ? 'Saving...' : 'Save Changes'}
-			</button>
-		</div>
+	<div class="mb-4 lg:mb-6">
+		<MobileActionBar onSave={save} onReset={reset} bind:saving>
+			<h1 slot="header" class="text-fluid-xl font-semibold text-text-primary">Currency Settings</h1>
+		</MobileActionBar>
 	</div>
 
 	{#if loading}
@@ -60,10 +57,10 @@
 			<div class="spinner spinner-lg"></div>
 		</div>
 	{:else}
-		<div class="space-y-6">
+		<div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0">
 			<div class="card">
-				<h2 class="text-sm font-medium text-text-primary mb-2">Server Currency</h2>
-				<p class="text-sm text-text-secondary mb-4">
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Server Currency</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
 					Configure the currency used for auctions and other features in your server.
 				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">

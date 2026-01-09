@@ -45,7 +45,7 @@
 		<!-- Header -->
 		<header class="sticky top-0 z-50 bg-surface-800 border-b border-surface-600">
 			<div class="max-w-6xl mx-auto px-4 lg:px-6">
-				<div class="flex items-center justify-between h-14">
+				<div class="flex items-center justify-between h-14 sm:h-16">
 					<!-- Logo -->
 					<a href="/dashboard" class="flex items-center gap-2.5">
 						<div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
@@ -124,7 +124,7 @@
 		</header>
 
 		<!-- Main content -->
-		<main class="max-w-6xl mx-auto px-4 lg:px-6 py-6">
+		<main class="max-w-6xl mx-auto px-4 lg:px-6 py-4 lg:py-6">
 			<slot />
 		</main>
 	</div>
