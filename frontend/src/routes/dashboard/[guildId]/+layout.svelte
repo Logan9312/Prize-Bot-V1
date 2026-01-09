@@ -41,7 +41,7 @@
 
 <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
 	<!-- Mobile: Hamburger + Drawer -->
-	<div class="lg:hidden">
+	<div class="lg:hidden mb-4">
 		<MobileNav {navItems} {currentPath} {guildId} />
 	</div>
 

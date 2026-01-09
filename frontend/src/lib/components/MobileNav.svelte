@@ -35,7 +35,7 @@
 <!-- Hamburger Button -->
 <button
 	onclick={toggleDrawer}
-	class="fixed top-3.5 left-4 z-50 flex items-center justify-center w-12 h-12 rounded-lg bg-surface-800 border border-surface-600 hover:bg-surface-700 transition-colors duration-200"
+	class="flex items-center justify-center w-12 h-12 rounded-lg bg-surface-800 border border-surface-600 hover:bg-surface-700 transition-colors duration-200"
 	aria-label={isOpen ? 'Close menu' : 'Open menu'}
 	aria-expanded={isOpen}
 >
