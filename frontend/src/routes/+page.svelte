@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 
+	const API_BASE = import.meta.env.VITE_API_URL || '/api';
 	let loading = true;
 
 	onMount(() => {
@@ -43,7 +44,7 @@
 			</div>
 		{:else}
 			<a
-				href="/api/auth/discord"
+				href="{API_BASE}/auth/discord"
 				class="inline-flex items-center gap-3 px-6 py-3 bg-[#5865F2] text-white font-medium rounded-lg hover:bg-[#4752c4] transition-colors"
 			>
 				<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

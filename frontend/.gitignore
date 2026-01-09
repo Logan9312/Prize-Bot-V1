@@ -2,3 +2,5 @@
 package
 node_modules
 build
+.env
+.env.local
