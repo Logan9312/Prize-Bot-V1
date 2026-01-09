@@ -1,6 +1,33 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+	/* Surface colors */
+	--color-surface-900: #111214;
+	--color-surface-800: #1a1b1e;
+	--color-surface-700: #232428;
+	--color-surface-600: #2e3035;
+	--color-surface-500: #3f4147;
+	--color-surface-400: #4e5058;
+	--color-surface-300: #6d6f78;
+
+	/* Text colors */
+	--color-text-primary: #f2f3f5;
+	--color-text-secondary: #b5bac1;
+	--color-text-muted: #6d6f78;
+
+	/* Accent colors */
+	--color-accent: #5865f2;
+	--color-accent-hover: #4752c4;
+	--color-accent-light: #7289da;
+
+	/* Status colors */
+	--color-status-success: #23a559;
+	--color-status-warning: #f0b232;
+	--color-status-danger: #da373c;
+
+	/* Font family */
+	--font-family-sans: Geist, system-ui, sans-serif;
+}
 
 @layer base {
 	* {
