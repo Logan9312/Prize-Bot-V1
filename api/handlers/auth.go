@@ -69,7 +69,7 @@ func DiscordOAuthRedirect(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 
-	redirectURI := config.C.APIBaseURL + "/api/auth/discord/callback"
+	redirectURI := config.C.APIBaseURL + "/auth/discord/callback"
 
 	authURL := fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s",
 		discordAuthURL,
@@ -141,7 +141,7 @@ func DiscordOAuthCallback(c echo.Context) error {
 
 // exchangeCodeForToken exchanges the authorization code for access and refresh tokens
 func exchangeCodeForToken(code string) (*DiscordTokenResponse, error) {
-	redirectURI := config.C.APIBaseURL + "/api/auth/discord/callback"
+	redirectURI := config.C.APIBaseURL + "/auth/discord/callback"
 
 	data := url.Values{}
 	data.Set("client_id", config.C.DiscordClientID)

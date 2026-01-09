@@ -35,7 +35,7 @@ type Config struct {
 	DiscordClientSecret string // Discord OAuth2 client secret
 	JWTSecret           string // Secret for signing JWT tokens
 	FrontendURL         string // Frontend URL for CORS and redirects
-	APIBaseURL          string // API base URL
+	APIBaseURL          string // API base URL (should include /api prefix, e.g., https://api.prizebot.dev/api)
 	SecureCookies       bool   // Whether to set Secure flag on cookies (true in prod)
 }
 
@@ -73,7 +73,7 @@ func Init() {
 		DiscordClientSecret: getEnv("DISCORD_CLIENT_SECRET", ""),
 		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production-32chars"),
 		FrontendURL:         getEnv("FRONTEND_URL", "http://localhost:5173"),
-		APIBaseURL:          getEnv("API_BASE_URL", "http://localhost:8080"),
+		APIBaseURL:          getEnv("API_BASE_URL", "http://localhost:8080/api"),
 		SecureCookies:       getEnv("ENVIRONMENT", "") == "prod",
 	}
 }
