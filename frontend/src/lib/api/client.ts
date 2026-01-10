@@ -64,6 +64,13 @@ export const claimsAPI = {
 		api.delete(`/guilds/${guildId}/claims/${messageId}`)
 };
 
+// Premium API
+export const premiumAPI = {
+	getUserStatus: () => api.get<UserPremiumStatus>('/premium/status'),
+	getGuildStatus: (guildId: string) => api.get<GuildPremiumStatus>(`/guilds/${guildId}/premium`),
+	createPortalSession: () => api.post<BillingPortalResponse>('/premium/portal')
+};
+
 // Settings API
 export const settingsAPI = {
 	// Auction
@@ -216,4 +223,27 @@ export interface ClaimListItem {
 	cost: number;
 	status: string;
 	ticket_id: string;
+}
+
+// Premium types
+export interface SubscriptionInfo {
+	id: string;
+	status: string;
+	current_period_end: number;
+	guild_id?: string;
+	plan_name: string;
+}
+
+export interface UserPremiumStatus {
+	is_premium: boolean;
+	subscriptions: SubscriptionInfo[];
+}
+
+export interface GuildPremiumStatus {
+	is_premium: boolean;
+	guild_id: string;
+}
+
+export interface BillingPortalResponse {
+	url: string;
 }

@@ -44,8 +44,8 @@ func validateDiscordID(id string) error {
 	return nil
 }
 
-// buildStripeQuery safely builds a Stripe search query with validated Discord ID
-func buildStripeQuery(field, discordID string) (string, error) {
+// BuildStripeQuery safely builds a Stripe search query with validated Discord ID
+func BuildStripeQuery(field, discordID string) (string, error) {
 	if err := validateDiscordID(discordID); err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	customerID := ""
 
 	// Build query with validated Discord ID to prevent injection
-	query, err := buildStripeQuery("discord_id", i.Member.User.ID)
+	query, err := BuildStripeQuery("discord_id", i.Member.User.ID)
 	if err != nil {
 		return fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -176,7 +176,7 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 	}
 
 	// Build query with validated Discord ID to prevent injection
-	query, err := buildStripeQuery("discord_id", i.Member.User.ID)
+	query, err := BuildStripeQuery("discord_id", i.Member.User.ID)
 	if err != nil {
 		return fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -302,7 +302,7 @@ func CheckPremiumUser(userID string) bool {
 	}
 
 	// Validate user ID before using in query
-	query, err := buildStripeQuery("discord_id", userID)
+	query, err := BuildStripeQuery("discord_id", userID)
 	if err != nil {
 		logger.Sugar.Warnw("invalid user ID for premium check", "user_id", userID, "error", err)
 		return false
@@ -329,7 +329,7 @@ func CheckPremiumGuild(guildID string) bool {
 	}
 
 	// Validate guild ID before using in query
-	query, err := buildStripeQuery("guild_id", guildID)
+	query, err := BuildStripeQuery("guild_id", guildID)
 	if err != nil {
 		logger.Sugar.Warnw("invalid guild ID for premium check", "guild_id", guildID, "error", err)
 		return false
