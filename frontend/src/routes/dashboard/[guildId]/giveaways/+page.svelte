@@ -7,13 +7,14 @@
 	import RoleSelect from '$lib/components/RoleSelect.svelte';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
 
-	$: guildId = $page.params.guildId!;
+	const guildId = $derived($page.params.guildId!);
 
-	let loading = true;
-	let saving = false;
-	let settings: GiveawaySettings = { guild_id: guildId };
+	let loading = $state(true);
+	let saving = $state(false);
+	let settings: GiveawaySettings = $state({ guild_id: '' });
 
 	onMount(async () => {
+		settings = { guild_id: guildId };
 		try {
 			settings = await settingsAPI.getGiveaway(guildId);
 		} catch {
@@ -47,11 +48,13 @@
 	}
 </script>
 
+{#snippet header()}
+	<h1 class="text-fluid-xl font-semibold text-text-primary">Giveaway Settings</h1>
+{/snippet}
+
 <div>
 	<div class="mb-4 lg:mb-6">
-		<MobileActionBar onSave={save} onReset={reset} bind:saving>
-			<h1 slot="header" class="text-fluid-xl font-semibold text-text-primary">Giveaway Settings</h1>
-		</MobileActionBar>
+		<MobileActionBar onSave={save} onReset={reset} bind:saving {header} />
 	</div>
 
 	{#if loading}

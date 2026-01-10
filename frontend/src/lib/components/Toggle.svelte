@@ -1,6 +1,8 @@
 <script lang="ts">
-	export let checked: boolean = false;
-	export let label: string = '';
+	let { checked = $bindable(false), label = '' }: {
+		checked?: boolean;
+		label?: string;
+	} = $props();
 </script>
 
 <label class="flex items-center gap-3 cursor-pointer py-2 -mx-2 px-2 rounded-lg hover:bg-surface-700 transition-colors min-h-[44px]">

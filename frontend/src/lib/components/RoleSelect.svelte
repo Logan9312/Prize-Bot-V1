@@ -3,11 +3,13 @@
 	import type { Writable } from 'svelte/store';
 	import type { Role } from '$lib/api/client';
 
-	export let value: string = '';
-	export let label: string = '';
+	let { value = $bindable(''), label = '' }: {
+		value?: string;
+		label?: string;
+	} = $props();
 
 	const roles = getContext<Writable<Role[]>>('roles');
-	let isOpen = false;
+	let isOpen = $state(false);
 	let dropdownElement: HTMLDivElement;
 	const dropdownId = `role-select-${Math.random().toString(36).substring(2, 11)}`;
 
@@ -31,10 +33,10 @@
 		}
 	}
 
-	$: selectedRole = $roles.find(r => r.id === value);
+	const selectedRole = $derived($roles.find(r => r.id === value));
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} />
 
 <div bind:this={dropdownElement}>
 	{#if label}

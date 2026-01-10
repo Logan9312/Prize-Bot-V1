@@ -3,20 +3,12 @@
 	import { onMount } from 'svelte';
 	import { guildsAPI, type GuildStats } from '$lib/api/client';
 
-	$: guildId = $page.params.guildId!;
+	const guildId = $derived($page.params.guildId!);
 
-	let stats: GuildStats | null = null;
-	let loading = true;
+	let stats: GuildStats | null = $state(null);
+	let loading = $state(true);
 
 	onMount(async () => {
-		await loadStats();
-	});
-
-	$: if (guildId) {
-		loadStats();
-	}
-
-	async function loadStats() {
 		loading = true;
 		try {
 			stats = await guildsAPI.getStats(guildId);
@@ -26,7 +18,7 @@
 		} finally {
 			loading = false;
 		}
-	}
+	});
 
 	const features = [
 		{

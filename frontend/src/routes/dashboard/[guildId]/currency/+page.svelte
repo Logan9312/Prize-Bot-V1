@@ -5,13 +5,14 @@
 	import { toast } from '$lib/stores/toast';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
 
-	$: guildId = $page.params.guildId!;
+	const guildId = $derived($page.params.guildId!);
 
-	let loading = true;
-	let saving = false;
-	let settings: CurrencySettings = { guild_id: guildId };
+	let loading = $state(true);
+	let saving = $state(false);
+	let settings: CurrencySettings = $state({ guild_id: '' });
 
 	onMount(async () => {
+		settings = { guild_id: guildId };
 		try {
 			settings = await settingsAPI.getCurrency(guildId);
 		} catch {
@@ -45,11 +46,13 @@
 	}
 </script>
 
+{#snippet header()}
+	<h1 class="text-fluid-xl font-semibold text-text-primary">Currency Settings</h1>
+{/snippet}
+
 <div>
 	<div class="mb-4 lg:mb-6">
-		<MobileActionBar onSave={save} onReset={reset} bind:saving>
-			<h1 slot="header" class="text-fluid-xl font-semibold text-text-primary">Currency Settings</h1>
-		</MobileActionBar>
+		<MobileActionBar onSave={save} onReset={reset} bind:saving {header} />
 	</div>
 
 	{#if loading}
@@ -65,9 +68,10 @@
 				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
-						<label class="label">Currency Symbol</label>
+						<label for="currency-symbol" class="label">Currency Symbol</label>
 						<p class="text-fluid-xs text-text-secondary mb-2">The symbol or name displayed with amounts (e.g., $, coins, credits, points).</p>
 						<input
+							id="currency-symbol"
 							type="text"
 							bind:value={settings.currency}
 							placeholder="$ or coins"
@@ -75,9 +79,9 @@
 						/>
 					</div>
 					<div>
-						<label class="label">Symbol Position</label>
+						<label for="currency-position" class="label">Symbol Position</label>
 						<p class="text-fluid-xs text-text-secondary mb-2">Choose whether the symbol appears before or after the amount.</p>
-						<select bind:value={settings.side} class="select">
+						<select id="currency-position" bind:value={settings.side} class="select">
 							<option value="">Default (Left)</option>
 							<option value="left">Left ($100)</option>
 							<option value="right">Right (100$)</option>
@@ -87,7 +91,7 @@
 
 				<!-- Preview -->
 				<div class="mt-6 p-4 bg-surface-800 border border-surface-600 rounded-lg">
-					<label class="label">Preview</label>
+					<span class="label">Preview</span>
 					<p class="text-fluid-xs text-text-secondary mb-2">This is how currency amounts will appear to users.</p>
 					<p class="text-lg text-text-primary">
 						{#if settings.side === 'right'}

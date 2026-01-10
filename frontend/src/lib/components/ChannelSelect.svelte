@@ -3,19 +3,22 @@
 	import type { Writable } from 'svelte/store';
 	import type { Channel } from '$lib/api/client';
 
-	export let value: string = '';
-	export let label: string = '';
-	export let type: 'text' | 'category' | 'all' = 'all';
+	let { value = $bindable(''), label = '', type = 'all' }: {
+		value?: string;
+		label?: string;
+		type?: 'text' | 'category' | 'all';
+	} = $props();
 
+	const id = `channel-select-${Math.random().toString(36).substring(2, 11)}`;
 	const channels = getContext<Writable<Channel[]>>('channels');
 
-	$: filteredChannels = $channels.filter((ch) => {
+	const filteredChannels = $derived($channels.filter((ch) => {
 		if (type === 'text') return ch.type === 0;
 		if (type === 'category') return ch.type === 4;
 		return true;
-	});
+	}));
 
-	$: categories = $channels.filter((ch) => ch.type === 4);
+	const categories = $derived($channels.filter((ch) => ch.type === 4));
 
 	function getChannelsByCategory(parentId: string | null) {
 		return filteredChannels.filter((ch) => {
@@ -27,9 +30,9 @@
 
 <div>
 	{#if label}
-		<label class="label">{label}</label>
+		<label for={id} class="label">{label}</label>
 	{/if}
-	<select bind:value class="select">
+	<select {id} bind:value class="select">
 		<option value="">None</option>
 		{#if type === 'category'}
 			{#each filteredChannels as channel}

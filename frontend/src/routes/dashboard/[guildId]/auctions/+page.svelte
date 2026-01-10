@@ -9,13 +9,14 @@
 	import Toggle from '$lib/components/Toggle.svelte';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
 
-	$: guildId = $page.params.guildId!;
+	const guildId = $derived($page.params.guildId!);
 
-	let loading = true;
-	let saving = false;
-	let settings: AuctionSettings = { guild_id: guildId };
+	let loading = $state(true);
+	let saving = $state(false);
+	let settings: AuctionSettings = $state({ guild_id: '' });
 
 	onMount(async () => {
+		settings = { guild_id: guildId };
 		try {
 			settings = await settingsAPI.getAuction(guildId);
 		} catch {
@@ -49,11 +50,13 @@
 	}
 </script>
 
+{#snippet header()}
+	<h1 class="text-fluid-xl font-semibold text-text-primary">Auction Settings</h1>
+{/snippet}
+
 <div>
 	<div class="mb-4 lg:mb-6">
-		<MobileActionBar onSave={save} onReset={reset} bind:saving>
-			<h1 slot="header" class="text-fluid-xl font-semibold text-text-primary">Auction Settings</h1>
-		</MobileActionBar>
+		<MobileActionBar onSave={save} onReset={reset} bind:saving {header} />
 	</div>
 
 	{#if loading}
@@ -73,11 +76,12 @@
 					<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
 				</div>
 				<div class="mt-4">
-					<label class="label">Channel Prefix</label>
+					<label for="auction-channel-prefix" class="label">Channel Prefix</label>
 					<p class="text-fluid-xs text-text-secondary mb-2">
 						Text prepended to auction channel names (e.g., "auction-item-name").
 					</p>
 					<input
+						id="auction-channel-prefix"
 						type="text"
 						bind:value={settings.channel_prefix}
 						placeholder="auction-"
@@ -112,14 +116,14 @@
 				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
-						<label class="label">Currency Symbol</label>
+						<label for="auction-currency-symbol" class="label">Currency Symbol</label>
 						<p class="text-fluid-xs text-text-secondary mb-2">Symbol shown next to bid amounts (e.g., $, coins, tokens).</p>
-						<input type="text" bind:value={settings.currency} placeholder="$" class="input" />
+						<input id="auction-currency-symbol" type="text" bind:value={settings.currency} placeholder="$" class="input" />
 					</div>
 					<div>
-						<label class="label">Currency Side</label>
+						<label for="auction-currency-side" class="label">Currency Side</label>
 						<p class="text-fluid-xs text-text-secondary mb-2">Where to display the symbol relative to the amount.</p>
-						<select bind:value={settings.currency_side} class="select">
+						<select id="auction-currency-side" bind:value={settings.currency_side} class="select">
 							<option value="">Default (Left)</option>
 							<option value="left">Left ($100)</option>
 							<option value="right">Right (100$)</option>

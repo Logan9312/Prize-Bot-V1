@@ -3,8 +3,11 @@
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
 	import { toast, type Toast } from '$lib/stores/toast';
+	import type { Snippet } from 'svelte';
 
-	let toasts: Toast[] = [];
+	let { children }: { children: Snippet } = $props();
+
+	let toasts: Toast[] = $state([]);
 	toast.subscribe((value) => (toasts = value));
 
 	onMount(() => {
@@ -35,7 +38,7 @@
 </script>
 
 <div class="min-h-screen bg-surface-900">
-	<slot />
+	{@render children()}
 </div>
 
 <!-- Toast notifications -->

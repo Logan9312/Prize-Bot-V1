@@ -3,8 +3,8 @@
 	import { guildsAPI, type Guild } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 
-	let guilds: Guild[] = [];
-	let loading = true;
+	let guilds: Guild[] = $state([]);
+	let loading = $state(true);
 
 	onMount(async () => {
 		try {
@@ -22,8 +22,12 @@
 		return '';
 	}
 
-	$: activeGuilds = guilds.filter(g => g.bot_in);
-	$: inactiveGuilds = guilds.filter(g => !g.bot_in);
+	const activeGuilds = $derived(guilds.filter(g => g.bot_in));
+	const inactiveGuilds = $derived(guilds.filter(g => !g.bot_in));
+
+	function handleAddClick(event: MouseEvent) {
+		event.stopPropagation();
+	}
 </script>
 
 <div>
@@ -133,7 +137,7 @@
 								target="_blank"
 								rel="noopener"
 								class="btn btn-secondary text-xs py-1.5 px-3"
-								on:click|stopPropagation
+								onclick={handleAddClick}
 							>
 								Add
 							</a>

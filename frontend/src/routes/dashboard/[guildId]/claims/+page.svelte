@@ -8,13 +8,14 @@
 	import Toggle from '$lib/components/Toggle.svelte';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
 
-	$: guildId = $page.params.guildId!;
+	const guildId = $derived($page.params.guildId!);
 
-	let loading = true;
-	let saving = false;
-	let settings: ClaimSettings = { guild_id: guildId };
+	let loading = $state(true);
+	let saving = $state(false);
+	let settings: ClaimSettings = $state({ guild_id: '' });
 
 	onMount(async () => {
+		settings = { guild_id: guildId };
 		try {
 			settings = await settingsAPI.getClaim(guildId);
 		} catch {
@@ -48,11 +49,13 @@
 	}
 </script>
 
+{#snippet header()}
+	<h1 class="text-fluid-xl font-semibold text-text-primary">Claim Settings</h1>
+{/snippet}
+
 <div>
 	<div class="mb-4 lg:mb-6">
-		<MobileActionBar onSave={save} onReset={reset} bind:saving>
-			<h1 slot="header" class="text-fluid-xl font-semibold text-text-primary">Claim Settings</h1>
-		</MobileActionBar>
+		<MobileActionBar onSave={save} onReset={reset} bind:saving {header} />
 	</div>
 
 	{#if loading}
@@ -78,11 +81,12 @@
 					</div>
 				</div>
 				<div class="mt-4">
-					<label class="label">Channel Prefix</label>
+					<label for="claim-channel-prefix" class="label">Channel Prefix</label>
 					<p class="text-fluid-xs text-text-secondary mb-2">
 						Text prepended to ticket channel names (e.g., "ticket-username").
 					</p>
 					<input
+						id="claim-channel-prefix"
 						type="text"
 						bind:value={settings.channel_prefix}
 						placeholder="ticket-"
@@ -109,11 +113,12 @@
 				<p class="text-fluid-sm text-text-secondary mb-4">
 					Customize the message users see when they open a claim ticket.
 				</p>
-				<label class="label">Ticket Instructions</label>
+				<label for="claim-instructions" class="label">Ticket Instructions</label>
 				<p class="text-fluid-xs text-text-secondary mb-2">
 					This message is sent automatically when a ticket is created. Include any info users need to provide.
 				</p>
 				<textarea
+					id="claim-instructions"
 					bind:value={settings.instructions}
 					placeholder="Instructions shown to users when they open a ticket..."
 					rows="4"
@@ -129,11 +134,12 @@
 				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 					<div>
-						<label class="label">Ticket Expiration</label>
+						<label for="claim-expiration" class="label">Ticket Expiration</label>
 						<p class="text-fluid-xs text-text-secondary mb-2">
 							Automatically close inactive tickets after this duration. Use formats like "7d" (7 days) or "24h" (24 hours). Leave empty to disable.
 						</p>
 						<input
+							id="claim-expiration"
 							type="text"
 							bind:value={settings.expiration}
 							placeholder="e.g., 7d, 24h"

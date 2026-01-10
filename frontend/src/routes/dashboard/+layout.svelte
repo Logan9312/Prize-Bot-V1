@@ -2,9 +2,12 @@
 	import { auth } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import type { Snippet } from 'svelte';
 
-	let loading = true;
-	let showUserMenu = false;
+	let { children }: { children: Snippet } = $props();
+
+	let loading = $state(true);
+	let showUserMenu = $state(false);
 
 	onMount(() => {
 		const unsubscribe = auth.subscribe((state) => {
@@ -22,7 +25,8 @@
 		goto('/');
 	}
 
-	function toggleUserMenu() {
+	function toggleUserMenu(event: MouseEvent) {
+		event.stopPropagation();
 		showUserMenu = !showUserMenu;
 	}
 
@@ -34,7 +38,7 @@
 	}
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} />
 
 {#if loading}
 	<div class="min-h-screen flex items-center justify-center">
@@ -71,7 +75,7 @@
 						<!-- User menu -->
 						<div class="relative user-menu-container">
 							<button
-								on:click|stopPropagation={toggleUserMenu}
+								onclick={toggleUserMenu}
 								class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-surface-700 transition-colors"
 							>
 								{#if $auth.user.avatar_url}
@@ -106,7 +110,7 @@
 											My Servers
 										</a>
 										<button
-											on:click={handleLogout}
+											onclick={handleLogout}
 											class="w-full flex items-center gap-2 px-3 py-2 text-sm text-status-danger hover:bg-status-danger/10 rounded-md transition-colors"
 										>
 											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +129,7 @@
 
 		<!-- Main content -->
 		<main class="max-w-6xl mx-auto px-4 lg:px-6 py-4 lg:py-6">
-			<slot />
+			{@render children()}
 		</main>
 	</div>
 {/if}

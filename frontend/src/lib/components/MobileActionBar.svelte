@@ -1,14 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	let {
 		onSave,
 		onReset,
 		saving = $bindable(false),
-		disabled = false
+		disabled = false,
+		header
 	}: {
 		onSave: () => void | Promise<void>;
 		onReset: () => void;
 		saving?: boolean;
 		disabled?: boolean;
+		header?: Snippet;
 	} = $props();
 
 	async function handleSave() {
@@ -56,7 +60,7 @@
 <!-- Desktop: Inline Bar -->
 <div class="hidden lg:flex items-center justify-between">
 	<div class="flex-1">
-		<slot name="header" />
+		{#if header}{@render header()}{/if}
 	</div>
 	<div class="flex gap-2">
 		<button

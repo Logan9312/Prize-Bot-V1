@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 
 	const API_BASE = import.meta.env.VITE_API_URL || '/api';
-	let loading = true;
+	let loading = $state(true);
 
 	onMount(() => {
 		const unsubscribe = auth.subscribe((state) => {
