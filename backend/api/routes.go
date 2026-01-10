@@ -44,6 +44,12 @@ func RegisterRoutes(e *echo.Echo, botSession *discordgo.Session) {
 	protected.POST("/premium/portal", handlers.CreateBillingPortalSession)
 	protected.POST("/premium/sync", handlers.SyncAfterCheckout)
 
+	// Whitelabels
+	protected.GET("/whitelabels", handlers.ListWhitelabels)
+	protected.POST("/whitelabels", handlers.CreateWhitelabel)
+	protected.POST("/whitelabels/validate", handlers.ValidateToken)
+	protected.DELETE("/whitelabels/:botId", handlers.DeleteWhitelabel)
+
 	// List endpoints
 	protected.GET("/guilds/:guildId/auctions/list", handlers.ListAuctions)
 	protected.GET("/guilds/:guildId/giveaways/list", handlers.ListGiveaways)

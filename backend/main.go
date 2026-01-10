@@ -10,6 +10,7 @@ import (
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
+	"gitlab.com/logan9312/discord-auction-bot/crypto"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gitlab.com/logan9312/discord-auction-bot/routers"
@@ -44,6 +45,11 @@ func main() {
 	// Initialize config from environment variables
 	config.Init()
 
+	// Initialize encryption for whitelabel tokens
+	if err := crypto.Init(); err != nil {
+		os.Stderr.WriteString("Warning: Encryption not initialized - whitelabel tokens will not be encrypted: " + err.Error() + "\n")
+	}
+
 	// Initialize logger as early as possible
 	if err := logger.Init(environment.Environment, environment.LogLevel); err != nil {
 		os.Stderr.WriteString("FATAL: Failed to initialize logger: " + err.Error() + "\n")
@@ -60,6 +66,11 @@ func main() {
 
 	// Connects database
 	database.DatabaseConnect(environment.Password, environment.Host, environment.Environment)
+
+	// Migrate existing whitelabel tokens to encrypted format
+	if err := database.MigrateWhitelabelTokens(); err != nil {
+		logger.Sugar.Errorw("failed to migrate whitelabel tokens", "error", err)
+	}
 
 	// Connects main bot
 	mainSession, err := connect.BotConnect(environment.DiscordToken, environment.Environment)
@@ -80,8 +91,8 @@ func main() {
 		logger.Sugar.Warnw("failed to set game status", "error", err)
 	}
 
-	WhiteLabels := []map[string]any{}
-	result = database.DB.Model([]database.WhiteLabels{}).Find(&WhiteLabels)
+	whitelabels := []database.WhiteLabels{}
+	result = database.DB.Find(&whitelabels)
 	if result.Error != nil {
 		logger.Sugar.Errorw("failed to fetch whitelabels", "error", result.Error)
 	}
@@ -98,19 +109,24 @@ func main() {
 			}
 		}()
 
-		for i, v := range WhiteLabels {
+		for i, wl := range whitelabels {
 			// Add 2 second delay between each whitelabel bot connection
 			if i > 0 {
 				time.Sleep(2 * time.Second)
 			}
 
-			// Safe type assertion for bot_token
-			botToken, ok := v["bot_token"].(string)
-			if !ok {
-				logger.Sugar.Errorw("invalid bot_token type in whitelabel config",
-					"index", i,
-				)
-				continue
+			// Decrypt token if encrypted
+			botToken := wl.BotToken
+			if wl.Encrypted && crypto.IsInitialized() {
+				decrypted, err := crypto.Decrypt(wl.BotToken)
+				if err != nil {
+					logger.Sugar.Errorw("failed to decrypt whitelabel token",
+						"bot_id", wl.BotID,
+						"error", err,
+					)
+					continue
+				}
+				botToken = decrypted
 			}
 
 			s, err := connect.BotConnect(botToken, environment.Environment)

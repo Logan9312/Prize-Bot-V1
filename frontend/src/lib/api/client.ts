@@ -71,6 +71,16 @@ export const premiumAPI = {
 	createPortalSession: () => api.post<BillingPortalResponse>('/premium/portal')
 };
 
+// Whitelabel API
+export const whitelabelAPI = {
+	list: () => api.get<WhitelabelListResponse>('/whitelabels'),
+	create: (botToken: string) =>
+		api.post<WhitelabelCreateResponse>('/whitelabels', { bot_token: botToken }),
+	delete: (botId: string) => api.delete<{ message: string }>(`/whitelabels/${botId}`),
+	validate: (botToken: string) =>
+		api.post<ValidateTokenResponse>('/whitelabels/validate', { bot_token: botToken })
+};
+
 // Settings API
 export const settingsAPI = {
 	// Auction
@@ -246,4 +256,33 @@ export interface GuildPremiumStatus {
 
 export interface BillingPortalResponse {
 	url: string;
+}
+
+// Whitelabel types
+export interface Whitelabel {
+	bot_id: string;
+	bot_name: string;
+	bot_avatar: string;
+	user_id: string;
+	created_at: string;
+}
+
+export interface WhitelabelListResponse {
+	whitelabels: Whitelabel[];
+	is_admin: boolean;
+}
+
+export interface WhitelabelCreateResponse {
+	message: string;
+	bot_id: string;
+	bot_name: string;
+	bot_avatar: string;
+}
+
+export interface ValidateTokenResponse {
+	valid: boolean;
+	bot_id?: string;
+	bot_name?: string;
+	bot_avatar?: string;
+	error?: string;
 }

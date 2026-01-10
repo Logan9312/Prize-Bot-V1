@@ -31,7 +31,8 @@
       "Bash(npx svelte-check:*)",
       "WebFetch(domain:github.com)",
       "Bash(go doc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Skill(frontend-design)"
     ],
     "deny": [],
     "ask": []

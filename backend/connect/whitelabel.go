@@ -5,6 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	c "gitlab.com/logan9312/discord-auction-bot/commands"
+	"gitlab.com/logan9312/discord-auction-bot/crypto"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
@@ -71,10 +72,24 @@ func WhitelabelTokenModal(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return fmt.Errorf("Error connecting bot: %w", err)
 	}
 
+	// Encrypt the token before storing
+	tokenToStore := token
+	encrypted := false
+	if crypto.IsInitialized() {
+		encryptedToken, err := crypto.Encrypt(token)
+		if err != nil {
+			logger.Sugar.Errorw("failed to encrypt bot token", "user_id", i.Member.User.ID, "error", err)
+			return fmt.Errorf("failed to secure bot token. Please try again or contact support")
+		}
+		tokenToStore = encryptedToken
+		encrypted = true
+	}
+
 	whitelabelData := map[string]any{
 		"bot_id":    newSession.State.User.ID,
 		"user_id":   i.Member.User.ID,
-		"bot_token": token,
+		"bot_token": tokenToStore,
+		"encrypted": encrypted,
 	}
 
 	result := database.DB.Clauses(clause.OnConflict{

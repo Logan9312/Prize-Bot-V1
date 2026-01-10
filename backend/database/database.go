@@ -3,6 +3,7 @@ package database
 import (
 	"time"
 
+	"gitlab.com/logan9312/discord-auction-bot/crypto"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 	"gorm.io/gorm"
 )
@@ -13,9 +14,11 @@ type DevSetup struct {
 }
 
 type WhiteLabels struct {
-	BotID    string `gorm:"primaryKey;autoIncrement:false"`
-	UserID   string `gorm:"primaryKey;autoIncrement:false"`
-	BotToken string
+	BotID     string    `gorm:"primaryKey;autoIncrement:false"`
+	UserID    string    `gorm:"primaryKey;autoIncrement:false"`
+	BotToken  string
+	Encrypted bool      `gorm:"default:false"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
 type AuctionSetup struct {
@@ -221,4 +224,54 @@ func DatabaseConnect(password, host, env string) {
 	} else {
 		log.Info("database migration completed")
 	}
+}
+
+// MigrateWhitelabelTokens encrypts any existing plain text tokens in the database.
+// This is a one-time migration that should be called after crypto.Init().
+func MigrateWhitelabelTokens() error {
+	if !crypto.IsInitialized() {
+		return nil // Skip migration if encryption is not configured
+	}
+
+	log := logger.Database("migrate_tokens")
+
+	var whitelabels []WhiteLabels
+	result := DB.Where("encrypted = ? OR encrypted IS NULL", false).Find(&whitelabels)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if len(whitelabels) == 0 {
+		return nil
+	}
+
+	log.Infow("migrating whitelabel tokens", "count", len(whitelabels))
+
+	migratedCount := 0
+	for _, wl := range whitelabels {
+		if wl.BotToken == "" {
+			continue
+		}
+
+		encryptedToken, err := crypto.Encrypt(wl.BotToken)
+		if err != nil {
+			log.Errorw("failed to encrypt token", "bot_id", wl.BotID, "error", err)
+			continue
+		}
+
+		result := DB.Model(&WhiteLabels{}).
+			Where("bot_id = ? AND user_id = ?", wl.BotID, wl.UserID).
+			Updates(map[string]interface{}{
+				"bot_token": encryptedToken,
+				"encrypted": true,
+			})
+		if result.Error != nil {
+			log.Errorw("failed to update encrypted token", "bot_id", wl.BotID, "error", result.Error)
+			continue
+		}
+		migratedCount++
+	}
+
+	log.Infow("whitelabel token migration completed", "migrated", migratedCount)
+	return nil
 }
