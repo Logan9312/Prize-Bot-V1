@@ -1,0 +1,10 @@
+# Prize Bot - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://prizebot.dev/sitemap.xml
+
+# Disallow dashboard (requires auth)
+Disallow: /dashboard
+Disallow: /callback
