@@ -35,7 +35,7 @@
 	{#if label}
 		<label for={id} class="label">{label}</label>
 	{/if}
-	<select {id} bind:value class="select">
+	<select {id} value={selectValue} onchange={(e) => value = e.currentTarget.value} class="select">
 		<option value="">None</option>
 		{#if type === 'category'}
 			{#each filteredChannels as channel}

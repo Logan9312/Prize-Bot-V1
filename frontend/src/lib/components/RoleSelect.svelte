@@ -3,8 +3,8 @@
 	import type { Writable } from 'svelte/store';
 	import type { Role } from '$lib/api/client';
 
-	let { value = $bindable(''), label = '' }: {
-		value?: string;
+	let { value = $bindable<string | undefined>(''), label = '' }: {
+		value?: string | undefined;
 		label?: string;
 	} = $props();
 
@@ -33,7 +33,7 @@
 		}
 	}
 
-	const selectedRole = $derived($roles.find(r => r.id === value));
+	const selectedRole = $derived($roles.find(r => r.id === (value ?? '')));
 </script>
 
 <svelte:window onclick={handleClickOutside} />

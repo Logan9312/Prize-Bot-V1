@@ -1,6 +1,6 @@
 <script lang="ts">
-	let { value = $bindable(0), label = '' }: {
-		value?: number;
+	let { value = $bindable<number | undefined>(0), label = '' }: {
+		value?: number | undefined;
 		label?: string;
 	} = $props();
 
@@ -14,18 +14,20 @@
 		days: 24 * 60 * 60 * 1000
 	};
 
+	const normalizedValue = $derived(value ?? 0);
+
 	// Derive unit and input value from the milliseconds value
 	const derivedUnit = $derived.by((): Unit => {
-		if (value > 0) {
-			if (value % multipliers.days === 0) return 'days';
-			if (value % multipliers.hours === 0) return 'hours';
+		if (normalizedValue > 0) {
+			if (normalizedValue % multipliers.days === 0) return 'days';
+			if (normalizedValue % multipliers.hours === 0) return 'hours';
 		}
 		return 'minutes';
 	});
 
 	const derivedInputValue = $derived.by((): number => {
-		if (value > 0) {
-			return value / multipliers[derivedUnit];
+		if (normalizedValue > 0) {
+			return normalizedValue / multipliers[derivedUnit];
 		}
 		return 0;
 	});

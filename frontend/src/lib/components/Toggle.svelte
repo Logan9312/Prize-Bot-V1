@@ -1,13 +1,15 @@
 <script lang="ts">
-	let { checked = $bindable(false), label = '' }: {
-		checked?: boolean;
+	let { checked = $bindable<boolean | undefined>(false), label = '' }: {
+		checked?: boolean | undefined;
 		label?: string;
 	} = $props();
+
+	const isChecked = $derived(checked ?? false);
 </script>
 
 <label class="flex items-center gap-3 cursor-pointer py-2 -mx-2 px-2 rounded-lg hover:bg-surface-700 transition-colors min-h-[44px]">
 	<div class="relative">
-		<input type="checkbox" bind:checked class="sr-only peer" />
+		<input type="checkbox" checked={isChecked} onchange={(e) => checked = e.currentTarget.checked} class="sr-only peer" />
 		<div
 			class="w-11 h-6 sm:w-10 sm:h-5 bg-surface-600 rounded-full peer-checked:bg-accent transition-colors"
 		></div>
