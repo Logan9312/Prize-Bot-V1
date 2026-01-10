@@ -5,6 +5,11 @@
 
 	const API_BASE = import.meta.env.VITE_API_URL || '/api';
 	let loading = $state(true);
+	
+	const siteUrl = 'https://prizebot.dev';
+	const title = 'Prize Bot';
+	const description = 'Manage your Discord server\'s auctions, giveaways, and claims from one dashboard.';
+	const imageUrl = `${siteUrl}/icon.png`;
 
 	onMount(() => {
 		const unsubscribe = auth.subscribe((state) => {
@@ -16,6 +21,25 @@
 		return unsubscribe;
 	});
 </script>
+
+<svelte:head>
+	<meta name="description" content={description} />
+	
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content={siteUrl} />
+	<meta property="og:title" content={title} />
+	<meta property="og:description" content={description} />
+	<meta property="og:image" content={imageUrl} />
+	<meta property="og:site_name" content={title} />
+	
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:url" content={siteUrl} />
+	<meta name="twitter:title" content={title} />
+	<meta name="twitter:description" content={description} />
+	<meta name="twitter:image" content={imageUrl} />
+</svelte:head>
 
 <div class="min-h-screen flex flex-col items-center justify-center px-4">
 	<div class="text-center max-w-md">
