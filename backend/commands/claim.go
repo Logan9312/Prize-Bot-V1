@@ -14,6 +14,12 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// ClaimResult holds the result of a claim operation for cleanup purposes
+type ClaimResult struct {
+	MessageID string
+	ChannelID string
+}
+
 var ClaimCommand = discordgo.ApplicationCommand{
 	Name:        "claim",
 	Description: "Manage your claims!",
@@ -141,7 +147,7 @@ func ClaimCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	if i.ApplicationCommandData().Resolved.Users[claimMap["target"].(string)] != nil {
 		claimMap["winner"] = claimMap["target"].(string)
-		err := ClaimOutput(s, claimMap, "Custom Claim")
+		_, err := ClaimOutput(s, claimMap, "Custom Claim")
 		if err != nil {
 			return err
 		}
@@ -172,7 +178,7 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 		}
 
 		claimMap["winner"] = v.User.ID
-		err := ClaimOutput(s, claimMap, "Custom Claim")
+		_, err := ClaimOutput(s, claimMap, "Custom Claim")
 		if err != nil {
 			h.FollowUpErrorResponse(s, claimMap["interaction"].(*discordgo.InteractionCreate), fmt.Sprintf("There was an issue creating a claim for <@%s>. Error Message: %s", v.User.ID, err))
 		}
@@ -194,12 +200,14 @@ func ClaimCreateRole(s *discordgo.Session, g *discordgo.GuildMembersChunk) error
 
 // ClaimOutput Seems like using a map here overcomplicates it. Possibly need to go back to fix if I run into issues.
 // If tx is nil, uses the global database connection. Otherwise, uses the provided transaction.
-func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventType string) error {
+// Returns ClaimResult for cleanup purposes if the caller's transaction fails after this succeeds.
+func ClaimOutput(s *discordgo.Session, claimMap map[string]interface{}, eventType string) (*ClaimResult, error) {
 	return ClaimOutputWithTx(s, claimMap, eventType, nil)
 }
 
-// ClaimOutputWithTx allows passing a transaction for atomic operations
-func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, eventType string, tx *gorm.DB) error {
+// ClaimOutputWithTx allows passing a transaction for atomic operations.
+// Returns ClaimResult containing the posted message info for cleanup if needed.
+func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, eventType string, tx *gorm.DB) (*ClaimResult, error) {
 
 	p := message.NewPrinter(language.English)
 	mentionUser := ""
@@ -317,10 +325,11 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 	}
 
 	if claimMap["log_channel"] == nil {
-		return fmt.Errorf("No logging channel set.")
+		return nil, fmt.Errorf("No logging channel set.")
 	}
 
-	message, err := h.SuccessMessage(s, claimMap["log_channel"].(string), h.PresetResponse{
+	logChannelID := claimMap["log_channel"].(string)
+	discordMsg, err := h.SuccessMessage(s, logChannelID, h.PresetResponse{
 		Content: mentionUser,
 		Title:   fmt.Sprintf("%s Prize: __**%s**__", eventType, claimMap["item"]),
 		Fields:  fields,
@@ -334,26 +343,32 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 		// Check for common Discord API errors and provide user-friendly messages
 		errStr := err.Error()
 		if strings.Contains(errStr, "Unknown Channel") || strings.Contains(errStr, "10003") {
-			return fmt.Errorf("claim channel no longer exists. Please update your claim settings at https://prizebot.info/dashboard")
+			return nil, fmt.Errorf("claim channel no longer exists. Please update your claim settings at https://prizebot.info/dashboard")
 		}
 		if strings.Contains(errStr, "Missing Access") || strings.Contains(errStr, "50001") {
-			return fmt.Errorf("bot doesn't have access to the claim channel. Please check channel permissions")
+			return nil, fmt.Errorf("bot doesn't have access to the claim channel. Please check channel permissions")
 		}
 		if strings.Contains(errStr, "Missing Permissions") || strings.Contains(errStr, "50013") {
-			return fmt.Errorf("bot doesn't have permission to send messages in the claim channel")
+			return nil, fmt.Errorf("bot doesn't have permission to send messages in the claim channel")
 		}
-		return fmt.Errorf("failed to post claim message: %w", err)
+		return nil, fmt.Errorf("failed to post claim message: %w", err)
+	}
+
+	// At this point, Discord message is posted. Create ClaimResult for cleanup if needed.
+	claimResult := &ClaimResult{
+		MessageID: discordMsg.ID,
+		ChannelID: logChannelID,
 	}
 
 	if claimMap["old_id"] != nil {
 		primaryKey = claimMap["old_id"].(string)
 	} else {
-		primaryKey = message.ID
+		primaryKey = discordMsg.ID
 	}
 
-	claimMap["channel_id"] = claimMap["log_channel"].(string)
+	claimMap["channel_id"] = logChannelID
 	claimMap["type"] = eventType
-	claimMap["message_id"] = message.ID
+	claimMap["message_id"] = discordMsg.ID
 
 	// Use transaction if provided, otherwise use global DB
 	db := database.DB
@@ -367,7 +382,8 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 		"message_id": primaryKey,
 	})
 	if result.Error != nil {
-		return result.Error
+		// Return claimResult so caller can clean up the orphaned Discord message
+		return claimResult, result.Error
 	}
 
 	result = db.Model(database.Claim{
@@ -375,10 +391,11 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 	}).Select([]string{"message_id", "channel_id", "guild_id", "item", "type", "winner", "cost", "host", "bid_history", "note", "image_url", "description"}).Updates(claimMap)
 	if result.Error != nil {
 		logger.Sugar.Errorw("critical error updating claim", "message_id", primaryKey, "error", result.Error)
-		return fmt.Errorf("failed to save claim data. Please contact support")
+		// Return claimResult so caller can clean up the orphaned Discord message
+		return claimResult, fmt.Errorf("failed to save claim data. Please contact support")
 	}
 
-	return err
+	return claimResult, nil
 }
 
 func ClaimTicket(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -912,14 +929,14 @@ func claimRefresh(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		}
 
 		if v["channel_id"] != nil {
-			_, err := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
+			_, msgErr := s.ChannelMessage(v["channel_id"].(string), v["message_id"].(string))
 			v["old_id"] = v["message_id"]
-			if err != nil {
+			if msgErr != nil {
 				logger.Sugar.Debugw("processing claim message", "message_id", v["message_id"])
-				err = ClaimOutput(s, v, v["type"].(string))
+				_, claimErr := ClaimOutput(s, v, v["type"].(string))
 				restored++
-				if err != nil {
-					logger.Sugar.Warnw("claim restore failed", "message_id", v["message_id"], "error", err)
+				if claimErr != nil {
+					logger.Sugar.Warnw("claim restore failed", "message_id", v["message_id"], "error", claimErr)
 					h.FollowUpErrorResponse(s, i, "Failed to restore a claim. Please try again or contact support.")
 				}
 			}

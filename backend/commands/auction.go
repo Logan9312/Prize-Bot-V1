@@ -1158,15 +1158,16 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 	auctionMap["log_channel"] = auctionSetup["log_channel"]
 
 	// Use a transaction to ensure atomicity of claim creation and auction deletion
-	// The Discord message posting and database operations happen together, but if either fails,
-	// the database transaction will be rolled back
+	// Track the claim result so we can clean up the Discord message if the transaction fails
+	var claimResult *ClaimResult
+	var claimErr error
+
 	err = database.DB.Transaction(func(tx *gorm.DB) error {
 		// Post the claim message and save to claims table within transaction
-		err := ClaimOutputWithTx(s, auctionMap, "Auction", tx)
-		if err != nil {
-			logger.Sugar.Errorw("claim output failed", "channel_id", channelID, "error", err)
-			// Pass through meaningful errors from ClaimOutputWithTx
-			return err
+		claimResult, claimErr = ClaimOutputWithTx(s, auctionMap, "Auction", tx)
+		if claimErr != nil {
+			logger.Sugar.Errorw("claim output failed", "channel_id", channelID, "error", claimErr)
+			return claimErr
 		}
 
 		// Delete the auction from the database
@@ -1179,6 +1180,21 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		return nil
 	})
 	if err != nil {
+		// If transaction failed but Discord message was posted, clean up the orphaned message
+		if claimResult != nil {
+			logger.Sugar.Warnw("cleaning up orphaned claim message after transaction failure",
+				"channel_id", channelID,
+				"claim_message_id", claimResult.MessageID,
+				"claim_channel_id", claimResult.ChannelID,
+			)
+			if deleteErr := s.ChannelMessageDelete(claimResult.ChannelID, claimResult.MessageID); deleteErr != nil {
+				logger.Sugar.Errorw("failed to delete orphaned claim message",
+					"claim_message_id", claimResult.MessageID,
+					"claim_channel_id", claimResult.ChannelID,
+					"error", deleteErr,
+				)
+			}
+		}
 		return err
 	}
 

@@ -381,7 +381,7 @@ func GiveawayEnd(s *discordgo.Session, messageID string) error {
 			winnerMap[k] = val
 		}
 		winnerMap["winner"] = v
-		claimErr := ClaimOutput(s, winnerMap, "Giveaway")
+		_, claimErr := ClaimOutput(s, winnerMap, "Giveaway")
 		if claimErr != nil {
 			logger.Sugar.Errorw("failed to create claim for giveaway winner", "winner", v, "message_id", messageID, "error", claimErr)
 			h.ErrorMessage(s, giveawayMap["channel_id"].(string), fmt.Sprintf("Failed to create claim for winner <@%s>: %s", v, claimErr.Error()))
