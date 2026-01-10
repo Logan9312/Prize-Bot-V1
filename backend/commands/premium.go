@@ -467,7 +467,7 @@ func SyncUserSubscriptions(discordUserID string) error {
 // keysFromMap extracts keys from a map for use in SQL IN clause
 func keysFromMap(m map[string]bool) []string {
 	if len(m) == 0 {
-		return []string{""}  // Return placeholder to avoid empty IN clause
+		return []string{""} // Return placeholder to avoid empty IN clause
 	}
 	keys := make([]string, 0, len(m))
 	for k := range m {

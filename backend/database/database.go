@@ -14,8 +14,8 @@ type DevSetup struct {
 }
 
 type WhiteLabels struct {
-	BotID     string    `gorm:"primaryKey;autoIncrement:false"`
-	UserID    string    `gorm:"primaryKey;autoIncrement:false"`
+	BotID     string `gorm:"primaryKey;autoIncrement:false"`
+	UserID    string `gorm:"primaryKey;autoIncrement:false"`
 	BotToken  string
 	Encrypted bool      `gorm:"default:false"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
@@ -186,16 +186,16 @@ type Errors struct {
 // Subscription caches Stripe subscription data locally
 // This follows the recommendation to avoid querying Stripe API on every premium check
 type Subscription struct {
-	ID                 string    `gorm:"primaryKey"`              // Stripe subscription ID
-	CustomerID         string    `gorm:"index"`                   // Stripe customer ID
-	DiscordUserID      string    `gorm:"index"`                   // Discord user ID from metadata
-	GuildID            string    `gorm:"index"`                   // Linked guild ID from metadata (optional)
-	Status             string    `gorm:"index"`                   // active, canceled, past_due, etc.
-	PriceID            string                                     // Stripe price ID
-	CurrentPeriodStart time.Time                                  // Subscription period start
-	CurrentPeriodEnd   time.Time                                  // Subscription period end
-	CancelAtPeriodEnd  bool                                       // Whether subscription cancels at period end
-	UpdatedAt          time.Time `gorm:"autoUpdateTime"`          // Last sync time
+	ID                 string    `gorm:"primaryKey"` // Stripe subscription ID
+	CustomerID         string    `gorm:"index"`      // Stripe customer ID
+	DiscordUserID      string    `gorm:"index"`      // Discord user ID from metadata
+	GuildID            string    `gorm:"index"`      // Linked guild ID from metadata (optional)
+	Status             string    `gorm:"index"`      // active, canceled, past_due, etc.
+	PriceID            string    // Stripe price ID
+	CurrentPeriodStart time.Time // Subscription period start
+	CurrentPeriodEnd   time.Time // Subscription period end
+	CancelAtPeriodEnd  bool      // Whether subscription cancels at period end
+	UpdatedAt          time.Time `gorm:"autoUpdateTime"` // Last sync time
 }
 
 var DB *gorm.DB

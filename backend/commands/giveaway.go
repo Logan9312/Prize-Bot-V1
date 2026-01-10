@@ -197,48 +197,48 @@ func GiveawayDelete(s *discordgo.Session, i *discordgo.InteractionCreate) error 
 	if !CheckHostPermission(i.Member, giveawaySetup["host_role"], i.GuildID) {
 		return errors.New(GetHostRoleErrorMessage(giveawaySetup["host_role"], "delete giveaways"))
 	}
-	
+
 	// Parse command options
 	options := h.ParseSubCommand(i)
 	messageID := options["message_id"].(string)
 	channelID := options["channel"]
-	
+
 	if channelID == nil {
 		channelID = i.ChannelID
 	} else {
 		channelID = channelID.(string)
 	}
-	
+
 	// Find giveaway in database
 	giveawayInfo := database.Giveaway{
 		MessageID: messageID,
 	}
-	
+
 	result = database.DB.First(&giveawayInfo)
 	if result.Error != nil {
 		return fmt.Errorf("Giveaway not found. Please check the message ID and try again.")
 	}
-	
+
 	// Delete the giveaway message if possible
 	err := s.ChannelMessageDelete(channelID.(string), messageID)
 	if err != nil {
 		logger.Sugar.Warnw("error deleting giveaway message", "error", err)
 		// Continue even if message delete fails - we still want to remove from DB
 	}
-	
+
 	// Delete from database
 	result = database.DB.Delete(&giveawayInfo)
 	if result.Error != nil {
 		logger.Sugar.Errorw("failed to delete giveaway from database", "message_id", messageID, "error", result.Error)
 		return fmt.Errorf("failed to delete giveaway. Please try again or contact support")
 	}
-	
+
 	// Send success response
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "**Giveaway Deleted!**",
 		Description: "The giveaway has been successfully deleted.",
 	})
-	
+
 	return nil
 }
 

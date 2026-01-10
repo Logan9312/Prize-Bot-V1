@@ -293,8 +293,8 @@ func GetHostRoleErrorMessage(hostRole interface{}, actionType string) string {
 
 // SetupClearConfig holds the configuration for a setup clear operation
 type SetupClearConfig struct {
-	SetupType   string // e.g., "Auction", "Giveaway", "Claim", "Currency"
-	SetupCmd    string // e.g., "/settings auction", "/giveaway setup"
+	SetupType string // e.g., "Auction", "Giveaway", "Claim", "Currency"
+	SetupCmd  string // e.g., "/settings auction", "/giveaway setup"
 }
 
 // GenericSetupClear handles clearing settings for any setup type

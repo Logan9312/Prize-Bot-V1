@@ -8,15 +8,15 @@ import (
 // Config holds all configurable values for the application
 type Config struct {
 	// Discord IDs
-	DevUserIDs        []string // Users with developer access
-	PremiumServerIDs  []string // Servers with permanent premium
-	PremiumUserIDs    []string // Users with permanent premium
-	SupportServerID   string   // Support server guild ID
-	PremiumRoleID     string   // Premium role ID in support server
-	DevCommandsGuild  string   // Guild ID for dev commands registration
-	RestartChannelID  string   // Channel to send restart notifications
-	GuildJoinChannel  string   // Channel to send guild join notifications
-	WhitelabelBotID   string   // Bot ID for special whitelabel handling
+	DevUserIDs       []string // Users with developer access
+	PremiumServerIDs []string // Servers with permanent premium
+	PremiumUserIDs   []string // Users with permanent premium
+	SupportServerID  string   // Support server guild ID
+	PremiumRoleID    string   // Premium role ID in support server
+	DevCommandsGuild string   // Guild ID for dev commands registration
+	RestartChannelID string   // Channel to send restart notifications
+	GuildJoinChannel string   // Channel to send guild join notifications
+	WhitelabelBotID  string   // Bot ID for special whitelabel handling
 
 	// URLs
 	SupportServerURL string // Discord invite URL for support
@@ -24,8 +24,8 @@ type Config struct {
 	CancelURL        string // Stripe cancel redirect URL
 
 	// Stripe
-	StripePriceID        string // Stripe price ID for premium
-	StripeWebhookSecret  string // Stripe webhook signing secret
+	StripePriceID       string // Stripe price ID for premium
+	StripeWebhookSecret string // Stripe webhook signing secret
 
 	// Support Button
 	SupportButtonEmojiName string
@@ -47,15 +47,15 @@ var C Config
 func Init() {
 	C = Config{
 		// Discord IDs - comma-separated for multiple values
-		DevUserIDs:        parseCSV(getEnv("DEV_USER_IDS", "280812467775471627")),
-		PremiumServerIDs:  parseCSV(getEnv("PREMIUM_SERVER_IDS", "915767892467920967,626094990984216586")),
-		PremiumUserIDs:    parseCSV(getEnv("PREMIUM_USER_IDS", "280812467775471627")),
-		SupportServerID:   getEnv("SUPPORT_SERVER_ID", "885228283573178408"),
-		PremiumRoleID:     getEnv("PREMIUM_ROLE_ID", "942927890100682752"),
-		DevCommandsGuild:  getEnv("DEV_COMMANDS_GUILD", "915767892467920967"),
-		RestartChannelID:  getEnv("RESTART_CHANNEL_ID", "943175605858496602"),
-		GuildJoinChannel:  getEnv("GUILD_JOIN_CHANNEL", "1005255087200948234"),
-		WhitelabelBotID:   getEnv("WHITELABEL_BOT_ID", "995022149226082324"),
+		DevUserIDs:       parseCSV(getEnv("DEV_USER_IDS", "280812467775471627")),
+		PremiumServerIDs: parseCSV(getEnv("PREMIUM_SERVER_IDS", "915767892467920967,626094990984216586")),
+		PremiumUserIDs:   parseCSV(getEnv("PREMIUM_USER_IDS", "280812467775471627")),
+		SupportServerID:  getEnv("SUPPORT_SERVER_ID", "885228283573178408"),
+		PremiumRoleID:    getEnv("PREMIUM_ROLE_ID", "942927890100682752"),
+		DevCommandsGuild: getEnv("DEV_COMMANDS_GUILD", "915767892467920967"),
+		RestartChannelID: getEnv("RESTART_CHANNEL_ID", "943175605858496602"),
+		GuildJoinChannel: getEnv("GUILD_JOIN_CHANNEL", "1005255087200948234"),
+		WhitelabelBotID:  getEnv("WHITELABEL_BOT_ID", "995022149226082324"),
 
 		// URLs
 		SupportServerURL: getEnv("SUPPORT_SERVER_URL", "https://discord.gg/RxP2z5NGtj"),

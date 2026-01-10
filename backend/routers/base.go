@@ -34,4 +34,3 @@ func StartServer(botSession *discordgo.Session) {
 
 	e.Logger.Fatal(e.Start(":" + httpPort))
 }
-

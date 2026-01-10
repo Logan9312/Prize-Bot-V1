@@ -563,7 +563,7 @@ func ClaimPrizeButton(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		Description: "This is where you claim your prize.",
 		Fields:      fields,
 		//Thumbnail:   thumbnail,
-		Image:       &discordgo.MessageEmbedImage{},
+		Image: &discordgo.MessageEmbedImage{},
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{

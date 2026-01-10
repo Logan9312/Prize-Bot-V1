@@ -32,7 +32,10 @@
       "WebFetch(domain:github.com)",
       "Bash(go doc:*)",
       "Bash(grep:*)",
-      "Skill(frontend-design)"
+      "Skill(frontend-design)",
+      "Bash(go fmt:*)",
+      "Bash(npx tsc:*)",
+      "Bash(gofmt:*)"
     ],
     "deny": [],
     "ask": []
