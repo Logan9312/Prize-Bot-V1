@@ -63,13 +63,25 @@
 		<div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0">
 			<!-- Channels Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Channels</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Channels</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure where claim tickets are created and where activity is logged.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<ChannelSelect bind:value={settings.category} label="Ticket Category" type="category" />
-					<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
+					<div>
+						<ChannelSelect bind:value={settings.category} label="Ticket Category" type="category" />
+						<p class="text-fluid-xs text-text-secondary mt-1">Category where new ticket channels will be created.</p>
+					</div>
+					<div>
+						<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
+						<p class="text-fluid-xs text-text-secondary mt-1">Channel where ticket events are logged.</p>
+					</div>
 				</div>
 				<div class="mt-4">
 					<label class="label">Channel Prefix</label>
+					<p class="text-fluid-xs text-text-secondary mb-2">
+						Text prepended to ticket channel names (e.g., "ticket-username").
+					</p>
 					<input
 						type="text"
 						bind:value={settings.channel_prefix}
@@ -81,14 +93,26 @@
 
 			<!-- Role Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Staff</h2>
-				<RoleSelect bind:value={settings.staff_role} label="Staff Role" />
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Staff</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure which role can manage claim tickets.
+				</p>
+				<div>
+					<RoleSelect bind:value={settings.staff_role} label="Staff Role" />
+					<p class="text-fluid-xs text-text-secondary mt-1">Members with this role can view and manage all claim tickets.</p>
+				</div>
 			</div>
 
 			<!-- Instructions Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Instructions</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Instructions</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Customize the message users see when they open a claim ticket.
+				</p>
 				<label class="label">Ticket Instructions</label>
+				<p class="text-fluid-xs text-text-secondary mb-2">
+					This message is sent automatically when a ticket is created. Include any info users need to provide.
+				</p>
 				<textarea
 					bind:value={settings.instructions}
 					placeholder="Instructions shown to users when they open a ticket..."
@@ -99,10 +123,16 @@
 
 			<!-- Options Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Options</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Options</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Additional settings to control the claiming system behavior.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 					<div>
 						<label class="label">Ticket Expiration</label>
+						<p class="text-fluid-xs text-text-secondary mb-2">
+							Automatically close inactive tickets after this duration. Use formats like "7d" (7 days) or "24h" (24 hours). Leave empty to disable.
+						</p>
 						<input
 							type="text"
 							bind:value={settings.expiration}
@@ -111,7 +141,10 @@
 						/>
 					</div>
 				</div>
-				<Toggle bind:checked={settings.disable_claiming} label="Disable Claiming System" />
+				<div>
+					<Toggle bind:checked={settings.disable_claiming} label="Disable Claiming System" />
+					<p class="text-fluid-xs text-text-secondary mt-1 ml-11">Temporarily disable the ability for users to create new claim tickets.</p>
+				</div>
 			</div>
 		</div>
 	{/if}

@@ -62,8 +62,14 @@
 		<div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0">
 			<!-- Channels Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Logging</h2>
-				<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Logging</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure where giveaway events are logged.
+				</p>
+				<div>
+					<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
+					<p class="text-fluid-xs text-text-secondary mt-1">Channel where giveaway creation, completion, and winner announcements are logged.</p>
+				</div>
 			</div>
 
 			<!-- Roles Section -->

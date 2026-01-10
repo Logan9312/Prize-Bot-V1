@@ -64,13 +64,19 @@
 		<div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0">
 			<!-- Channels Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Channels</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Channels</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure where auction channels are created and where logs are sent.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<ChannelSelect bind:value={settings.category} label="Auction Category" type="category" />
 					<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
 				</div>
 				<div class="mt-4">
 					<label class="label">Channel Prefix</label>
+					<p class="text-fluid-xs text-text-secondary mb-2">
+						Text prepended to auction channel names (e.g., "auction-item-name").
+					</p>
 					<input
 						type="text"
 						bind:value={settings.channel_prefix}
@@ -82,23 +88,37 @@
 
 			<!-- Roles Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Roles</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Roles</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure which roles receive notifications about auctions.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<RoleSelect bind:value={settings.alert_role} label="Alert Role" />
-					<RoleSelect bind:value={settings.host_role} label="Host Role (Deprecated)" />
+					<div>
+						<RoleSelect bind:value={settings.alert_role} label="Alert Role" />
+						<p class="text-fluid-xs text-text-secondary mt-1">Pinged when new auctions are created.</p>
+					</div>
+					<div>
+						<RoleSelect bind:value={settings.host_role} label="Host Role (Deprecated)" />
+						<p class="text-fluid-xs text-text-secondary mt-1">No longer used. Will be removed in a future update.</p>
+					</div>
 				</div>
 			</div>
 
 			<!-- Currency Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Currency</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Currency</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Customize how bid amounts are displayed in auctions. These settings override the server-wide currency settings for auctions.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
 						<label class="label">Currency Symbol</label>
+						<p class="text-fluid-xs text-text-secondary mb-2">Symbol shown next to bid amounts (e.g., $, coins, tokens).</p>
 						<input type="text" bind:value={settings.currency} placeholder="$" class="input" />
 					</div>
 					<div>
 						<label class="label">Currency Side</label>
+						<p class="text-fluid-xs text-text-secondary mb-2">Where to display the symbol relative to the amount.</p>
 						<select bind:value={settings.currency_side} class="select">
 							<option value="">Default (Left)</option>
 							<option value="left">Left ($100)</option>
@@ -107,8 +127,14 @@
 					</div>
 				</div>
 				<div class="mt-4 space-y-3">
-					<Toggle bind:checked={settings.integer_only} label="Integer Only (no decimals)" />
-					<Toggle bind:checked={settings.use_currency} label="Use Server Currency for Bids" />
+					<div>
+						<Toggle bind:checked={settings.integer_only} label="Integer Only (no decimals)" />
+						<p class="text-fluid-xs text-text-secondary mt-1 ml-11">Only allow whole number bids, no cents or fractions.</p>
+					</div>
+					<div>
+						<Toggle bind:checked={settings.use_currency} label="Use Server Currency for Bids" />
+						<p class="text-fluid-xs text-text-secondary mt-1 ml-11">Deduct bids from users' server currency balance instead of just tracking amounts.</p>
+					</div>
 				</div>
 			</div>
 
@@ -140,12 +166,18 @@
 
 			<!-- Options Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Options</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Options</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Additional settings to control auction behavior.
+				</p>
 				<div class="space-y-3">
-					<Toggle
-						bind:checked={settings.channel_lock}
-						label="Lock Auction to Command Channel"
-					/>
+					<div>
+						<Toggle
+							bind:checked={settings.channel_lock}
+							label="Lock Auction to Command Channel"
+						/>
+						<p class="text-fluid-xs text-text-secondary mt-1 ml-11">Restrict bidding commands to only work in the auction's dedicated channel.</p>
+					</div>
 				</div>
 			</div>
 		</div>
