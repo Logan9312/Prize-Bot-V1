@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Guild } from '$lib/api/client';
+
 	interface NavItem {
 		href: string;
 		label: string;
@@ -8,11 +10,13 @@
 	let {
 		navItems,
 		currentPath,
-		guildId
+		guildId,
+		guild
 	}: {
 		navItems: NavItem[];
 		currentPath: string;
 		guildId: string;
+		guild: Guild | null;
 	} = $props();
 
 	let isOpen = $state(false);
@@ -79,6 +83,26 @@
 	aria-hidden={!isOpen}
 >
 	<div class="flex flex-col h-full pt-20 pb-6 px-4">
+		<!-- Guild Header -->
+		{#if guild}
+			<div class="flex items-center gap-3 mb-4 pb-4 border-b border-surface-600">
+				{#if guild.icon_url}
+					<img
+						src={guild.icon_url}
+						alt={guild.name}
+						class="w-10 h-10 rounded-lg"
+					/>
+				{:else}
+					<div class="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-sm font-medium text-white">
+						{guild.name[0].toUpperCase()}
+					</div>
+				{/if}
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text-primary text-sm truncate">{guild.name}</p>
+				</div>
+			</div>
+		{/if}
+
 		<!-- Back to servers link -->
 		<a
 			href="/dashboard"

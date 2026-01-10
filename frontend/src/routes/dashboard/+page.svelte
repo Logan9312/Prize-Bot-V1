@@ -2,14 +2,16 @@
 	import { onMount } from 'svelte';
 	import { guildsAPI, type Guild } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
+	import { guilds as guildsStore } from '$lib/stores/guilds';
 
-	let guilds: Guild[] = $state([]);
+	let guildsList: Guild[] = $state([]);
 	let loading = $state(true);
 
 	onMount(async () => {
 		try {
 			const response = await guildsAPI.list();
-			guilds = response.guilds || [];
+			guildsList = response.guilds || [];
+			guildsStore.set(guildsList);
 		} catch (err) {
 			toast.error('Failed to load servers');
 		} finally {
@@ -22,8 +24,8 @@
 		return '';
 	}
 
-	const activeGuilds = $derived(guilds.filter(g => g.bot_in));
-	const inactiveGuilds = $derived(guilds.filter(g => !g.bot_in));
+	const activeGuilds = $derived(guildsList.filter(g => g.bot_in));
+	const inactiveGuilds = $derived(guildsList.filter(g => !g.bot_in));
 
 	function handleAddClick(event: MouseEvent) {
 		event.stopPropagation();
@@ -41,7 +43,7 @@
 		<div class="flex justify-center py-16">
 			<div class="spinner spinner-lg"></div>
 		</div>
-	{:else if guilds.length === 0}
+	{:else if guildsList.length === 0}
 		<!-- Empty State -->
 		<div class="card text-center py-12 max-w-md mx-auto">
 			<svg class="w-12 h-12 mx-auto mb-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">

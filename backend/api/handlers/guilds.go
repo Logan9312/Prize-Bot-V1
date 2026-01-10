@@ -40,13 +40,13 @@ func getCacheKey(accessToken, guildID string) string {
 
 // Guild represents a Discord guild for the API response
 type Guild struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Icon     string `json:"icon"`
-	IconURL  string `json:"icon_url"`
-	Owner    bool   `json:"owner"`
-	IsAdmin  bool   `json:"is_admin"`
-	BotIn    bool   `json:"bot_in"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Icon    string `json:"icon"`
+	IconURL string `json:"icon_url"`
+	Owner   bool   `json:"owner"`
+	IsAdmin bool   `json:"is_admin"`
+	BotIn   bool   `json:"bot_in"`
 }
 
 // Channel represents a Discord channel for the API response

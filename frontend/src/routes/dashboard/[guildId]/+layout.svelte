@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { guildsAPI, type Channel, type Role } from '$lib/api/client';
+	import { guildsAPI, type Channel, type Role, type Guild } from '$lib/api/client';
 	import { setContext } from 'svelte';
-	import { writable } from 'svelte/store';
+	import { writable, get } from 'svelte/store';
 	import MobileNav from '$lib/components/MobileNav.svelte';
 	import type { Snippet } from 'svelte';
+	import { guilds as guildsStore, getGuildById } from '$lib/stores/guilds';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -17,8 +18,24 @@
 	setContext('channels', channels);
 	setContext('roles', roles);
 
+	let currentGuild: Guild | null = $state(null);
+	const guildStore = $derived(getGuildById(guildId));
+
+	$effect(() => {
+		const unsubscribe = guildStore.subscribe((guild) => {
+			currentGuild = guild;
+		});
+		return unsubscribe;
+	});
+
 	onMount(async () => {
 		try {
+			// Fetch guild list if not already loaded (e.g., direct navigation)
+			if (get(guildsStore).length === 0) {
+				const guildsRes = await guildsAPI.list();
+				guildsStore.set(guildsRes.guilds || []);
+			}
+
 			const [channelsRes, rolesRes] = await Promise.all([
 				guildsAPI.getChannels(guildId),
 				guildsAPI.getRoles(guildId)
@@ -45,7 +62,7 @@
 <div class="flex flex-col lg:flex-row gap-4 lg:gap-6">
 	<!-- Mobile: Hamburger + Drawer -->
 	<div class="lg:hidden mb-4">
-		<MobileNav {navItems} {currentPath} {guildId} />
+		<MobileNav {navItems} {currentPath} {guildId} guild={currentGuild} />
 	</div>
 
 	<!-- Desktop: Fixed Sidebar -->
@@ -59,6 +76,26 @@
 			</svg>
 			Back to servers
 		</a>
+
+		<!-- Guild Header -->
+		{#if currentGuild}
+			<div class="flex items-center gap-3 mb-5 pb-4 border-b border-surface-600">
+				{#if currentGuild.icon_url}
+					<img
+						src={currentGuild.icon_url}
+						alt={currentGuild.name}
+						class="w-10 h-10 rounded-lg"
+					/>
+				{:else}
+					<div class="w-10 h-10 rounded-lg bg-accent flex items-center justify-center text-sm font-medium text-white">
+						{currentGuild.name[0].toUpperCase()}
+					</div>
+				{/if}
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text-primary text-sm truncate">{currentGuild.name}</p>
+				</div>
+			</div>
+		{/if}
 
 		<div class="space-y-1">
 			{#each navItems as item}
