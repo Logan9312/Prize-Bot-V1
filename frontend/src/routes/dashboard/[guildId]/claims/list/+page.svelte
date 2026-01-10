@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { guildsAPI, claimsAPI, type ClaimListItem } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
+	import FeatureTabs from '$lib/components/FeatureTabs.svelte';
 
 	const guildId = $derived($page.params.guildId!);
 
@@ -97,51 +98,71 @@
 	}
 </script>
 
-<div>
-	<div class="mb-6 flex items-center justify-between">
-		<div>
-			<h1 class="text-xl font-semibold text-text-primary">Open Claims</h1>
-			<p class="text-sm text-text-secondary mt-1">
-				{claims.length} open claim{claims.length !== 1 ? 's' : ''}
-			</p>
-		</div>
-		<a href="/dashboard/{guildId}" class="text-sm text-text-secondary hover:text-text-primary transition-colors">
-			Back to Overview
-		</a>
+<div class="space-y-6">
+	<!-- Header with tabs -->
+	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+		<FeatureTabs feature="claims" activeTab="list" {guildId} listCount={claims.length} />
+
+		<button
+			onclick={loadClaims}
+			disabled={loading}
+			class="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-800 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+		>
+			<svg class="w-4 h-4 {loading ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+			</svg>
+			Refresh
+		</button>
 	</div>
 
+	<!-- Summary -->
+	<p class="text-sm text-text-secondary">
+		{claims.length} open claim{claims.length !== 1 ? 's' : ''}
+	</p>
+
+	<!-- Content -->
 	{#if loading}
 		<div class="flex justify-center py-12">
 			<div class="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
 		</div>
 	{:else if claims.length === 0}
-		<div class="bg-surface-800 border border-surface-600 rounded-lg text-center py-12">
-			<svg class="w-12 h-12 mx-auto text-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-			</svg>
-			<p class="text-text-secondary">No open claims</p>
+		<div class="bg-surface-800 border border-surface-600 rounded-lg text-center py-16 px-4">
+			<div class="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-700 flex items-center justify-center">
+				<svg class="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+				</svg>
+			</div>
+			<h3 class="text-lg font-medium text-text-primary mb-2">No open claims</h3>
+			<p class="text-text-secondary max-w-sm mx-auto">
+				Claims are created automatically when auctions end or giveaways are drawn. Check back later!
+			</p>
 		</div>
 	{:else}
 		<div class="space-y-3">
 			{#each claims as claim}
-				<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
+				<div class="bg-surface-800 border border-surface-600 rounded-lg p-4 hover:border-surface-500 transition-colors">
 					<div class="flex justify-between items-start gap-4">
 						<div class="flex-1 min-w-0">
-							<h3 class="font-medium text-text-primary truncate">{claim.item}</h3>
-							<p class="text-sm text-text-secondary mt-1">
-								Winner: <span class="text-text-primary">{claim.winner}</span>
-							</p>
-							{#if claim.cost > 0}
-								<p class="text-xs text-text-muted mt-1">
-									Cost: ${claim.cost}
-								</p>
-							{/if}
+							<div class="flex items-center gap-2">
+								<span class="w-2 h-2 rounded-full bg-yellow-400 flex-shrink-0" title="Pending"></span>
+								<h3 class="font-medium text-text-primary truncate">{claim.item}</h3>
+							</div>
+							<div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+								<span class="text-text-secondary">
+									Winner: <span class="text-text-primary font-mono text-xs">{claim.winner}</span>
+								</span>
+								{#if claim.cost > 0}
+									<span class="text-text-muted">
+										Cost: <span class="text-text-primary">${claim.cost}</span>
+									</span>
+								{/if}
+							</div>
 						</div>
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-1">
 							<button
 								onclick={() => openEditModal(claim)}
-								class="p-2 text-text-muted hover:text-text-primary hover:bg-surface-700 rounded transition-colors cursor-pointer"
-								title="Edit"
+								class="p-2 text-text-muted hover:text-text-primary hover:bg-surface-700 rounded-lg transition-colors cursor-pointer"
+								title="Edit claim"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -149,8 +170,8 @@
 							</button>
 							<button
 								onclick={() => openConfirmModal('resend', claim)}
-								class="p-2 text-text-muted hover:text-accent hover:bg-surface-700 rounded transition-colors cursor-pointer"
-								title="Resend"
+								class="p-2 text-text-muted hover:text-accent hover:bg-surface-700 rounded-lg transition-colors cursor-pointer"
+								title="Resend claim message"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -158,8 +179,8 @@
 							</button>
 							<button
 								onclick={() => openConfirmModal('cancel', claim)}
-								class="p-2 text-text-muted hover:text-red-400 hover:bg-surface-700 rounded transition-colors cursor-pointer"
-								title="Cancel"
+								class="p-2 text-text-muted hover:text-red-400 hover:bg-surface-700 rounded-lg transition-colors cursor-pointer"
+								title="Cancel claim"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -195,7 +216,7 @@
 						id="edit-item"
 						type="text"
 						bind:value={editForm.item}
-						class="w-full bg-surface-700 border border-surface-600 rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
+						class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
 					/>
 				</div>
 
@@ -205,7 +226,7 @@
 						id="edit-winner"
 						type="text"
 						bind:value={editForm.winner}
-						class="w-full bg-surface-700 border border-surface-600 rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
+						class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary font-mono text-sm focus:outline-none focus:border-accent"
 					/>
 				</div>
 
@@ -217,7 +238,7 @@
 						bind:value={editForm.cost}
 						min="0"
 						step="0.01"
-						class="w-full bg-surface-700 border border-surface-600 rounded px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
+						class="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-accent"
 					/>
 				</div>
 			</div>
@@ -225,14 +246,14 @@
 			<div class="flex justify-end gap-3 mt-6">
 				<button
 					onclick={closeEditModal}
-					class="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors"
+					class="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={saveEdit}
 					disabled={saving}
-					class="px-4 py-2 bg-accent hover:bg-accent/80 text-white rounded transition-colors disabled:opacity-50"
+					class="px-4 py-2 bg-accent hover:bg-accent/80 text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
 				>
 					{saving ? 'Saving...' : 'Save'}
 				</button>
@@ -268,14 +289,14 @@
 			<div class="flex justify-end gap-3">
 				<button
 					onclick={closeConfirmModal}
-					class="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors"
+					class="px-4 py-2 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={executeAction}
 					disabled={actionLoading}
-					class="px-4 py-2 rounded transition-colors disabled:opacity-50 {confirmAction.type === 'cancel' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-accent hover:bg-accent/80 text-white'}"
+					class="px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer {confirmAction.type === 'cancel' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-accent hover:bg-accent/80 text-white'}"
 				>
 					{#if actionLoading}
 						Processing...

@@ -8,6 +8,7 @@
 	import DurationInput from '$lib/components/DurationInput.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
+	import FeatureTabs from '$lib/components/FeatureTabs.svelte';
 
 	const guildId = $derived($page.params.guildId!);
 
@@ -54,8 +55,10 @@
 	<h1 class="text-fluid-xl font-semibold text-text-primary">Auction Settings</h1>
 {/snippet}
 
-<div>
-	<div class="mb-4 lg:mb-6">
+<div class="space-y-6">
+	<FeatureTabs feature="auctions" activeTab="settings" {guildId} />
+
+	<div>
 		<MobileActionBar onSave={save} onReset={reset} bind:saving {header} />
 	</div>
 

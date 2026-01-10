@@ -7,6 +7,7 @@
 	import RoleSelect from '$lib/components/RoleSelect.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
+	import FeatureTabs from '$lib/components/FeatureTabs.svelte';
 
 	const guildId = $derived($page.params.guildId!);
 
@@ -53,8 +54,10 @@
 	<h1 class="text-fluid-xl font-semibold text-text-primary">Claim Settings</h1>
 {/snippet}
 
-<div>
-	<div class="mb-4 lg:mb-6">
+<div class="space-y-6">
+	<FeatureTabs feature="claims" activeTab="settings" {guildId} />
+
+	<div>
 		<MobileActionBar onSave={save} onReset={reset} bind:saving {header} />
 	</div>
 
