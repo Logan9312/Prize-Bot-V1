@@ -111,7 +111,7 @@
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2">
 								<span
-									class="w-2 h-2 rounded-full flex-shrink-0 {urgency === 'urgent' ? 'bg-red-400 animate-pulse' : urgency === 'warning' ? 'bg-yellow-400' : 'bg-green-400'}"
+									class="w-2 h-2 rounded-full shrink-0 {urgency === 'urgent' ? 'bg-red-400 animate-pulse' : urgency === 'warning' ? 'bg-yellow-400' : 'bg-green-400'}"
 									title="{urgency === 'urgent' ? 'Ending soon!' : urgency === 'warning' ? 'Ending in a few hours' : 'Active'}"
 								></span>
 								<h3 class="font-medium text-text-primary truncate">{auction.item}</h3>
@@ -129,7 +129,7 @@
 								{/if}
 							</div>
 						</div>
-						<div class="text-right flex-shrink-0">
+						<div class="text-right shrink-0">
 							<p class="text-xs text-text-muted mb-1">Ends in</p>
 							<p class="font-mono text-sm font-medium {urgency === 'urgent' ? 'text-red-400' : urgency === 'warning' ? 'text-yellow-400' : 'text-text-primary'}">
 								{formatTimeRemaining(auction.end_time)}
