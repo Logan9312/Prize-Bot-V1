@@ -1165,7 +1165,8 @@ func AuctionEnd(s *discordgo.Session, channelID, guildID string) error {
 		err := ClaimOutputWithTx(s, auctionMap, "Auction", tx)
 		if err != nil {
 			logger.Sugar.Errorw("claim output failed", "channel_id", channelID, "error", err)
-			return fmt.Errorf("failed to create claim record. Please contact support")
+			// Pass through meaningful errors from ClaimOutputWithTx
+			return err
 		}
 
 		// Delete the auction from the database

@@ -331,7 +331,18 @@ func ClaimOutputWithTx(s *discordgo.Session, claimMap map[string]interface{}, ev
 	})
 
 	if err != nil {
-		return err
+		// Check for common Discord API errors and provide user-friendly messages
+		errStr := err.Error()
+		if strings.Contains(errStr, "Unknown Channel") || strings.Contains(errStr, "10003") {
+			return fmt.Errorf("claim channel no longer exists. Please update your claim settings at https://prizebot.info/dashboard")
+		}
+		if strings.Contains(errStr, "Missing Access") || strings.Contains(errStr, "50001") {
+			return fmt.Errorf("bot doesn't have access to the claim channel. Please check channel permissions")
+		}
+		if strings.Contains(errStr, "Missing Permissions") || strings.Contains(errStr, "50013") {
+			return fmt.Errorf("bot doesn't have permission to send messages in the claim channel")
+		}
+		return fmt.Errorf("failed to post claim message: %w", err)
 	}
 
 	if claimMap["old_id"] != nil {
