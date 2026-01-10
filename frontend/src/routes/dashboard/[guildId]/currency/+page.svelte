@@ -5,7 +5,7 @@
 	import { toast } from '$lib/stores/toast';
 	import MobileActionBar from '$lib/components/MobileActionBar.svelte';
 
-	$: guildId = $page.params.guildId;
+	$: guildId = $page.params.guildId!;
 
 	let loading = true;
 	let saving = false;

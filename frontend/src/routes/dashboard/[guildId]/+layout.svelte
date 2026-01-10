@@ -6,7 +6,7 @@
 	import { writable } from 'svelte/store';
 	import MobileNav from '$lib/components/MobileNav.svelte';
 
-	$: guildId = $page.params.guildId;
+	$: guildId = $page.params.guildId!;
 
 	const channels = writable<Channel[]>([]);
 	const roles = writable<Role[]>([]);

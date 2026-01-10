@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { guildsAPI, type GuildStats } from '$lib/api/client';
 
-	$: guildId = $page.params.guildId;
+	$: guildId = $page.params.guildId!;
 
 	let stats: GuildStats | null = null;
 	let loading = true;
