@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"gitlab.com/logan9312/discord-auction-bot/config"
@@ -19,6 +20,11 @@ var DevCommand = discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "version",
 			Description: "Change the version of the bot",
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "resend_claim",
+			Description: "Resend a claim message by message ID (format: message_id,channel_id)",
 		},
 	},
 }
@@ -55,6 +61,10 @@ func Dev(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if options["resend_claim"] != nil {
+		return devResendClaim(s, i, options["resend_claim"].(string))
 	}
 
 	result = database.DB.Model(database.DevSetup{
@@ -120,5 +130,50 @@ func Stats(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		},
 	})
 
+	return nil
+}
+
+func devResendClaim(s *discordgo.Session, i *discordgo.InteractionCreate, input string) error {
+	// Parse input: message_id,channel_id
+	parts := strings.Split(input, ",")
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid format. Use: message_id,channel_id")
+	}
+
+	messageID := strings.TrimSpace(parts[0])
+	channelID := strings.TrimSpace(parts[1])
+
+	// Look up the claim by message_id
+	claimMap := map[string]interface{}{}
+	result := database.DB.Model(database.Claim{}).First(&claimMap, messageID)
+	if result.Error != nil {
+		return fmt.Errorf("claim not found with message_id: %s", messageID)
+	}
+
+	// Prepare the claim data for resending
+	claimMap["log_channel"] = channelID
+	claimMap["old_id"] = claimMap["message_id"]
+
+	if claimMap["type"] == nil || claimMap["type"] == "" {
+		claimMap["type"] = "Auction"
+	}
+
+	h.SuccessResponse(s, i, h.PresetResponse{
+		Title:       "Resending Claim",
+		Description: fmt.Sprintf("Resending claim for **%s**...", claimMap["item"]),
+	})
+
+	// Resend the claim
+	_, err := ClaimOutput(s, claimMap, claimMap["type"].(string))
+	if err != nil {
+		logger.Sugar.Errorw("failed to resend claim", "message_id", messageID, "error", err)
+		h.FollowUpErrorResponse(s, i, fmt.Sprintf("Failed to resend claim: %s", err.Error()))
+		return nil
+	}
+
+	h.FollowUpSuccessResponse(s, i, h.PresetResponse{
+		Title:       "Claim Resent",
+		Description: fmt.Sprintf("Claim for **%s** has been resent to <#%s>", claimMap["item"], channelID),
+	})
 	return nil
 }
