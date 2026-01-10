@@ -177,7 +177,7 @@
 						<div class="space-y-6">
 							<!-- Step 1 -->
 							<div class="flex gap-4">
-								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">1</div>
+								<div class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">1</div>
 								<div class="flex-1 pt-1">
 									<h3 class="font-medium text-text-primary mb-1">Create a Discord Application</h3>
 									<p class="text-sm text-text-secondary mb-2">
@@ -188,7 +188,7 @@
 
 							<!-- Step 2 -->
 							<div class="flex gap-4">
-								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">2</div>
+								<div class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">2</div>
 								<div class="flex-1 pt-1">
 									<h3 class="font-medium text-text-primary mb-1">Get Your Bot Token</h3>
 									<p class="text-sm text-text-secondary mb-2">
@@ -199,7 +199,7 @@
 
 							<!-- Step 3 -->
 							<div class="flex gap-4">
-								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">3</div>
+								<div class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">3</div>
 								<div class="flex-1 pt-1">
 									<h3 class="font-medium text-text-primary mb-1">Configure Bot Settings</h3>
 									<p class="text-sm text-text-secondary mb-2">
@@ -210,7 +210,7 @@
 
 							<!-- Step 4 -->
 							<div class="flex gap-4">
-								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">4</div>
+								<div class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-white">4</div>
 								<div class="flex-1 pt-1">
 									<h3 class="font-medium text-text-primary mb-1">Invite Your Bot</h3>
 									<p class="text-sm text-text-secondary mb-2">
@@ -221,7 +221,7 @@
 
 							<!-- Step 5 -->
 							<div class="flex gap-4">
-								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-status-success flex items-center justify-center text-sm font-bold text-white">5</div>
+								<div class="shrink-0 w-8 h-8 rounded-full bg-status-success flex items-center justify-center text-sm font-bold text-white">5</div>
 								<div class="flex-1 pt-1">
 									<h3 class="font-medium text-text-primary mb-1">Add Token Here</h3>
 									<p class="text-sm text-text-secondary">
@@ -234,7 +234,7 @@
 						<!-- Important Notes -->
 						<div class="mt-6 p-4 bg-status-warning/10 border border-status-warning/30 rounded-lg">
 							<div class="flex gap-3">
-								<svg class="w-5 h-5 text-status-warning flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-5 h-5 text-status-warning shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 								</svg>
 								<div class="text-sm">
@@ -434,7 +434,7 @@
 					{:else}
 						<div class="p-4 bg-status-danger/10 border border-status-danger/30 rounded-lg">
 							<div class="flex items-center gap-3">
-								<svg class="w-5 h-5 text-status-danger flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-5 h-5 text-status-danger shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 								</svg>
 								<div>
@@ -514,7 +514,7 @@
 
 				<div class="p-4 bg-status-danger/10 border border-status-danger/30 rounded-lg">
 					<div class="flex gap-3">
-						<svg class="w-5 h-5 text-status-danger flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-status-danger shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 						</svg>
 						<div class="text-sm">

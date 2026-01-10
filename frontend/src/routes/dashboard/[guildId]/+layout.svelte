@@ -74,7 +74,7 @@
 	</div>
 
 	<!-- Desktop: Fixed Sidebar -->
-	<nav class="hidden lg:block w-44 flex-shrink-0">
+	<nav class="hidden lg:block w-44 shrink-0">
 		<a
 			href="/dashboard"
 			class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors mb-5"

@@ -147,59 +147,59 @@
 				<p class="text-sm text-text-secondary mb-3">Create a new auction.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">item</span>
+						<span class="text-text-muted w-32 shrink-0">item</span>
 						<span class="text-text-secondary">Name of the item being auctioned (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">bid</span>
+						<span class="text-text-muted w-32 shrink-0">bid</span>
 						<span class="text-text-secondary">Starting bid amount (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">duration</span>
+						<span class="text-text-muted w-32 shrink-0">duration</span>
 						<span class="text-text-secondary">How long the auction runs, e.g. 1h, 30m, 1d (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">description</span>
+						<span class="text-text-muted w-32 shrink-0">description</span>
 						<span class="text-text-secondary">Description of the item</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">currency</span>
+						<span class="text-text-muted w-32 shrink-0">currency</span>
 						<span class="text-text-secondary">One-time currency symbol for this auction</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">use_currency</span>
+						<span class="text-text-muted w-32 shrink-0">use_currency</span>
 						<span class="text-text-secondary">Winner pays with their currency balance</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">integer_only</span>
+						<span class="text-text-muted w-32 shrink-0">integer_only</span>
 						<span class="text-text-secondary">Only allow whole number bids</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">increment_min</span>
+						<span class="text-text-muted w-32 shrink-0">increment_min</span>
 						<span class="text-text-secondary">Minimum bid increment</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">increment_max</span>
+						<span class="text-text-muted w-32 shrink-0">increment_max</span>
 						<span class="text-text-secondary">Maximum bid increment</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">buyout</span>
+						<span class="text-text-muted w-32 shrink-0">buyout</span>
 						<span class="text-text-secondary">Price to instantly win the auction</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">target_price</span>
+						<span class="text-text-muted w-32 shrink-0">target_price</span>
 						<span class="text-text-secondary">Hidden minimum price (no winner if not reached)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">category</span>
+						<span class="text-text-muted w-32 shrink-0">category</span>
 						<span class="text-text-secondary">Category to create the auction channel in</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">image</span>
+						<span class="text-text-muted w-32 shrink-0">image</span>
 						<span class="text-text-secondary">Attach an image to the auction</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">schedule</span>
+						<span class="text-text-muted w-32 shrink-0">schedule</span>
 						<span class="text-text-secondary">Delay before auction starts, e.g. 24h <span class="text-accent">(Premium)</span></span>
 					</div>
 				</div>
@@ -227,47 +227,47 @@
 				<p class="text-sm text-text-secondary mb-3">Modify an active auction.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">item</span>
+						<span class="text-text-muted w-32 shrink-0">item</span>
 						<span class="text-text-secondary">Change the item name</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">host</span>
+						<span class="text-text-muted w-32 shrink-0">host</span>
 						<span class="text-text-secondary">Change the auction host</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">bid</span>
+						<span class="text-text-muted w-32 shrink-0">bid</span>
 						<span class="text-text-secondary">Change the current bid</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">winner</span>
+						<span class="text-text-muted w-32 shrink-0">winner</span>
 						<span class="text-text-secondary">Set the current winner</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">extend</span>
+						<span class="text-text-muted w-32 shrink-0">extend</span>
 						<span class="text-text-secondary">Extend or reduce time (use negative for reduce)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">description</span>
+						<span class="text-text-muted w-32 shrink-0">description</span>
 						<span class="text-text-secondary">Change the description</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">currency</span>
+						<span class="text-text-muted w-32 shrink-0">currency</span>
 						<span class="text-text-secondary">Change the currency symbol</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">currency_side</span>
+						<span class="text-text-muted w-32 shrink-0">currency_side</span>
 						<span class="text-text-secondary">Left or right of amount</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">buyout</span>
+						<span class="text-text-muted w-32 shrink-0">buyout</span>
 						<span class="text-text-secondary">Change the buyout price</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">target_price</span>
+						<span class="text-text-muted w-32 shrink-0">target_price</span>
 						<span class="text-text-secondary">Change the hidden target price</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">image</span>
+						<span class="text-text-muted w-32 shrink-0">image</span>
 						<span class="text-text-secondary">Change the image</span>
 					</div>
 				</div>
@@ -282,47 +282,47 @@
 		<div class="card">
 			<div class="text-sm space-y-2">
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">log_channel</span>
+					<span class="text-accent w-32 shrink-0">log_channel</span>
 					<span class="text-text-secondary">Channel where auction results are posted when they end</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">category</span>
+					<span class="text-accent w-32 shrink-0">category</span>
 					<span class="text-text-secondary">Category to create auction channels in</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">alert_role</span>
+					<span class="text-accent w-32 shrink-0">alert_role</span>
 					<span class="text-text-secondary">Role to ping when auctions start</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">integer_only</span>
+					<span class="text-accent w-32 shrink-0">integer_only</span>
 					<span class="text-text-secondary">Only allow whole number bids</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">use_currency</span>
+					<span class="text-accent w-32 shrink-0">use_currency</span>
 					<span class="text-text-secondary">Winner pays with their currency balance</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">snipe_range</span>
+					<span class="text-accent w-32 shrink-0">snipe_range</span>
 					<span class="text-text-secondary">Remaining time to trigger anti-snipe (e.g. 5m)</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">snipe_extension</span>
+					<span class="text-accent w-32 shrink-0">snipe_extension</span>
 					<span class="text-text-secondary">Time to add when anti-snipe triggers (e.g. 2m)</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">snipe_limit</span>
+					<span class="text-accent w-32 shrink-0">snipe_limit</span>
 					<span class="text-text-secondary">Maximum total time that can be added via anti-snipe</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">snipe_cap</span>
+					<span class="text-accent w-32 shrink-0">snipe_cap</span>
 					<span class="text-text-secondary">Maximum auction duration after extensions</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">channel_lock</span>
+					<span class="text-accent w-32 shrink-0">channel_lock</span>
 					<span class="text-text-secondary">Run auction in the same channel as the command</span>
 				</div>
 				<div class="flex gap-2">
-					<span class="text-accent w-32 flex-shrink-0">channel_prefix</span>
+					<span class="text-accent w-32 shrink-0">channel_prefix</span>
 					<span class="text-text-secondary">Prefix for auction channel names (default: 💸│)</span>
 				</div>
 			</div>

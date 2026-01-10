@@ -64,7 +64,7 @@
 				<div class="text-xs text-accent uppercase mb-3">After (Your Bot)</div>
 				<div class="bg-[#2f3136] rounded-lg p-3">
 					<div class="flex items-center gap-2">
-						<div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">Y</div>
+						<div class="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">Y</div>
 						<div>
 							<span class="font-semibold text-white">Your Server Bot</span>
 							<span class="text-xs bg-accent px-1.5 py-0.5 rounded text-white ml-1">BOT</span>
@@ -81,28 +81,28 @@
 		<div class="card">
 			<ol class="space-y-4">
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Create a Discord Application</h3>
 						<p class="text-sm text-text-secondary mt-1">Go to the <a href="https://discord.com/developers/applications" target="_blank" rel="noopener" class="text-accent hover:underline">Discord Developer Portal</a> and create a new application with your desired name and avatar.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Get your bot token</h3>
 						<p class="text-sm text-text-secondary mt-1">In the Bot section, reset and copy your bot token. Keep this secret!</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Add your token to Prize Bot</h3>
 						<p class="text-sm text-text-secondary mt-1">Use <code class="px-1.5 py-0.5 bg-surface-800 rounded text-accent">/whitelabel add_token</code> to securely add your bot token.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">4</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">4</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Invite your bot</h3>
 						<p class="text-sm text-text-secondary mt-1">Use the OAuth2 URL generator in the Developer Portal to create an invite link for your custom bot.</p>

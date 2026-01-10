@@ -111,19 +111,19 @@
 				<p class="text-sm text-text-secondary mb-3">Modify currency balances for users or roles.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">action</span>
+						<span class="text-text-muted w-32 shrink-0">action</span>
 						<span class="text-text-secondary">Add, set, or subtract from balance</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">amount</span>
+						<span class="text-text-muted w-32 shrink-0">amount</span>
 						<span class="text-text-secondary">The amount to add/set/subtract</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">user</span>
+						<span class="text-text-muted w-32 shrink-0">user</span>
 						<span class="text-text-secondary">Target user (optional if using role)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">role</span>
+						<span class="text-text-muted w-32 shrink-0">role</span>
 						<span class="text-text-secondary">Target role for bulk operations (optional if using user)</span>
 					</div>
 				</div>

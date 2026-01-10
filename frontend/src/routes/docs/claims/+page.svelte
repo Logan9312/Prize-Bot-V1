@@ -105,19 +105,19 @@
 				<p class="text-sm text-text-secondary mb-3">Create a claimable prize.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">target</span>
+						<span class="text-text-muted w-32 shrink-0">target</span>
 						<span class="text-text-secondary">User or role to receive the prize (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">item</span>
+						<span class="text-text-muted w-32 shrink-0">item</span>
 						<span class="text-text-secondary">The prize you're giving (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">log_channel</span>
+						<span class="text-text-muted w-32 shrink-0">log_channel</span>
 						<span class="text-text-secondary">Output channel for the prize (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">description</span>
+						<span class="text-text-muted w-32 shrink-0">description</span>
 						<span class="text-text-secondary">Description of the prize</span>
 					</div>
 				</div>
@@ -130,7 +130,7 @@
 				<p class="text-sm text-text-secondary mb-3">View a user's unclaimed prizes.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">user</span>
+						<span class="text-text-muted w-32 shrink-0">user</span>
 						<span class="text-text-secondary">User to view prizes for (required)</span>
 					</div>
 				</div>
@@ -143,7 +143,7 @@
 				<p class="text-sm text-text-secondary mb-3">Resend all claim messages. Does not delete old ones.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">channel</span>
+						<span class="text-text-muted w-32 shrink-0">channel</span>
 						<span class="text-text-secondary">Output channel for the claims (required)</span>
 					</div>
 				</div>
@@ -157,28 +157,28 @@
 		<div class="card">
 			<ol class="space-y-4">
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Prize Created</h3>
 						<p class="text-sm text-text-secondary mt-1">Use /claim create or win an auction/giveaway. User receives a DM with a claim button.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
 					<div>
 						<h3 class="font-medium text-text-primary">User Claims</h3>
 						<p class="text-sm text-text-secondary mt-1">User clicks the "Claim Prize" button. A private ticket channel is created.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Prize Delivery</h3>
 						<p class="text-sm text-text-secondary mt-1">Staff can communicate with the winner in the ticket to deliver the prize.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">4</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">4</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Complete Claim</h3>
 						<p class="text-sm text-text-secondary mt-1">Click "Complete" to close the ticket. The claim is logged to your log channel.</p>

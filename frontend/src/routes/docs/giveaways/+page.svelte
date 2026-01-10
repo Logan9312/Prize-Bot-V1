@@ -152,27 +152,27 @@
 				<p class="text-sm text-text-secondary mb-3">Start a new giveaway.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">item</span>
+						<span class="text-text-muted w-32 shrink-0">item</span>
 						<span class="text-text-secondary">What you're giving away (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">winners</span>
+						<span class="text-text-muted w-32 shrink-0">winners</span>
 						<span class="text-text-secondary">Number of winners to select (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">duration</span>
+						<span class="text-text-muted w-32 shrink-0">duration</span>
 						<span class="text-text-secondary">How long the giveaway runs, e.g. 1d, 12h (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">channel</span>
+						<span class="text-text-muted w-32 shrink-0">channel</span>
 						<span class="text-text-secondary">Channel to post the giveaway in</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">description</span>
+						<span class="text-text-muted w-32 shrink-0">description</span>
 						<span class="text-text-secondary">Description of the giveaway item</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">image</span>
+						<span class="text-text-muted w-32 shrink-0">image</span>
 						<span class="text-text-secondary">Attach an image to the giveaway</span>
 					</div>
 				</div>
@@ -185,11 +185,11 @@
 				<p class="text-sm text-text-secondary mb-3">Cancel and delete a giveaway.</p>
 				<div class="text-sm space-y-2">
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">message_id</span>
+						<span class="text-text-muted w-32 shrink-0">message_id</span>
 						<span class="text-text-secondary">Message ID of the giveaway to delete (required)</span>
 					</div>
 					<div class="flex gap-2">
-						<span class="text-text-muted w-32 flex-shrink-0">channel</span>
+						<span class="text-text-muted w-32 shrink-0">channel</span>
 						<span class="text-text-secondary">Channel containing the giveaway</span>
 					</div>
 				</div>
@@ -228,28 +228,28 @@
 		<div class="card">
 			<ol class="space-y-4">
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Create the giveaway</h3>
 						<p class="text-sm text-text-secondary mt-1">Use /giveaway create with your prize details and duration.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Members enter</h3>
 						<p class="text-sm text-text-secondary mt-1">Users react with the 🎁 emoji to enter the giveaway.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Timer expires</h3>
 						<p class="text-sm text-text-secondary mt-1">When the duration ends, Prize Bot automatically selects winners.</p>
 					</div>
 				</li>
 				<li class="flex gap-4">
-					<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">4</span>
+					<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">4</span>
 					<div>
 						<h3 class="font-medium text-text-primary">Winners announced</h3>
 						<p class="text-sm text-text-secondary mt-1">Winners are mentioned in the channel and logged to your log channel.</p>

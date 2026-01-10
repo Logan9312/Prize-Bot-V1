@@ -143,7 +143,7 @@
 				<ul class="space-y-3">
 					{#each freeFeatures as feature}
 						<li class="flex items-start gap-3 text-sm">
-							<svg class="w-5 h-5 text-status-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 text-status-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 							</svg>
 							<span class="text-text-secondary">{feature}</span>
@@ -171,7 +171,7 @@
 				<ul class="space-y-3">
 					{#each premiumFeatures as feature}
 						<li class="flex items-start gap-3 text-sm">
-							<svg class="w-5 h-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 							</svg>
 							<span class="text-text-secondary">{feature}</span>

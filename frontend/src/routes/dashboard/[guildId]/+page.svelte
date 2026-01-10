@@ -71,7 +71,7 @@
 		{#each features as feature}
 			<a href={feature.href(guildId)} class="feature-card group">
 				<div class="flex items-start gap-4">
-					<div class="w-10 h-10 rounded-lg bg-surface-600 flex items-center justify-center flex-shrink-0 group-hover:bg-accent transition-colors">
+					<div class="w-10 h-10 rounded-lg bg-surface-600 flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
 						<svg class="w-5 h-5 text-text-secondary group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={feature.icon} />
 						</svg>

@@ -97,7 +97,7 @@
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 		<div class="flex gap-8">
 			<!-- Desktop Sidebar -->
-			<aside class="hidden md:block w-64 flex-shrink-0">
+			<aside class="hidden md:block w-64 shrink-0">
 				<nav class="sticky top-24 space-y-1">
 					{#each navItems as item}
 						<a

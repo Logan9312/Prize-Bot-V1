@@ -113,7 +113,7 @@
 		{#each features as feature}
 			<a href={feature.href} class="feature-card group">
 				<div class="flex items-start gap-4">
-					<div class="flex-shrink-0 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+					<div class="shrink-0 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
 						<svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={feature.icon} />
 						</svg>
@@ -136,21 +136,21 @@
 	<div class="card mb-8">
 		<ol class="space-y-4">
 			<li class="flex gap-4">
-				<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
+				<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">1</span>
 				<div>
 					<h3 class="font-medium text-text-primary">Add Prize Bot to your server</h3>
 					<p class="text-sm text-text-secondary mt-1">Click "Add to Discord" and select your server. Grant the required permissions.</p>
 				</div>
 			</li>
 			<li class="flex gap-4">
-				<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
+				<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">2</span>
 				<div>
 					<h3 class="font-medium text-text-primary">Configure your settings</h3>
 					<p class="text-sm text-text-secondary mt-1">Use <code class="px-1.5 py-0.5 bg-surface-800 rounded text-accent">/settings</code> to set up channels, roles, and preferences.</p>
 				</div>
 			</li>
 			<li class="flex gap-4">
-				<span class="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
+				<span class="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-medium text-white">3</span>
 				<div>
 					<h3 class="font-medium text-text-primary">Start hosting events</h3>
 					<p class="text-sm text-text-secondary mt-1">Create your first auction with <code class="px-1.5 py-0.5 bg-surface-800 rounded text-accent">/auction create</code> or giveaway with <code class="px-1.5 py-0.5 bg-surface-800 rounded text-accent">/giveaway create</code>.</p>

@@ -47,7 +47,7 @@
 		<div
 			class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg border {getToastClasses(t.type)}"
 		>
-			<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={getToastIcon(t.type)} />
 			</svg>
 			<p class="text-sm text-text-primary">{t.message}</p>
