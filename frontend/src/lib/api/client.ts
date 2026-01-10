@@ -54,6 +54,16 @@ export const guildsAPI = {
 	listClaims: (guildId: string) => api.get<{ claims: ClaimListItem[] }>(`/guilds/${guildId}/claims/list`)
 };
 
+// Claims API
+export const claimsAPI = {
+	update: (guildId: string, messageId: string, data: { item?: string; winner?: string; cost?: number }) =>
+		api.put(`/guilds/${guildId}/claims/${messageId}`, data),
+	resend: (guildId: string, messageId: string) =>
+		api.post(`/guilds/${guildId}/claims/${messageId}/resend`),
+	cancel: (guildId: string, messageId: string) =>
+		api.delete(`/guilds/${guildId}/claims/${messageId}`)
+};
+
 // Settings API
 export const settingsAPI = {
 	// Auction

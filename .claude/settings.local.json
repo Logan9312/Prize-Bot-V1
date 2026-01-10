@@ -26,7 +26,9 @@
       "Bash(ls:*)",
       "Bash(git commit:*)",
       "Bash(go mod tidy:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx svelte-check:*)"
     ],
     "deny": [],
     "ask": []
