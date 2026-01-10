@@ -140,7 +140,7 @@
 						<div class="flex items-center gap-2">
 							<button
 								onclick={() => openEditModal(claim)}
-								class="p-2 text-text-muted hover:text-text-primary hover:bg-surface-700 rounded transition-colors"
+								class="p-2 text-text-muted hover:text-text-primary hover:bg-surface-700 rounded transition-colors cursor-pointer"
 								title="Edit"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@
 							</button>
 							<button
 								onclick={() => openConfirmModal('resend', claim)}
-								class="p-2 text-text-muted hover:text-accent hover:bg-surface-700 rounded transition-colors"
+								class="p-2 text-text-muted hover:text-accent hover:bg-surface-700 rounded transition-colors cursor-pointer"
 								title="Resend"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@
 							</button>
 							<button
 								onclick={() => openConfirmModal('cancel', claim)}
-								class="p-2 text-text-muted hover:text-red-400 hover:bg-surface-700 rounded transition-colors"
+								class="p-2 text-text-muted hover:text-red-400 hover:bg-surface-700 rounded transition-colors cursor-pointer"
 								title="Cancel"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

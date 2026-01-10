@@ -36,9 +36,10 @@ func GetGuildStats(c echo.Context) error {
 		Where("guild_id = ? AND finished = ?", guildID, false).
 		Count(&stats.RunningGiveaways)
 
-	// Count open claims (status = pending)
+	// Count open claims (status = pending, or legacy NULL/empty status)
 	database.DB.Model(&database.Claim{}).
-		Where("guild_id = ? AND status = ?", guildID, database.ClaimStatusPending).
+		Where("guild_id = ?", guildID).
+		Where("status = ? OR status IS NULL OR status = ''", database.ClaimStatusPending).
 		Count(&stats.OpenClaims)
 
 	// Shop items - currently no ShopItem model exists, so return 0

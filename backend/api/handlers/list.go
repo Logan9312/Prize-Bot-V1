@@ -122,7 +122,8 @@ func ListClaims(c echo.Context) error {
 	}
 
 	var claims []database.Claim
-	result := database.DB.Where("guild_id = ? AND status = ?", guildID, database.ClaimStatusPending).
+	result := database.DB.Where("guild_id = ?", guildID).
+		Where("status = ? OR status IS NULL OR status = ''", database.ClaimStatusPending).
 		Find(&claims)
 
 	if result.Error != nil {
