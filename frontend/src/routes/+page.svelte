@@ -69,7 +69,7 @@
 		</div>
 		<div class="flex items-center gap-6">
 			<a href="/docs" class="text-sm text-text-secondary hover:text-text-primary transition-colors">Docs</a>
-			<a href="/pricing" class="text-sm text-text-secondary hover:text-text-primary transition-colors">Pricing</a>
+			<a href="{API_BASE}/auth/discord" class="text-sm text-text-secondary hover:text-text-primary transition-colors">Login</a>
 		</div>
 	</nav>
 
