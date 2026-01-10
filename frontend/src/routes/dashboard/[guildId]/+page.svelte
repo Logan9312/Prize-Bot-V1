@@ -93,37 +93,37 @@
 	<div class="mt-8 pt-6 border-t border-surface-600">
 		<h3 class="text-xs font-medium text-text-secondary uppercase tracking-wide mb-4">Quick Stats</h3>
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">
+			<a href="/dashboard/{guildId}/auctions/list" class="bg-surface-800 border border-surface-600 rounded-lg p-4 hover:border-accent hover:bg-surface-700 transition-colors group cursor-pointer">
+				<p class="text-2xl font-semibold text-text-primary group-hover:text-accent">
 					{#if loading}
 						<span class="animate-pulse">-</span>
 					{:else}
 						{stats?.active_auctions ?? 0}
 					{/if}
 				</p>
-				<p class="text-xs text-text-muted mt-1">Active Auctions</p>
-			</div>
-			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">
+				<p class="text-xs text-text-muted mt-1 group-hover:text-text-secondary">Active Auctions</p>
+			</a>
+			<a href="/dashboard/{guildId}/giveaways/list" class="bg-surface-800 border border-surface-600 rounded-lg p-4 hover:border-accent hover:bg-surface-700 transition-colors group cursor-pointer">
+				<p class="text-2xl font-semibold text-text-primary group-hover:text-accent">
 					{#if loading}
 						<span class="animate-pulse">-</span>
 					{:else}
 						{stats?.running_giveaways ?? 0}
 					{/if}
 				</p>
-				<p class="text-xs text-text-muted mt-1">Running Giveaways</p>
-			</div>
-			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
-				<p class="text-2xl font-semibold text-text-primary">
+				<p class="text-xs text-text-muted mt-1 group-hover:text-text-secondary">Running Giveaways</p>
+			</a>
+			<a href="/dashboard/{guildId}/claims/list" class="bg-surface-800 border border-surface-600 rounded-lg p-4 hover:border-accent hover:bg-surface-700 transition-colors group cursor-pointer">
+				<p class="text-2xl font-semibold text-text-primary group-hover:text-accent">
 					{#if loading}
 						<span class="animate-pulse">-</span>
 					{:else}
 						{stats?.open_claims ?? 0}
 					{/if}
 				</p>
-				<p class="text-xs text-text-muted mt-1">Open Claims</p>
-			</div>
-			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4">
+				<p class="text-xs text-text-muted mt-1 group-hover:text-text-secondary">Open Claims</p>
+			</a>
+			<div class="bg-surface-800 border border-surface-600 rounded-lg p-4 opacity-50 cursor-not-allowed" title="Coming soon">
 				<p class="text-2xl font-semibold text-text-primary">
 					{#if loading}
 						<span class="animate-pulse">-</span>

@@ -48,7 +48,10 @@ export const guildsAPI = {
 	list: () => api.get<{ guilds: Guild[] }>('/guilds'),
 	getChannels: (guildId: string) => api.get<{ channels: Channel[] }>(`/guilds/${guildId}/channels`),
 	getRoles: (guildId: string) => api.get<{ roles: Role[] }>(`/guilds/${guildId}/roles`),
-	getStats: (guildId: string) => api.get<GuildStats>(`/guilds/${guildId}/stats`)
+	getStats: (guildId: string) => api.get<GuildStats>(`/guilds/${guildId}/stats`),
+	listAuctions: (guildId: string) => api.get<{ auctions: AuctionListItem[] }>(`/guilds/${guildId}/auctions/list`),
+	listGiveaways: (guildId: string) => api.get<{ giveaways: GiveawayListItem[] }>(`/guilds/${guildId}/giveaways/list`),
+	listClaims: (guildId: string) => api.get<{ claims: ClaimListItem[] }>(`/guilds/${guildId}/claims/list`)
 };
 
 // Settings API
@@ -173,4 +176,34 @@ export interface GuildStats {
 	running_giveaways: number;
 	open_claims: number;
 	shop_items: number;
+}
+
+export interface AuctionListItem {
+	channel_id: string;
+	item: string;
+	bid: number;
+	winner: string;
+	host: string;
+	end_time: string;
+	currency: string;
+	currency_side: string;
+}
+
+export interface GiveawayListItem {
+	message_id: string;
+	channel_id: string;
+	item: string;
+	end_time: string;
+	host: string;
+	winners: number;
+}
+
+export interface ClaimListItem {
+	message_id: string;
+	channel_id: string;
+	item: string;
+	winner: string;
+	cost: number;
+	status: string;
+	ticket_id: string;
 }
