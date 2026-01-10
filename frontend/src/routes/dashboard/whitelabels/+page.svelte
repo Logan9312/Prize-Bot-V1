@@ -344,7 +344,7 @@
 			<!-- Header -->
 			<div class="flex items-center justify-between p-5 border-b border-surface-600">
 				<h2 class="text-lg font-semibold text-text-primary">Add Whitelabel</h2>
-				<button onclick={closeModal} class="p-1 rounded-lg hover:bg-surface-600 transition-colors">
+				<button onclick={closeModal} class="p-1 rounded-lg hover:bg-surface-600 transition-colors" aria-label="Close modal">
 					<svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
@@ -485,7 +485,7 @@
 			<!-- Header -->
 			<div class="flex items-center justify-between p-5 border-b border-surface-600">
 				<h2 class="text-lg font-semibold text-status-danger">Delete Whitelabel</h2>
-				<button onclick={closeDeleteModal} class="p-1 rounded-lg hover:bg-surface-600 transition-colors">
+				<button onclick={closeDeleteModal} class="p-1 rounded-lg hover:bg-surface-600 transition-colors" aria-label="Close modal">
 					<svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>

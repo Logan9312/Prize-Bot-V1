@@ -35,7 +35,9 @@
       "Skill(frontend-design)",
       "Bash(go fmt:*)",
       "Bash(npx tsc:*)",
-      "Bash(gofmt:*)"
+      "Bash(gofmt:*)",
+      "Bash(sips:*)",
+      "Bash(identify:*)"
     ],
     "deny": [],
     "ask": []
