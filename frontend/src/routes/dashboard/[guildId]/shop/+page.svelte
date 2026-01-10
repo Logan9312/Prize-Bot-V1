@@ -62,16 +62,31 @@
 		<div class="space-y-4 lg:space-y-6 pb-20 lg:pb-0">
 			<!-- Channels Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Logging</h2>
-				<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Logging</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure where shop activity is logged.
+				</p>
+				<div>
+					<ChannelSelect bind:value={settings.log_channel} label="Log Channel" type="text" />
+					<p class="text-fluid-xs text-text-secondary mt-1">Channel where purchases, item changes, and other shop events are logged.</p>
+				</div>
 			</div>
 
 			<!-- Roles Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Roles</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Roles</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure which roles can manage the shop and receive notifications.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<RoleSelect bind:value={settings.host_role} label="Host Role" />
-					<RoleSelect bind:value={settings.alert_role} label="Alert Role" />
+					<div>
+						<RoleSelect bind:value={settings.host_role} label="Host Role" />
+						<p class="text-fluid-xs text-text-secondary mt-1">Members with this role can add, edit, and remove shop items.</p>
+					</div>
+					<div>
+						<RoleSelect bind:value={settings.alert_role} label="Alert Role" />
+						<p class="text-fluid-xs text-text-secondary mt-1">Pinged when new items are added to the shop.</p>
+					</div>
 				</div>
 			</div>
 		</div>

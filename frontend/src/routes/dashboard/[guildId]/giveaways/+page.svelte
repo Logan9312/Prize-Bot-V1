@@ -74,10 +74,19 @@
 
 			<!-- Roles Section -->
 			<div class="card">
-				<h2 class="text-fluid-sm font-medium text-text-primary mb-4">Roles</h2>
+				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Roles</h2>
+				<p class="text-fluid-sm text-text-secondary mb-4">
+					Configure which roles receive notifications about giveaways.
+				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<RoleSelect bind:value={settings.alert_role} label="Alert Role" />
-					<RoleSelect bind:value={settings.host_role} label="Host Role (Deprecated)" />
+					<div>
+						<RoleSelect bind:value={settings.alert_role} label="Alert Role" />
+						<p class="text-fluid-xs text-text-secondary mt-1">Pinged when new giveaways are created.</p>
+					</div>
+					<div>
+						<RoleSelect bind:value={settings.host_role} label="Host Role (Deprecated)" />
+						<p class="text-fluid-xs text-text-secondary mt-1">No longer used. Will be removed in a future update.</p>
+					</div>
 				</div>
 			</div>
 		</div>

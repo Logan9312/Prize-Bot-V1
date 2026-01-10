@@ -61,11 +61,12 @@
 			<div class="card">
 				<h2 class="text-fluid-sm font-medium text-text-primary mb-2">Server Currency</h2>
 				<p class="text-fluid-sm text-text-secondary mb-4">
-					Configure the currency used for auctions and other features in your server.
+					Configure the default currency used across all features in your server. Individual features like auctions can override these settings.
 				</p>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
 						<label class="label">Currency Symbol</label>
+						<p class="text-fluid-xs text-text-secondary mb-2">The symbol or name displayed with amounts (e.g., $, coins, credits, points).</p>
 						<input
 							type="text"
 							bind:value={settings.currency}
@@ -75,6 +76,7 @@
 					</div>
 					<div>
 						<label class="label">Symbol Position</label>
+						<p class="text-fluid-xs text-text-secondary mb-2">Choose whether the symbol appears before or after the amount.</p>
 						<select bind:value={settings.side} class="select">
 							<option value="">Default (Left)</option>
 							<option value="left">Left ($100)</option>
@@ -86,6 +88,7 @@
 				<!-- Preview -->
 				<div class="mt-6 p-4 bg-surface-800 border border-surface-600 rounded-lg">
 					<label class="label">Preview</label>
+					<p class="text-fluid-xs text-text-secondary mb-2">This is how currency amounts will appear to users.</p>
 					<p class="text-lg text-text-primary">
 						{#if settings.side === 'right'}
 							100{settings.currency || '$'}
