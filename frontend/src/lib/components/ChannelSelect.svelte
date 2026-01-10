@@ -3,11 +3,14 @@
 	import type { Writable } from 'svelte/store';
 	import type { Channel } from '$lib/api/client';
 
-	let { value = $bindable(''), label = '', type = 'all' }: {
-		value?: string;
+	let { value = $bindable<string | undefined>(''), label = '', type = 'all' }: {
+		value?: string | undefined;
 		label?: string;
 		type?: 'text' | 'category' | 'all';
 	} = $props();
+
+	// Normalize undefined to empty string for the select
+	const selectValue = $derived(value ?? '');
 
 	const id = `channel-select-${Math.random().toString(36).substring(2, 11)}`;
 	const channels = getContext<Writable<Channel[]>>('channels');
