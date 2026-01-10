@@ -21,11 +21,7 @@
 	<div class="text-center max-w-md">
 		<!-- Logo -->
 		<div class="mb-8">
-			<div class="inline-flex items-center justify-center w-16 h-16 bg-accent rounded-xl">
-				<svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-					<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-				</svg>
-			</div>
+			<img src="/icon.png" alt="Prize Bot" class="w-16 h-16 rounded-xl" />
 		</div>
 
 		<!-- Heading -->

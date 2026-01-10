@@ -52,11 +52,7 @@
 				<div class="flex items-center justify-between h-14 sm:h-16">
 					<!-- Logo -->
 					<a href="/dashboard" class="flex items-center gap-2.5">
-						<div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-							<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-							</svg>
-						</div>
+						<img src="/icon.png" alt="Prize Bot" class="w-8 h-8 rounded-lg" />
 						<span class="font-semibold text-text-primary hidden sm:block">Prize Bot</span>
 					</a>
 
