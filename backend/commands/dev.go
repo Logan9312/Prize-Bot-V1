@@ -24,7 +24,7 @@ var DevCommand = discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "resend_claim",
-			Description: "Resend a claim message by message ID (format: message_id,channel_id)",
+			Description: "Resend a claim message by message ID",
 		},
 	},
 }
@@ -133,15 +133,8 @@ func Stats(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return nil
 }
 
-func devResendClaim(s *discordgo.Session, i *discordgo.InteractionCreate, input string) error {
-	// Parse input: message_id,channel_id
-	parts := strings.Split(input, ",")
-	if len(parts) != 2 {
-		return fmt.Errorf("invalid format. Use: message_id,channel_id")
-	}
-
-	messageID := strings.TrimSpace(parts[0])
-	channelID := strings.TrimSpace(parts[1])
+func devResendClaim(s *discordgo.Session, i *discordgo.InteractionCreate, messageID string) error {
+	messageID = strings.TrimSpace(messageID)
 
 	// Look up the claim by message_id
 	claimMap := map[string]interface{}{}
@@ -150,8 +143,26 @@ func devResendClaim(s *discordgo.Session, i *discordgo.InteractionCreate, input 
 		return fmt.Errorf("claim not found with message_id: %s", messageID)
 	}
 
+	// Get the guild_id from the claim to look up the log channel
+	guildID, ok := claimMap["guild_id"].(string)
+	if !ok || guildID == "" {
+		return fmt.Errorf("claim has no guild_id set")
+	}
+
+	// Look up the claim setup to get the log channel
+	claimSetup := map[string]interface{}{}
+	result = database.DB.Model(database.ClaimSetup{}).First(&claimSetup, guildID)
+	if result.Error != nil {
+		return fmt.Errorf("no claim setup found for guild %s", guildID)
+	}
+
+	logChannel, ok := claimSetup["log_channel"].(string)
+	if !ok || logChannel == "" {
+		return fmt.Errorf("no log channel configured for guild %s", guildID)
+	}
+
 	// Prepare the claim data for resending
-	claimMap["log_channel"] = channelID
+	claimMap["log_channel"] = logChannel
 	claimMap["old_id"] = claimMap["message_id"]
 
 	if claimMap["type"] == nil || claimMap["type"] == "" {
@@ -160,7 +171,7 @@ func devResendClaim(s *discordgo.Session, i *discordgo.InteractionCreate, input 
 
 	h.SuccessResponse(s, i, h.PresetResponse{
 		Title:       "Resending Claim",
-		Description: fmt.Sprintf("Resending claim for **%s**...", claimMap["item"]),
+		Description: fmt.Sprintf("Resending claim for **%s** to guild %s...", claimMap["item"], guildID),
 	})
 
 	// Resend the claim
@@ -173,7 +184,7 @@ func devResendClaim(s *discordgo.Session, i *discordgo.InteractionCreate, input 
 
 	h.FollowUpSuccessResponse(s, i, h.PresetResponse{
 		Title:       "Claim Resent",
-		Description: fmt.Sprintf("Claim for **%s** has been resent to <#%s>", claimMap["item"], channelID),
+		Description: fmt.Sprintf("Claim for **%s** has been resent to <#%s>", claimMap["item"], logChannel),
 	})
 	return nil
 }
