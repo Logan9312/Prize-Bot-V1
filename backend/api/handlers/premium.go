@@ -9,6 +9,7 @@ import (
 	"github.com/stripe/stripe-go/v72/sub"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/config"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 )
 
 // UserPremiumStatusResponse represents the user's premium status
@@ -41,30 +42,52 @@ type BillingPortalResponse struct {
 func GetUserPremiumStatus(c echo.Context) error {
 	userID := c.Get("user_id").(string)
 
-	// Check if user has premium (uses existing function)
+	// Check if user has premium (uses existing function - now checks local cache first)
 	isPremium := commands.CheckPremiumUser(userID)
 
-	// Query Stripe for user's subscriptions
+	// Try local cache first for subscription list
+	var localSubs []database.Subscription
+	database.DB.Where("discord_user_id = ?", userID).Find(&localSubs)
+
 	var subscriptions []SubscriptionInfo
 
-	query, err := commands.BuildStripeQuery("discord_id", userID)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
+	if len(localSubs) > 0 {
+		// Use cached subscriptions
+		for _, sub := range localSubs {
+			subscriptions = append(subscriptions, SubscriptionInfo{
+				ID:               sub.ID,
+				Status:           sub.Status,
+				CurrentPeriodEnd: sub.CurrentPeriodEnd.Unix(),
+				GuildID:          sub.GuildID,
+				PlanName:         "Prize Bot Premium",
+			})
+		}
+	} else {
+		// Fallback to Stripe API if no local cache
+		query, err := commands.BuildStripeQuery("discord_id", userID)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		}
 
-	params := &stripe.SubscriptionSearchParams{}
-	params.Query = *stripe.String(query)
-	iter := sub.Search(params)
+		params := &stripe.SubscriptionSearchParams{}
+		params.Query = *stripe.String(query)
+		iter := sub.Search(params)
 
-	for iter.Next() {
-		subscription := iter.Subscription()
-		subscriptions = append(subscriptions, SubscriptionInfo{
-			ID:               subscription.ID,
-			Status:           string(subscription.Status),
-			CurrentPeriodEnd: subscription.CurrentPeriodEnd,
-			GuildID:          subscription.Metadata["guild_id"],
-			PlanName:         "Prize Bot Premium",
-		})
+		for iter.Next() {
+			subscription := iter.Subscription()
+			subscriptions = append(subscriptions, SubscriptionInfo{
+				ID:               subscription.ID,
+				Status:           string(subscription.Status),
+				CurrentPeriodEnd: subscription.CurrentPeriodEnd,
+				GuildID:          subscription.Metadata["guild_id"],
+				PlanName:         "Prize Bot Premium",
+			})
+		}
+
+		// Trigger async sync if we had to use Stripe API
+		if len(subscriptions) > 0 {
+			go commands.SyncUserSubscriptions(userID)
+		}
 	}
 
 	return c.JSON(http.StatusOK, UserPremiumStatusResponse{
@@ -88,6 +111,22 @@ func GetGuildPremiumStatus(c echo.Context) error {
 		IsPremium: isPremium,
 		GuildID:   guildID,
 	})
+}
+
+// SyncAfterCheckout is called by the frontend after successful checkout
+// This handles the race condition where user returns before webhook fires
+func SyncAfterCheckout(c echo.Context) error {
+	userID := c.Get("user_id").(string)
+
+	// Sync subscriptions from Stripe
+	if err := commands.SyncUserSubscriptions(userID); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to sync subscription data",
+		})
+	}
+
+	// Return updated premium status
+	return GetUserPremiumStatus(c)
 }
 
 // CreateBillingPortalSession creates a Stripe billing portal session

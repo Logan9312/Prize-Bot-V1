@@ -11,6 +11,7 @@ import (
 	checkout "github.com/stripe/stripe-go/v72/checkout/session"
 	"github.com/stripe/stripe-go/v72/sub"
 	"gitlab.com/logan9312/discord-auction-bot/config"
+	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
 )
@@ -252,15 +253,28 @@ func SetRoles(s *discordgo.Session) {
 	supportServer := config.C.SupportServerID
 
 	for {
-		params := &stripe.SubscriptionListParams{}
+		// Query local database cache instead of Stripe API
+		// This is kept up-to-date by webhooks and sync functions
 		activeMap := map[string]bool{}
-		i := sub.List(params)
-		for i.Next() {
-			subscription := i.Subscription()
-			if subscription.Status == stripe.SubscriptionStatusActive {
-				activeMap[subscription.Metadata["discord_id"]] = true
-			} else if !activeMap[subscription.Metadata["discord_id"]] {
-				activeMap[subscription.Metadata["discord_id"]] = false
+
+		// Get all unique discord_user_ids and their best status
+		var subscriptions []database.Subscription
+		if err := database.DB.Find(&subscriptions).Error; err != nil {
+			logger.Sugar.Warnw("failed to query subscriptions for role sync", "error", err)
+			time.Sleep(5 * time.Minute)
+			continue
+		}
+
+		// Build activeMap: user is active if ANY of their subscriptions is active
+		for _, sub := range subscriptions {
+			if sub.DiscordUserID == "" {
+				continue
+			}
+			if sub.Status == "active" {
+				activeMap[sub.DiscordUserID] = true
+			} else if !activeMap[sub.DiscordUserID] {
+				// Only set to false if not already true (active takes precedence)
+				activeMap[sub.DiscordUserID] = false
 			}
 		}
 
@@ -301,7 +315,16 @@ func CheckPremiumUser(userID string) bool {
 		return true
 	}
 
-	// Validate user ID before using in query
+	// Check local cache first
+	var count int64
+	database.DB.Model(&database.Subscription{}).
+		Where("discord_user_id = ? AND status = ?", userID, "active").
+		Count(&count)
+	if count > 0 {
+		return true
+	}
+
+	// Fallback: Query Stripe API (for race condition edge cases)
 	query, err := BuildStripeQuery("discord_id", userID)
 	if err != nil {
 		logger.Sugar.Warnw("invalid user ID for premium check", "user_id", userID, "error", err)
@@ -315,6 +338,12 @@ func CheckPremiumUser(userID string) bool {
 	for iter.Next() {
 		subscription := iter.Subscription()
 		if subscription.Status == stripe.SubscriptionStatusActive {
+			// Found in Stripe but not in local cache - trigger async sync
+			go func() {
+				if err := SyncUserSubscriptions(userID); err != nil {
+					logger.Sugar.Warnw("async sync failed", "user_id", userID, "error", err)
+				}
+			}()
 			return true
 		}
 	}
@@ -328,7 +357,16 @@ func CheckPremiumGuild(guildID string) bool {
 		return true
 	}
 
-	// Validate guild ID before using in query
+	// Check local cache first
+	var count int64
+	database.DB.Model(&database.Subscription{}).
+		Where("guild_id = ? AND status = ?", guildID, "active").
+		Count(&count)
+	if count > 0 {
+		return true
+	}
+
+	// Fallback: Query Stripe API (for race condition edge cases)
 	query, err := BuildStripeQuery("guild_id", guildID)
 	if err != nil {
 		logger.Sugar.Warnw("invalid guild ID for premium check", "guild_id", guildID, "error", err)
@@ -342,9 +380,94 @@ func CheckPremiumGuild(guildID string) bool {
 	for iter.Next() {
 		subscription := iter.Subscription()
 		if subscription.Status == stripe.SubscriptionStatusActive {
+			// Found in Stripe but not in local cache - trigger async sync
+			go func(discordID string) {
+				if discordID != "" {
+					if err := SyncUserSubscriptions(discordID); err != nil {
+						logger.Sugar.Warnw("async sync failed", "discord_id", discordID, "error", err)
+					}
+				}
+			}(subscription.Metadata["discord_id"])
 			return true
 		}
 	}
 
 	return false
+}
+
+// SyncUserSubscriptions fetches all subscriptions for a Discord user from Stripe
+// and updates the local cache. This is the SINGLE source of truth sync function.
+// All webhook events should call this function rather than updating fields selectively.
+func SyncUserSubscriptions(discordUserID string) error {
+	if err := validateDiscordID(discordUserID); err != nil {
+		return fmt.Errorf("invalid discord user ID: %w", err)
+	}
+
+	log := logger.Sugar.With("discord_user_id", discordUserID)
+	log.Debug("syncing user subscriptions from Stripe")
+
+	// Query Stripe for all subscriptions with this discord_id
+	// Note: We query ALL statuses, not just active, to properly sync cancellations
+	params := &stripe.SubscriptionSearchParams{}
+	params.Query = *stripe.String(fmt.Sprintf("metadata['discord_id']:'%s'", discordUserID))
+	iter := sub.Search(params)
+
+	// Collect all subscription IDs from Stripe
+	stripeSubIDs := make(map[string]bool)
+	var subscriptionsToUpsert []database.Subscription
+
+	for iter.Next() {
+		stripeSub := iter.Subscription()
+		stripeSubIDs[stripeSub.ID] = true
+
+		// Get price ID from first item
+		priceID := ""
+		if stripeSub.Items != nil && len(stripeSub.Items.Data) > 0 {
+			priceID = stripeSub.Items.Data[0].Price.ID
+		}
+
+		subscriptionsToUpsert = append(subscriptionsToUpsert, database.Subscription{
+			ID:                 stripeSub.ID,
+			CustomerID:         stripeSub.Customer.ID,
+			DiscordUserID:      discordUserID,
+			GuildID:            stripeSub.Metadata["guild_id"],
+			Status:             string(stripeSub.Status),
+			PriceID:            priceID,
+			CurrentPeriodStart: time.Unix(stripeSub.CurrentPeriodStart, 0),
+			CurrentPeriodEnd:   time.Unix(stripeSub.CurrentPeriodEnd, 0),
+			CancelAtPeriodEnd:  stripeSub.CancelAtPeriodEnd,
+		})
+	}
+
+	if err := iter.Err(); err != nil {
+		return fmt.Errorf("stripe search error: %w", err)
+	}
+
+	// Delete local subscriptions that no longer exist in Stripe for this user
+	if err := database.DB.Where("discord_user_id = ? AND id NOT IN ?", discordUserID, keysFromMap(stripeSubIDs)).
+		Delete(&database.Subscription{}).Error; err != nil {
+		log.Warnw("failed to delete stale subscriptions", "error", err)
+	}
+
+	// Upsert all subscriptions from Stripe
+	for _, sub := range subscriptionsToUpsert {
+		if err := database.DB.Save(&sub).Error; err != nil {
+			log.Warnw("failed to upsert subscription", "subscription_id", sub.ID, "error", err)
+		}
+	}
+
+	log.Debugw("sync completed", "subscription_count", len(subscriptionsToUpsert))
+	return nil
+}
+
+// keysFromMap extracts keys from a map for use in SQL IN clause
+func keysFromMap(m map[string]bool) []string {
+	if len(m) == 0 {
+		return []string{""}  // Return placeholder to avoid empty IN clause
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }

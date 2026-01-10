@@ -24,7 +24,8 @@ type Config struct {
 	CancelURL        string // Stripe cancel redirect URL
 
 	// Stripe
-	StripePriceID string // Stripe price ID for premium
+	StripePriceID        string // Stripe price ID for premium
+	StripeWebhookSecret  string // Stripe webhook signing secret
 
 	// Support Button
 	SupportButtonEmojiName string
@@ -62,7 +63,8 @@ func Init() {
 		CancelURL:        getEnv("STRIPE_CANCEL_URL", "https://discord.gg/YBRvZ3mRtb"),
 
 		// Stripe
-		StripePriceID: getEnv("STRIPE_PRICE_ID", "price_1KYE0EKpOiJyve6nT9Qo9IfN"),
+		StripePriceID:       getEnv("STRIPE_PRICE_ID", "price_1KYE0EKpOiJyve6nT9Qo9IfN"),
+		StripeWebhookSecret: getEnv("STRIPE_WEBHOOK_SECRET", ""),
 
 		// Support Button
 		SupportButtonEmojiName: getEnv("SUPPORT_BUTTON_EMOJI_NAME", "logo"),

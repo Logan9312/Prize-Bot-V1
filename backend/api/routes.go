@@ -22,6 +22,9 @@ func RegisterRoutes(e *echo.Echo, botSession *discordgo.Session) {
 	auth.GET("/discord/callback", handlers.DiscordOAuthCallback)
 	auth.POST("/logout", handlers.Logout)
 
+	// Webhook routes (no auth required - signature verified internally)
+	api.POST("/webhooks/stripe", handlers.StripeWebhook)
+
 	// Protected routes (auth required)
 	protected := api.Group("")
 	protected.Use(middleware.JWTAuth)
@@ -39,6 +42,7 @@ func RegisterRoutes(e *echo.Echo, botSession *discordgo.Session) {
 	protected.GET("/premium/status", handlers.GetUserPremiumStatus)
 	protected.GET("/guilds/:guildId/premium", handlers.GetGuildPremiumStatus)
 	protected.POST("/premium/portal", handlers.CreateBillingPortalSession)
+	protected.POST("/premium/sync", handlers.SyncAfterCheckout)
 
 	// List endpoints
 	protected.GET("/guilds/:guildId/auctions/list", handlers.ListAuctions)

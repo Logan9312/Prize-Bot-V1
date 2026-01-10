@@ -180,6 +180,21 @@ type Errors struct {
 	UserID  string `gorm:"primaryKey;autoIncrement:false"`
 }
 
+// Subscription caches Stripe subscription data locally
+// This follows the recommendation to avoid querying Stripe API on every premium check
+type Subscription struct {
+	ID                 string    `gorm:"primaryKey"`              // Stripe subscription ID
+	CustomerID         string    `gorm:"index"`                   // Stripe customer ID
+	DiscordUserID      string    `gorm:"index"`                   // Discord user ID from metadata
+	GuildID            string    `gorm:"index"`                   // Linked guild ID from metadata (optional)
+	Status             string    `gorm:"index"`                   // active, canceled, past_due, etc.
+	PriceID            string                                     // Stripe price ID
+	CurrentPeriodStart time.Time                                  // Subscription period start
+	CurrentPeriodEnd   time.Time                                  // Subscription period end
+	CancelAtPeriodEnd  bool                                       // Whether subscription cancels at period end
+	UpdatedAt          time.Time `gorm:"autoUpdateTime"`          // Last sync time
+}
+
 var DB *gorm.DB
 
 func DatabaseConnect(password, host, env string) {
@@ -200,7 +215,7 @@ func DatabaseConnect(password, host, env string) {
 
 	log.Info("database connection established")
 
-	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{})
+	err := DB.AutoMigrate(AuctionSetup{}, Auction{}, AuctionQueue{}, GiveawaySetup{}, Giveaway{}, ClaimSetup{}, CurrencySetup{}, Claim{}, DevSetup{}, UserProfile{}, ShopSetup{}, WhiteLabels{}, Subscription{})
 	if err != nil {
 		log.Errorw("database migration failed", "error", err)
 	} else {

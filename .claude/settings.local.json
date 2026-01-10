@@ -28,7 +28,8 @@
       "Bash(go mod tidy:*)",
       "Bash(git restore:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npx svelte-check:*)"
+      "Bash(npx svelte-check:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
