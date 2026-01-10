@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/billingportal/session"
-	"github.com/stripe/stripe-go/v72/sub"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/billingportal/session"
+	"github.com/stripe/stripe-go/v82/subscription"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/database"
@@ -71,15 +71,20 @@ func GetUserPremiumStatus(c echo.Context) error {
 
 		params := &stripe.SubscriptionSearchParams{}
 		params.Query = *stripe.String(query)
-		iter := sub.Search(params)
+		iter := subscription.Search(params)
 
 		for iter.Next() {
-			subscription := iter.Subscription()
+			sub := iter.Subscription()
+			// In v82, CurrentPeriodEnd moved to SubscriptionItem
+			var periodEnd int64
+			if sub.Items != nil && len(sub.Items.Data) > 0 {
+				periodEnd = sub.Items.Data[0].CurrentPeriodEnd
+			}
 			subscriptions = append(subscriptions, SubscriptionInfo{
-				ID:               subscription.ID,
-				Status:           string(subscription.Status),
-				CurrentPeriodEnd: subscription.CurrentPeriodEnd,
-				GuildID:          subscription.Metadata["guild_id"],
+				ID:               sub.ID,
+				Status:           string(sub.Status),
+				CurrentPeriodEnd: periodEnd,
+				GuildID:          sub.Metadata["guild_id"],
 				PlanName:         "Prize Bot Premium",
 			})
 		}
@@ -141,7 +146,7 @@ func CreateBillingPortalSession(c echo.Context) error {
 
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(query)
-	iter := sub.Search(params)
+	iter := subscription.Search(params)
 
 	var customerID string
 	for iter.Next() {

@@ -29,7 +29,9 @@
       "Bash(git restore:*)",
       "mcp__ide__getDiagnostics",
       "Bash(npx svelte-check:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(go doc:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

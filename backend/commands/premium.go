@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/billingportal/session"
-	checkout "github.com/stripe/stripe-go/v72/checkout/session"
-	"github.com/stripe/stripe-go/v72/sub"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/billingportal/session"
+	checkout "github.com/stripe/stripe-go/v82/checkout/session"
+	"github.com/stripe/stripe-go/v82/subscription"
 	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/database"
 	h "gitlab.com/logan9312/discord-auction-bot/helpers"
@@ -79,7 +79,7 @@ func PremiumInfo(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(query)
-	iter := sub.Search(params)
+	iter := subscription.Search(params)
 
 	for iter.Next() {
 		subscription := iter.Subscription()
@@ -184,16 +184,16 @@ func PremiumActivate(s *discordgo.Session, i *discordgo.InteractionCreate) error
 
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(query)
-	iter := sub.Search(params)
+	iter := subscription.Search(params)
 
 	for iter.Next() {
-		subscription := iter.Subscription()
-		if subscription.Status == stripe.SubscriptionStatusActive {
-			if _, ok := subscription.Metadata["guild_id"]; !ok {
-				subscription.Metadata["guild_id"] = i.GuildID
-				sub.Update(subscription.ID, &stripe.SubscriptionParams{
+		sub := iter.Subscription()
+		if sub.Status == stripe.SubscriptionStatusActive {
+			if _, ok := sub.Metadata["guild_id"]; !ok {
+				sub.Metadata["guild_id"] = i.GuildID
+				subscription.Update(sub.ID, &stripe.SubscriptionParams{
 					Params: stripe.Params{
-						Metadata: subscription.Metadata,
+						Metadata: sub.Metadata,
 					},
 				})
 				h.SuccessResponse(s, i, h.PresetResponse{
@@ -333,7 +333,7 @@ func CheckPremiumUser(userID string) bool {
 
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(query)
-	iter := sub.Search(params)
+	iter := subscription.Search(params)
 
 	for iter.Next() {
 		subscription := iter.Subscription()
@@ -375,7 +375,7 @@ func CheckPremiumGuild(guildID string) bool {
 
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(query)
-	iter := sub.Search(params)
+	iter := subscription.Search(params)
 
 	for iter.Next() {
 		subscription := iter.Subscription()
@@ -410,7 +410,7 @@ func SyncUserSubscriptions(discordUserID string) error {
 	// Note: We query ALL statuses, not just active, to properly sync cancellations
 	params := &stripe.SubscriptionSearchParams{}
 	params.Query = *stripe.String(fmt.Sprintf("metadata['discord_id']:'%s'", discordUserID))
-	iter := sub.Search(params)
+	iter := subscription.Search(params)
 
 	// Collect all subscription IDs from Stripe
 	stripeSubIDs := make(map[string]bool)
@@ -420,10 +420,14 @@ func SyncUserSubscriptions(discordUserID string) error {
 		stripeSub := iter.Subscription()
 		stripeSubIDs[stripeSub.ID] = true
 
-		// Get price ID from first item
+		// Get price ID and period info from first item (v82 moved these to SubscriptionItem)
 		priceID := ""
+		var currentPeriodStart, currentPeriodEnd int64
 		if stripeSub.Items != nil && len(stripeSub.Items.Data) > 0 {
-			priceID = stripeSub.Items.Data[0].Price.ID
+			item := stripeSub.Items.Data[0]
+			priceID = item.Price.ID
+			currentPeriodStart = item.CurrentPeriodStart
+			currentPeriodEnd = item.CurrentPeriodEnd
 		}
 
 		subscriptionsToUpsert = append(subscriptionsToUpsert, database.Subscription{
@@ -433,8 +437,8 @@ func SyncUserSubscriptions(discordUserID string) error {
 			GuildID:            stripeSub.Metadata["guild_id"],
 			Status:             string(stripeSub.Status),
 			PriceID:            priceID,
-			CurrentPeriodStart: time.Unix(stripeSub.CurrentPeriodStart, 0),
-			CurrentPeriodEnd:   time.Unix(stripeSub.CurrentPeriodEnd, 0),
+			CurrentPeriodStart: time.Unix(currentPeriodStart, 0),
+			CurrentPeriodEnd:   time.Unix(currentPeriodEnd, 0),
 			CancelAtPeriodEnd:  stripeSub.CancelAtPeriodEnd,
 		})
 	}

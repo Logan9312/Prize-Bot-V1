@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/webhook"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/webhook"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/logger"
@@ -110,14 +110,9 @@ func extractDiscordUserID(event stripe.Event) string {
 	case "invoice.paid",
 		"invoice.payment_failed",
 		"invoice.payment_action_required":
-		var invoice stripe.Invoice
-		if err := json.Unmarshal(event.Data.Raw, &invoice); err == nil {
-			// Invoice has subscription attached, get metadata from there
-			if invoice.Subscription != nil {
-				// The subscription object in invoice might not have full metadata
-				// We'd need to fetch it - for now, we rely on subscription events
-			}
-		}
+		// In v82, subscription is accessed via invoice.Parent.SubscriptionDetails
+		// For now, we rely on subscription events to trigger syncs
+		// Invoice events alone don't have full subscription metadata
 		return ""
 	}
 

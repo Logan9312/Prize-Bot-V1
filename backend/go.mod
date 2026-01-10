@@ -7,7 +7,7 @@ require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/stripe/stripe-go/v72 v72.122.0
+	github.com/stripe/stripe-go/v82 v82.5.1
 	go.uber.org/zap v1.27.1
 	golang.org/x/sync v0.15.0
 	golang.org/x/text v0.26.0
@@ -37,7 +37,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )

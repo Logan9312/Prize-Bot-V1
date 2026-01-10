@@ -6,7 +6,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
-	"github.com/stripe/stripe-go/v72"
+	"github.com/stripe/stripe-go/v82"
 	"gitlab.com/logan9312/discord-auction-bot/commands"
 	"gitlab.com/logan9312/discord-auction-bot/config"
 	"gitlab.com/logan9312/discord-auction-bot/connect"
