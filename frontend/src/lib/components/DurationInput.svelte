@@ -1,6 +1,6 @@
 <script lang="ts">
-	let { value = $bindable<number | undefined>(0), label = '' }: {
-		value?: number | undefined;
+	let { value = $bindable(), label = '' }: {
+		value?: number;
 		label?: string;
 	} = $props();
 

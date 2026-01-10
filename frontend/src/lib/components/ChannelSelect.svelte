@@ -3,8 +3,8 @@
 	import type { Writable } from 'svelte/store';
 	import type { Channel } from '$lib/api/client';
 
-	let { value = $bindable<string | undefined>(''), label = '', type = 'all' }: {
-		value?: string | undefined;
+	let { value = $bindable(), label = '', type = 'all' }: {
+		value?: string;
 		label?: string;
 		type?: 'text' | 'category' | 'all';
 	} = $props();

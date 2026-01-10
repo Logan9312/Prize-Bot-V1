@@ -3,8 +3,8 @@
 	import type { Writable } from 'svelte/store';
 	import type { Role } from '$lib/api/client';
 
-	let { value = $bindable<string | undefined>(''), label = '' }: {
-		value?: string | undefined;
+	let { value = $bindable(), label = '' }: {
+		value?: string;
 		label?: string;
 	} = $props();
 

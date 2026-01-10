@@ -1,6 +1,6 @@
 <script lang="ts">
-	let { checked = $bindable<boolean | undefined>(false), label = '' }: {
-		checked?: boolean | undefined;
+	let { checked = $bindable(), label = '' }: {
+		checked?: boolean;
 		label?: string;
 	} = $props();
 
