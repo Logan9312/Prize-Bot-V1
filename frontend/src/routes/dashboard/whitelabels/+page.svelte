@@ -22,6 +22,7 @@
 
 	// Delete confirmation
 	let deleteConfirmId = $state<string | null>(null);
+	let deleteConfirmInput = $state('');
 	let deleting = $state(false);
 
 	onMount(async () => {
@@ -74,13 +75,23 @@
 		try {
 			await whitelabelAPI.delete(botId);
 			toast.success('Whitelabel deleted');
-			deleteConfirmId = null;
+			closeDeleteModal();
 			await loadWhitelabels();
 		} catch (err: any) {
 			toast.error(err.message || 'Failed to delete whitelabel');
 		} finally {
 			deleting = false;
 		}
+	}
+
+	function openDeleteModal(botId: string) {
+		deleteConfirmId = botId;
+		deleteConfirmInput = '';
+	}
+
+	function closeDeleteModal() {
+		deleteConfirmId = null;
+		deleteConfirmInput = '';
 	}
 
 	function openModal() {
@@ -300,36 +311,15 @@
 
 							<!-- Actions -->
 							<div class="flex items-center gap-2">
-								{#if deleteConfirmId === bot.bot_id}
-									<span class="text-sm text-text-secondary mr-2">Delete?</span>
-									<button
-										onclick={() => deleteWhitelabel(bot.bot_id)}
-										disabled={deleting}
-										class="btn btn-danger py-1.5 px-3 min-h-0 text-sm"
-									>
-										{#if deleting}
-											<span class="spinner w-4 h-4 border-white/30 border-t-white"></span>
-										{:else}
-											Yes
-										{/if}
-									</button>
-									<button
-										onclick={() => (deleteConfirmId = null)}
-										class="btn btn-ghost py-1.5 px-3 min-h-0 text-sm"
-									>
-										No
-									</button>
-								{:else}
-									<button
-										onclick={() => (deleteConfirmId = bot.bot_id)}
-										class="btn btn-ghost py-1.5 px-3 min-h-0 text-sm text-status-danger hover:bg-status-danger/10"
-									>
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-										</svg>
-										Delete
-									</button>
-								{/if}
+								<button
+									onclick={() => openDeleteModal(bot.bot_id)}
+									class="btn btn-ghost py-1.5 px-3 min-h-0 text-sm text-status-danger hover:bg-status-danger/10"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+									</svg>
+									Delete
+								</button>
 							</div>
 						</div>
 					{/each}
@@ -472,6 +462,96 @@
 						Saving...
 					{:else}
 						Save Whitelabel
+					{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Delete Confirmation Modal -->
+{#if deleteConfirmId}
+	{@const botToDelete = whitelabels.find(b => b.bot_id === deleteConfirmId)}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+		<!-- Backdrop -->
+		<button
+			onclick={closeDeleteModal}
+			class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+			aria-label="Close modal"
+		></button>
+
+		<!-- Modal -->
+		<div class="relative bg-surface-800 border border-surface-600 rounded-xl w-full max-w-md shadow-2xl">
+			<!-- Header -->
+			<div class="flex items-center justify-between p-5 border-b border-surface-600">
+				<h2 class="text-lg font-semibold text-status-danger">Delete Whitelabel</h2>
+				<button onclick={closeDeleteModal} class="p-1 rounded-lg hover:bg-surface-600 transition-colors">
+					<svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<!-- Content -->
+			<div class="p-5 space-y-4">
+				<div class="flex items-center gap-4 p-4 bg-surface-700 rounded-lg">
+					{#if botToDelete?.bot_avatar}
+						<img
+							src={botToDelete.bot_avatar}
+							alt={botToDelete.bot_name}
+							class="w-12 h-12 rounded-full bg-surface-600"
+						/>
+					{:else}
+						<div class="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
+							{getBotInitial(botToDelete?.bot_name || '')}
+						</div>
+					{/if}
+					<div>
+						<p class="font-medium text-text-primary">{botToDelete?.bot_name || 'Unknown Bot'}</p>
+						<p class="text-sm text-text-secondary font-mono">{botToDelete?.bot_id}</p>
+					</div>
+				</div>
+
+				<div class="p-4 bg-status-danger/10 border border-status-danger/30 rounded-lg">
+					<div class="flex gap-3">
+						<svg class="w-5 h-5 text-status-danger flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+						</svg>
+						<div class="text-sm">
+							<p class="font-medium text-status-danger mb-1">This action cannot be undone</p>
+							<p class="text-text-secondary">This will permanently delete the whitelabel bot. You will need to re-add it if you want to use it again.</p>
+						</div>
+					</div>
+				</div>
+
+				<div>
+					<label for="deleteConfirm" class="label">Type <span class="font-mono text-status-danger">delete</span> to confirm</label>
+					<input
+						id="deleteConfirm"
+						type="text"
+						bind:value={deleteConfirmInput}
+						placeholder="delete"
+						class="input font-mono"
+						autocomplete="off"
+					/>
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<div class="flex justify-end gap-3 p-5 border-t border-surface-600 bg-surface-900/50">
+				<button onclick={closeDeleteModal} class="btn btn-ghost">
+					Cancel
+				</button>
+				<button
+					onclick={() => deleteWhitelabel(deleteConfirmId!)}
+					disabled={deleteConfirmInput.toLowerCase() !== 'delete' || deleting}
+					class="btn btn-danger"
+				>
+					{#if deleting}
+						<span class="spinner w-4 h-4 border-white/30 border-t-white"></span>
+						Deleting...
+					{:else}
+						Delete Whitelabel
 					{/if}
 				</button>
 			</div>
