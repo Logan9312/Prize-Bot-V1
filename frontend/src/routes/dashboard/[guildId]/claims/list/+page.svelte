@@ -144,7 +144,7 @@
 					<div class="flex justify-between items-start gap-4">
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2">
-								<span class="w-2 h-2 rounded-full bg-yellow-400 flex-shrink-0" title="Pending"></span>
+								<span class="w-2 h-2 rounded-full bg-yellow-400 shrink-0" title="Pending"></span>
 								<h3 class="font-medium text-text-primary truncate">{claim.item}</h3>
 							</div>
 							<div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
